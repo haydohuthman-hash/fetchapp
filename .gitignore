@@ -1,0 +1,23 @@
+# Secrets — never commit
+.env
+.env.local
+.env.*.local
+*.p8
+AuthKey*.p8
+
+node_modules
+dist
+
+*.log
+.DS_Store
+Thumbs.db
+
+# OpenAI-generated marketplace supply PNGs (run npm run generate:supply-images)
+public/supplies/*.png
+public/supplies/*.webp
+
+# Peer listing uploads (local dev)
+public/listing-uploads/
+
+# Peer buy & sell marketplace data (local dev — starts empty if missing)
+server/peer-listings.json

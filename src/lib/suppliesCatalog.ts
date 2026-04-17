@@ -1,0 +1,837 @@
+/**
+ * Supplies catalog — prices (AUD) must match `server/lib/supplies-catalog.js`.
+ *
+ * Cover art: `public/supplies/{id}.png` (transparent PNGs). Generate with:
+ *   npm run generate:supply-images
+ * Requires `OPENAI_API_KEY` and a GPT Image model (e.g. gpt-image-1).
+ */
+
+import type { HardwareProduct } from './hardwareCatalog'
+
+export type SupplyCategoryId =
+  | 'drinks'
+  | 'cleaning'
+  | 'packing'
+  | 'kitchen'
+  | 'bedroom'
+  | 'bathroom'
+  | 'livingRoom'
+  | 'laundry'
+  | 'storage'
+
+/** Valid category ids for supplies marketplace + store admin quick listing. */
+export const MARKETPLACE_SUPPLY_CATEGORY_IDS: readonly SupplyCategoryId[] = [
+  'drinks',
+  'cleaning',
+  'packing',
+  'kitchen',
+  'bedroom',
+  'bathroom',
+  'livingRoom',
+  'laundry',
+  'storage',
+] as const
+
+export type SupplyProduct = HardwareProduct & {
+  /** Category slug from DB or static catalog (dynamic categories use arbitrary strings). */
+  categoryId: SupplyCategoryId | string
+  coverImageUrl: string
+  /** From Postgres catalog / admin; used for subcategory carousels */
+  subcategoryId?: string
+  subcategoryLabel?: string
+  /** Optional “was / RRP” in AUD (same units as priceAud) for storefront compare display */
+  compareAtAud?: number
+  /** From Postgres `products.tags` when present */
+  tags?: string[]
+  /** External marketplace listing (e.g. Amazon) — CTA opens affiliate link, not cart */
+  productSource?: 'fetch' | 'amazon'
+  externalListing?: boolean
+  affiliateUrl?: string
+  asin?: string
+}
+
+type SupplyProductDef = Omit<SupplyProduct, 'coverImageUrl'>
+
+const SUPPLY_PRODUCT_DEFS: readonly SupplyProductDef[] = [
+  {
+    id: 'sup-drink-soft-case',
+    sku: 'SUPPLY_DRINK_SOFT_CASE',
+    title: 'Soft drink mixed case',
+    subtitle: 'Cola · citrus · variety cans',
+    priceAud: 42,
+    previewStyle: 'blue',
+    categoryId: 'drinks',
+    specs: ['24 × 375 ml cans', 'Assorted flavours', 'Fridge-ready'],
+    description: 'Mixed cans for moving day, guests, or stocking the new fridge.',
+  },
+  {
+    id: 'sup-drink-sparkling-12',
+    sku: 'SUPPLY_DRINK_SPARKLING_12',
+    title: 'Sparkling water (12)',
+    subtitle: 'Plain · slim cans',
+    priceAud: 28,
+    previewStyle: 'slate',
+    categoryId: 'drinks',
+    specs: ['12 × 330 ml', 'No added sugar', 'Serve cold'],
+    description: 'Crisp bubbles without a separate supermarket stop.',
+  },
+  {
+    id: 'sup-drink-sports-6',
+    sku: 'SUPPLY_DRINK_SPORTS_6',
+    title: 'Isotonic sports pack',
+    subtitle: 'Mixed flavours · 600 ml',
+    priceAud: 32,
+    previewStyle: 'violet',
+    categoryId: 'drinks',
+    specs: ['6 bottles', 'Electrolyte blend', 'Twist cap'],
+    description: 'Hydration for unpack days and hot lifts.',
+  },
+  {
+    id: 'sup-drink-iced-tea-8',
+    sku: 'SUPPLY_DRINK_ICED_TEA_8',
+    title: 'Iced tea cans (8)',
+    subtitle: 'Lemon · peach',
+    priceAud: 26,
+    previewStyle: 'blue',
+    categoryId: 'drinks',
+    specs: ['8 × 375 ml', 'Lower sugar', 'Chill before serving'],
+    description: 'Lighter option when you want something cold and easy.',
+  },
+  {
+    id: 'sup-clean-pro-kit',
+    sku: 'SUPPLY_CLEAN_PRO_KIT',
+    title: 'Pro clean starter',
+    subtitle: 'Spray bottles · cloths · gloves',
+    priceAud: 48,
+    previewStyle: 'blue',
+    categoryId: 'cleaning',
+    specs: ['3× 500 ml bottles', '12× microfibre cloths', 'Nitrile gloves (M)'],
+    description: 'Reset kitchens and baths between jobs.',
+  },
+  {
+    id: 'sup-clean-floor',
+    sku: 'SUPPLY_CLEAN_FLOOR_SYS',
+    title: 'Hard-floor system',
+    subtitle: 'Mop · pads · neutral cleaner',
+    priceAud: 72,
+    previewStyle: 'slate',
+    categoryId: 'cleaning',
+    specs: ['Flat mop + 4 pads', '2 L cleaner', 'Grout brush'],
+    description: 'Low-streak routine for timber and tile.',
+  },
+  {
+    id: 'sup-clean-stick-vac',
+    sku: 'SUPPLY_CLEAN_STICK_VAC',
+    title: 'Stick vacuum kit',
+    subtitle: 'Crevice tool · hard floors',
+    priceAud: 118,
+    previewStyle: 'slate',
+    categoryId: 'cleaning',
+    specs: ['Motorised floor head', 'HEPA filter', '45 min runtime'],
+    description: 'Quick touch-ups between full cleans.',
+  },
+  {
+    id: 'sup-clean-spray-trio',
+    sku: 'SUPPLY_CLEAN_SPRAY_TRIO',
+    title: 'Surface spray trio',
+    subtitle: 'Glass · bath · degrease',
+    priceAud: 36,
+    previewStyle: 'blue',
+    categoryId: 'cleaning',
+    specs: ['3× 750 ml triggers', 'Colour-coded caps', 'QR SDS'],
+    description: 'Grab the right bottle at a glance.',
+  },
+  {
+    id: 'sup-pack-move-kit',
+    sku: 'SUPPLY_PACK_MOVE_KIT_S',
+    title: 'Apartment pack kit',
+    subtitle: 'Boxes · tape · bubble wrap',
+    priceAud: 89,
+    previewStyle: 'violet',
+    categoryId: 'packing',
+    specs: ['15 small + 10 medium cartons', '2 tape rolls', '20 m wrap'],
+    description: 'Sized for 1–2 bedroom pack-outs.',
+  },
+  {
+    id: 'sup-pack-fragile',
+    sku: 'SUPPLY_PACK_FRAGILE',
+    title: 'Fragile cell kit',
+    subtitle: 'Dish cells · corners · tape',
+    priceAud: 56,
+    previewStyle: 'slate',
+    categoryId: 'packing',
+    specs: ['8 dish cells', '40 corner guards', 'Glassine roll'],
+    description: 'Protects glass on local moves.',
+  },
+  {
+    id: 'sup-pack-tape-kit',
+    sku: 'SUPPLY_PACK_TAPE_KIT',
+    title: 'Tape & dispenser',
+    subtitle: 'Fibre tape · cutter · refills',
+    priceAud: 42,
+    previewStyle: 'violet',
+    categoryId: 'packing',
+    specs: ['Quiet dispenser', '2× 48 mm rolls', 'Fragile print roll'],
+    description: 'Seal cartons fast and clean.',
+  },
+  {
+    id: 'sup-pack-pad-blanket',
+    sku: 'SUPPLY_PACK_PAD_BLANKET',
+    title: 'Furniture pad bundle',
+    subtitle: 'Quilted pads · edge quilts',
+    priceAud: 78,
+    previewStyle: 'slate',
+    categoryId: 'packing',
+    specs: ['4 large pads', '2 door jamb quilts', 'Washable'],
+    description: 'Polished timber and glass in tight stairs.',
+  },
+  {
+    id: 'sup-clean-micro-bulk',
+    sku: 'SUPPLY_CLEAN_MICRO_BULK',
+    title: 'Microfibre bulk pack',
+    subtitle: '24 cloths · colour bands',
+    priceAud: 34,
+    previewStyle: 'blue',
+    categoryId: 'cleaning',
+    specs: ['24× 30×30 cm', 'Lint-light weave', 'Machine wash'],
+    description: 'Rotate colours by room so you never cross-contaminate.',
+  },
+  {
+    id: 'sup-clean-gloves-nitrile',
+    sku: 'SUPPLY_CLEAN_GLOVES_NITRILE',
+    title: 'Nitrile gloves (L)',
+    subtitle: '100 pack · powder-free',
+    priceAud: 28,
+    previewStyle: 'blue',
+    categoryId: 'cleaning',
+    specs: ['5 mil', 'Textured grip', 'Latex-free'],
+    description: 'Comfortable for longer deep cleans.',
+  },
+  {
+    id: 'sup-clean-degrease',
+    sku: 'SUPPLY_CLEAN_DEGREASE',
+    title: 'Kitchen degreaser',
+    subtitle: '2 L refill · citrus',
+    priceAud: 22,
+    previewStyle: 'blue',
+    categoryId: 'cleaning',
+    specs: ['Concentrate', 'Range hood safe', 'Food-prep adjacent'],
+    description: 'Cuts through cooktop film without harsh fumes.',
+  },
+  {
+    id: 'sup-clean-toilet',
+    sku: 'SUPPLY_CLEAN_TOILET_SYS',
+    title: 'Bath & toilet kit',
+    subtitle: 'Bowl · brush · lime scale',
+    priceAud: 31,
+    previewStyle: 'slate',
+    categoryId: 'cleaning',
+    specs: ['Angled brush', '750 ml bowl cleaner', 'Grout pen'],
+    description: 'Everything for a quick bathroom reset.',
+  },
+  {
+    id: 'sup-clean-glass',
+    sku: 'SUPPLY_CLEAN_GLASS_PRO',
+    title: 'Glass & mirror pro',
+    subtitle: 'Squeegee · 1 L refill',
+    priceAud: 26,
+    previewStyle: 'slate',
+    categoryId: 'cleaning',
+    specs: ['Streak-free formula', 'Rubber blade', 'Extension pole clip'],
+    description: 'Large sliders and shower screens in fewer passes.',
+  },
+  {
+    id: 'sup-clean-odour',
+    sku: 'SUPPLY_CLEAN_ODOUR_NEUT',
+    title: 'Odour neutraliser',
+    subtitle: 'Spray · 500 ml × 2',
+    priceAud: 19,
+    previewStyle: 'blue',
+    categoryId: 'cleaning',
+    specs: ['Enzyme base', 'Pet-safe when dry', 'Low scent'],
+    description: 'For turnovers where smell matters as much as shine.',
+  },
+  {
+    id: 'sup-clean-mop-pads',
+    sku: 'SUPPLY_CLEAN_MOP_PADS_8',
+    title: 'Mop pad refill (8)',
+    subtitle: 'Microfibre · loop backing',
+    priceAud: 24,
+    previewStyle: 'slate',
+    categoryId: 'cleaning',
+    specs: ['Fits Fetch flat mop', 'Wash 60×', 'Colour-coded tags'],
+    description: 'Keep a fresh pad on hand every day of the week.',
+  },
+  {
+    id: 'sup-pack-wardrobe',
+    sku: 'SUPPLY_PACK_WARDROBE_BOX',
+    title: 'Wardrobe cartons (3)',
+    subtitle: 'Bar included · tall',
+    priceAud: 64,
+    previewStyle: 'violet',
+    categoryId: 'packing',
+    specs: ['120 cm hanging space', 'Reinforced base', 'Perforated vents'],
+    description: 'Suits dresses and coats without folding creases.',
+  },
+  {
+    id: 'sup-pack-paper',
+    sku: 'SUPPLY_PACK_PAPER_10KG',
+    title: 'Packing paper bundle',
+    subtitle: '10 kg news offcuts',
+    priceAud: 38,
+    previewStyle: 'slate',
+    categoryId: 'packing',
+    specs: ['Ink-light', 'Acid-free option mix', 'Easy tear'],
+    description: 'Wrap glass and ceramics before cells.',
+  },
+  {
+    id: 'sup-pack-stretch',
+    sku: 'SUPPLY_PACK_STRETCH_WRAP',
+    title: 'Stretch wrap hand roll',
+    subtitle: '400 mm × 300 m',
+    priceAud: 29,
+    previewStyle: 'violet',
+    categoryId: 'packing',
+    specs: ['Extended core', 'Quiet unwind', 'Bundling sofas'],
+    description: 'Hold doors and drawers closed on dollies.',
+  },
+  {
+    id: 'sup-pack-markers',
+    sku: 'SUPPLY_PACK_MARKER_SET',
+    title: 'Room marker set',
+    subtitle: '12 permanent · labels',
+    priceAud: 16,
+    previewStyle: 'violet',
+    categoryId: 'packing',
+    specs: ['Colour per room', '250 adhesive flags', 'Smear-resistant'],
+    description: 'Crew unloads to the right zone first time.',
+  },
+  {
+    id: 'sup-pack-mattress',
+    sku: 'SUPPLY_PACK_MATTRESS_BAG',
+    title: 'Mattress bag (queen)',
+    subtitle: 'Heavy poly · zip',
+    priceAud: 18,
+    previewStyle: 'slate',
+    categoryId: 'packing',
+    specs: ['6 mil', 'Full enclosure', 'Reusable once'],
+    description: 'Keeps fabric dry in light rain between truck and lift.',
+  },
+  {
+    id: 'sup-fetch-mattress-bag-double',
+    sku: 'SUPPLY_FETCH_MATTRESS_BAG_D',
+    title: 'Fetch heavy mattress bag',
+    subtitle: 'Double · zip · handles',
+    priceAud: 37,
+    previewStyle: 'violet',
+    categoryId: 'packing',
+    specs: [
+      'Extra-thick poly · waterproof zip',
+      'Carry handles · move & storage',
+      'Fits standard double depth',
+    ],
+    description:
+      'Fetch-branded move kit — DREAMZ-series style heavy-duty bag for doubles. Seals out dust between truck and bedroom.',
+  },
+  {
+    id: 'sup-fetch-mattress-bag-queen',
+    sku: 'SUPPLY_FETCH_MATTRESS_BAG_Q',
+    title: 'Fetch heavy mattress bag',
+    subtitle: 'Queen · zip · handles',
+    priceAud: 43,
+    previewStyle: 'violet',
+    categoryId: 'packing',
+    specs: [
+      'Extra-thick poly · waterproof zip',
+      'Carry handles · move & storage',
+      'Fits standard queen depth',
+    ],
+    description:
+      'Fetch-branded move kit — DREAMZ-series style heavy-duty bag for queens. Same tough zip track as the double, scaled for wider mattresses.',
+  },
+  {
+    id: 'sup-fetch-mattress-bag-king',
+    sku: 'SUPPLY_FETCH_MATTRESS_BAG_K',
+    title: 'Fetch heavy mattress bag',
+    subtitle: 'King · zip · handles',
+    priceAud: 47,
+    previewStyle: 'violet',
+    categoryId: 'packing',
+    specs: [
+      'Extra-thick poly · waterproof zip',
+      'Carry handles · move & storage',
+      'Fits standard king depth',
+    ],
+    description:
+      'Fetch-branded move kit — DREAMZ-series style heavy-duty bag for kings. Maximum coverage for your largest mattress on settlement day.',
+  },
+  {
+    id: 'sup-pack-rope',
+    sku: 'SUPPLY_PACK_ROPE_TIE',
+    title: 'Tie-down rope kit',
+    subtitle: '15 m × 2 · carabiners',
+    priceAud: 22,
+    previewStyle: 'slate',
+    categoryId: 'packing',
+    specs: ['Braided poly', 'Soft loops', '200 kg WLL note'],
+    description: 'Anchor tall stacks in the truck body.',
+  },
+  {
+    id: 'sup-pack-bubble-narrow',
+    sku: 'SUPPLY_PACK_BUBBLE_NARROW',
+    title: 'Bubble roll (narrow)',
+    subtitle: '30 cm × 50 m',
+    priceAud: 35,
+    previewStyle: 'violet',
+    categoryId: 'packing',
+    specs: ['10 mm bubbles', 'Perforated every 30 cm', 'Frames & art'],
+    description: 'Easier to wrap long items than wide rolls.',
+  },
+  {
+    id: 'sup-pack-blade',
+    sku: 'SUPPLY_PACK_UTILITY_BLADES',
+    title: 'Utility blades (20)',
+    subtitle: 'Standard trapezoid',
+    priceAud: 12,
+    previewStyle: 'slate',
+    categoryId: 'packing',
+    specs: ['Dispenser compatible', 'Carbon steel', 'Storage case'],
+    description: 'Fresh blade per job for clean carton cuts.',
+  },
+  /* Room categories — kitchen, bedroom, bath, living, laundry, storage */
+  {
+    id: 'sup-home-desk-lamp',
+    sku: 'SUPPLY_HOME_DESK_LAMP',
+    title: 'LED desk lamp',
+    subtitle: 'Dimmable · warm white',
+    priceAud: 46,
+    previewStyle: 'violet',
+    categoryId: 'livingRoom',
+    specs: ['Touch dimmer', 'USB-A charge port', 'Adjustable arm'],
+    description: 'Bedside or WFH corner — soft light on day one.',
+  },
+  {
+    id: 'sup-home-kettle',
+    sku: 'SUPPLY_HOME_KETTLE',
+    title: 'Electric kettle',
+    subtitle: '1.7 L · rapid boil',
+    priceAud: 59,
+    previewStyle: 'slate',
+    categoryId: 'kitchen',
+    specs: ['Stainless body', 'Auto shut-off', '360° base'],
+    description: 'First cuppa in the new place without hunting for a saucepan.',
+  },
+  {
+    id: 'sup-home-bedding-queen',
+    sku: 'SUPPLY_HOME_BEDDING_Q',
+    title: 'Cotton sheet set (queen)',
+    subtitle: 'Fitted · flat · 2 pillowcases',
+    priceAud: 92,
+    previewStyle: 'blue',
+    categoryId: 'bedroom',
+    specs: ['Percale weave', 'Breathable', 'Machine wash cold'],
+    description: 'Sleep-ready the night you get keys.',
+  },
+  {
+    id: 'sup-home-bath-towels',
+    sku: 'SUPPLY_HOME_TOWEL_SET',
+    title: 'Bath towel bundle',
+    subtitle: '4 bath · 2 hand',
+    priceAud: 52,
+    previewStyle: 'slate',
+    categoryId: 'bathroom',
+    specs: ['600 gsm cotton', 'Low lint', 'Neutral stone'],
+    description: 'Fresh towels before the first shower in the new bath.',
+  },
+  {
+    id: 'sup-home-utensils',
+    sku: 'SUPPLY_HOME_UTENSIL_BLK',
+    title: 'Kitchen utensil block',
+    subtitle: '12 pieces · bamboo block',
+    priceAud: 64,
+    previewStyle: 'violet',
+    categoryId: 'kitchen',
+    specs: ['Nylon & stainless tools', 'Non-scratch', 'Compact block'],
+    description: 'Cook the first meal without rummaging through boxes.',
+  },
+  {
+    id: 'sup-home-saucepans',
+    sku: 'SUPPLY_HOME_SAUCEPAN_SET',
+    title: 'Non-stick saucepan pair',
+    subtitle: '18 cm + 24 cm · lids',
+    priceAud: 118,
+    previewStyle: 'slate',
+    categoryId: 'kitchen',
+    specs: ['Induction-ready base', 'Soft-grip handles', 'Dishwasher safe'],
+    description: 'Boil, simmer, and sauce on any cooktop.',
+  },
+  {
+    id: 'sup-home-shower-curtain',
+    sku: 'SUPPLY_HOME_SHOWER_CURT',
+    title: 'Shower curtain kit',
+    subtitle: 'Liner + rings · mildew resistant',
+    priceAud: 36,
+    previewStyle: 'blue',
+    categoryId: 'bathroom',
+    specs: ['180 cm drop', 'Weighted hem', '12 hooks'],
+    description: 'Privacy and splash control from day one.',
+  },
+  {
+    id: 'sup-home-bath-mat',
+    sku: 'SUPPLY_HOME_BATH_MAT',
+    title: 'Memory foam bath mat',
+    subtitle: '50 × 80 cm · non-slip',
+    priceAud: 34,
+    previewStyle: 'violet',
+    categoryId: 'bathroom',
+    specs: ['Quick-dry top', 'Machine wash', 'Rubber backing'],
+    description: 'Soft landing when the bathroom is still a work in progress.',
+  },
+  {
+    id: 'sup-home-storage',
+    sku: 'SUPPLY_HOME_STORAGE_3',
+    title: 'Storage bin trio',
+    subtitle: 'Stackable · 15 L each',
+    priceAud: 44,
+    previewStyle: 'slate',
+    categoryId: 'storage',
+    specs: ['Clear lids', 'Label clips', 'Pantry or wardrobe'],
+    description: 'Corral loose bits before you find a permanent drawer.',
+  },
+  {
+    id: 'sup-home-dinner-set',
+    sku: 'SUPPLY_HOME_DINNER_START',
+    title: 'Dinner starter set',
+    subtitle: '4 place settings · stoneware',
+    priceAud: 78,
+    previewStyle: 'blue',
+    categoryId: 'kitchen',
+    specs: ['Dinner + side plates', 'Bowls & mugs', 'Microwave safe'],
+    description: 'Eat at the counter or table without disposable plates.',
+  },
+  {
+    id: 'sup-home-led-bulbs',
+    sku: 'SUPPLY_HOME_LED_BULBS',
+    title: 'LED bulb multipack',
+    subtitle: '6 × A60 · 2700 K',
+    priceAud: 32,
+    previewStyle: 'violet',
+    categoryId: 'livingRoom',
+    specs: ['806 lm each', 'Dimmable compatible', '15-year rated life'],
+    description: 'Replace unknown globes with consistent warm light.',
+  },
+  {
+    id: 'sup-home-pedal-bin',
+    sku: 'SUPPLY_HOME_PEDAL_BIN',
+    title: 'Pedal bin (20 L)',
+    subtitle: 'Soft-close lid · kitchen',
+    priceAud: 72,
+    previewStyle: 'slate',
+    categoryId: 'kitchen',
+    specs: ['Fingerprint matte', 'Removable inner bucket', 'Charcoal filter slot'],
+    description: 'Keeps the new kitchen smelling like home, not takeaway.',
+  },
+  {
+    id: 'sup-kitchen-dishrack',
+    sku: 'SUPPLY_KITCHEN_DISH_RACK',
+    title: 'Dish drying rack',
+    subtitle: '2-tier · cutlery caddy',
+    priceAud: 54,
+    previewStyle: 'slate',
+    categoryId: 'kitchen',
+    specs: ['Rust-resistant wire', 'Drain spout', 'Fits standard sink'],
+    description: 'Air-dry dishes when the dishwasher is still on order.',
+  },
+  {
+    id: 'sup-bed-pillows',
+    sku: 'SUPPLY_BED_PILLOW_PAIR',
+    title: 'Pillow pair (standard)',
+    subtitle: 'Medium loft · breathable cover',
+    priceAud: 68,
+    previewStyle: 'violet',
+    categoryId: 'bedroom',
+    specs: ['48 × 73 cm', 'Machine wash cover', 'Allergen blocked fill'],
+    description: 'Fresh pillows for the first night in a new bed.',
+  },
+  {
+    id: 'sup-bed-blackout',
+    sku: 'SUPPLY_BED_BLACKOUT_PAIR',
+    title: 'Blackout curtains (pair)',
+    subtitle: '220 cm drop · charcoal',
+    priceAud: 112,
+    previewStyle: 'slate',
+    categoryId: 'bedroom',
+    specs: ['Thermal lining', 'Eyelet header', 'Blocks street light'],
+    description: 'Sleep past sunrise while boxes are still stacked.',
+  },
+  {
+    id: 'sup-bath-soap',
+    sku: 'SUPPLY_BATH_SOAP_SET',
+    title: 'Soap dispenser duo',
+    subtitle: 'Pump bottles · labels',
+    priceAud: 28,
+    previewStyle: 'blue',
+    categoryId: 'bathroom',
+    specs: ['300 ml glass', 'Non-slip base', 'Hand + body'],
+    description: 'Counter-ready wash station from day one.',
+  },
+  {
+    id: 'sup-living-throw',
+    sku: 'SUPPLY_LIVING_THROW',
+    title: 'Knit throw blanket',
+    subtitle: '130 × 170 cm · oatmeal',
+    priceAud: 74,
+    previewStyle: 'blue',
+    categoryId: 'livingRoom',
+    specs: ['Soft acrylic blend', 'Machine wash cold', 'Lightweight'],
+    description: 'Sofas and floor seating before the couch arrives.',
+  },
+  {
+    id: 'sup-living-coasters',
+    sku: 'SUPPLY_LIVING_COASTERS_6',
+    title: 'Coaster set (6)',
+    subtitle: 'Cork-backed · stone look',
+    priceAud: 22,
+    previewStyle: 'slate',
+    categoryId: 'livingRoom',
+    specs: ['10 cm round', 'Heat safe', 'Wipe clean'],
+    description: 'Protect fresh surfaces from the first coffee round.',
+  },
+  {
+    id: 'sup-laundry-hamper',
+    sku: 'SUPPLY_LAUNDRY_HAMPER',
+    title: 'Laundry hamper (wheeled)',
+    subtitle: 'Breathable liner · 60 L',
+    priceAud: 48,
+    previewStyle: 'violet',
+    categoryId: 'laundry',
+    specs: ['Steel frame', 'Removable bag', 'Lock casters'],
+    description: 'Rolls from bedroom to machine in one trip.',
+  },
+  {
+    id: 'sup-laundry-detergent',
+    sku: 'SUPPLY_LAUNDRY_LIQUID_2L',
+    title: 'Laundry liquid (2 L)',
+    subtitle: 'Concentrated · sensitive',
+    priceAud: 26,
+    previewStyle: 'blue',
+    categoryId: 'laundry',
+    specs: ['HE compatible', 'Low fragrance', 'Plant-based surfactants'],
+    description: 'First full loads without a supermarket detour.',
+  },
+  {
+    id: 'sup-laundry-hangers',
+    sku: 'SUPPLY_LAUNDRY_HANGERS_30',
+    title: 'Velvet hangers (30)',
+    subtitle: 'Slim · non-slip',
+    priceAud: 34,
+    previewStyle: 'slate',
+    categoryId: 'laundry',
+    specs: ['Shoulder notches', 'Swivel hook', 'Space saving'],
+    description: 'Wardrobe rails stay neat while you unpack.',
+  },
+  {
+    id: 'sup-laundry-airer',
+    sku: 'SUPPLY_LAUNDRY_AIRER',
+    title: 'Fold clothes airer',
+    subtitle: 'Wing · 18 m line',
+    priceAud: 42,
+    previewStyle: 'violet',
+    categoryId: 'laundry',
+    specs: ['Powder coat steel', 'Folds flat', 'Indoor / balcony'],
+    description: 'Air-dry delicates before the dryer is hooked up.',
+  },
+  {
+    id: 'sup-store-vacuum-bags',
+    sku: 'SUPPLY_STORE_VAC_BAGS',
+    title: 'Vacuum storage bags (6)',
+    subtitle: 'Jumbo + large mix',
+    priceAud: 36,
+    previewStyle: 'slate',
+    categoryId: 'storage',
+    specs: ['Hand pump included', 'Airtight valve', 'Seasonal bedding'],
+    description: 'Shrink bulky textiles under beds and shelves.',
+  },
+  {
+    id: 'sup-store-cubes',
+    sku: 'SUPPLY_STORE_FABRIC_CUBE_2',
+    title: 'Fabric cube bins (2)',
+    subtitle: '28 cm · label window',
+    priceAud: 32,
+    previewStyle: 'violet',
+    categoryId: 'storage',
+    specs: ['Collapsible', 'Fits Kallax-style units', 'Reinforced handles'],
+    description: 'Sort cables, tools, and odds in open shelving.',
+  },
+]
+
+export const SUPPLY_PRODUCTS: readonly SupplyProduct[] = SUPPLY_PRODUCT_DEFS.map((row) => ({
+  ...row,
+  coverImageUrl: `/supplies/${row.id}.png`,
+}))
+
+/** Rich hero copy for the marketplace bundle sheet (optional). */
+export type MarketplaceBundleMarketing = {
+  /** Lead line under the title. */
+  subtitle: string
+  whatsInside: readonly string[]
+  perfectFor: readonly string[]
+  closing: string
+}
+
+/** Curated “bundle & save” offer per supplies category (prices AUD). */
+export type MarketplaceBundleDef = {
+  id: string
+  categoryId: SupplyCategoryId
+  title: string
+  tagline: string
+  /** What’s included — must match {@link SUPPLY_PRODUCTS} ids for that category. */
+  productIds: readonly string[]
+  /** Bundle checkout total (typically below {@link bundleRetailTotalAud}). */
+  bundlePriceAud: number
+  /** Structured marketing (cleaning kit hero, etc.). */
+  marketing?: MarketplaceBundleMarketing
+}
+
+const MARKETPLACE_BUNDLES: readonly MarketplaceBundleDef[] = [
+  {
+    id: 'bundle-drinks-fridge',
+    categoryId: 'drinks',
+    title: 'Fridge starter drinks pack',
+    tagline: 'Soft drinks, sparkling water, sports, and iced tea — one delivery.',
+    productIds: [
+      'sup-drink-soft-case',
+      'sup-drink-sparkling-12',
+      'sup-drink-sports-6',
+      'sup-drink-iced-tea-8',
+    ],
+    bundlePriceAud: 109,
+  },
+  {
+    id: 'bundle-clean-essentials',
+    categoryId: 'cleaning',
+    title: 'ULTIMATE HOME CLEAN KIT',
+    tagline: 'Everything you need to clean your entire home in one delivery.',
+    productIds: [
+      'sup-clean-spray-trio',
+      'sup-clean-glass',
+      'sup-clean-degrease',
+      'sup-clean-floor',
+      'sup-clean-toilet',
+      'sup-clean-micro-bulk',
+      'sup-clean-gloves-nitrile',
+      'sup-clean-odour',
+      'sup-clean-mop-pads',
+    ],
+    bundlePriceAud: 149,
+    marketing: {
+      subtitle: 'Everything you need to clean your entire home in one delivery.',
+      whatsInside: [
+        'Multi-purpose cleaner',
+        'Bathroom cleaner',
+        'Glass cleaner',
+        'Floor cleaner',
+        'Toilet cleaner',
+        'Spray mop with reusable pad',
+        'Mop bucket',
+        'Microfibre cloth pack',
+        'Heavy-duty sponge pack',
+        'Scrub brush',
+        'Rubber cleaning gloves',
+        'Antibacterial wipes',
+        'Bin bags',
+        'Paper towel pack',
+        'Air freshener',
+      ],
+      perfectFor: [
+        'Full home reset',
+        'Move-in / move-out cleans',
+        'Weekly deep cleaning',
+      ],
+      closing: 'Delivered fast. No extra shopping needed.',
+    },
+  },
+  {
+    id: 'bundle-move-starter',
+    categoryId: 'packing',
+    title: 'Move-in box bundle',
+    tagline: 'Cartons, tape, and room markers sized for a 1–2 bedroom pack-out.',
+    productIds: ['sup-pack-move-kit', 'sup-pack-tape-kit', 'sup-pack-markers'],
+    bundlePriceAud: 129,
+  },
+  {
+    id: 'bundle-kitchen-move-in',
+    categoryId: 'kitchen',
+    title: 'Kitchen move-in bundle',
+    tagline: 'Kettle, utensil block, dinner set, and dish rack.',
+    productIds: ['sup-home-kettle', 'sup-home-utensils', 'sup-home-dinner-set', 'sup-kitchen-dishrack'],
+    bundlePriceAud: 239,
+  },
+  {
+    id: 'bundle-bedroom-sleep',
+    categoryId: 'bedroom',
+    title: 'Sleep-ready bundle',
+    tagline: 'Queen cotton sheets plus a fresh pillow pair.',
+    productIds: ['sup-home-bedding-queen', 'sup-bed-pillows'],
+    bundlePriceAud: 149,
+  },
+  {
+    id: 'bundle-bathroom-fresh',
+    categoryId: 'bathroom',
+    title: 'Bathroom day-one bundle',
+    tagline: 'Towels, shower kit, mat, and soap dispensers.',
+    productIds: ['sup-home-bath-towels', 'sup-home-shower-curtain', 'sup-home-bath-mat', 'sup-bath-soap'],
+    bundlePriceAud: 129,
+  },
+  {
+    id: 'bundle-living-cosy',
+    categoryId: 'livingRoom',
+    title: 'Living room starter',
+    tagline: 'LED lamp, warm bulbs, throw, and coasters.',
+    productIds: ['sup-home-desk-lamp', 'sup-home-led-bulbs', 'sup-living-throw', 'sup-living-coasters'],
+    bundlePriceAud: 159,
+  },
+  {
+    id: 'bundle-laundry-move-in',
+    categoryId: 'laundry',
+    title: 'Laundry setup bundle',
+    tagline: 'Hamper, liquid, hangers, and fold airer.',
+    productIds: ['sup-laundry-hamper', 'sup-laundry-detergent', 'sup-laundry-hangers', 'sup-laundry-airer'],
+    bundlePriceAud: 129,
+  },
+  {
+    id: 'bundle-storage-trio',
+    categoryId: 'storage',
+    title: 'Storage starter bundle',
+    tagline: 'Stackable bins, vacuum bags, and fabric cubes.',
+    productIds: ['sup-home-storage', 'sup-store-vacuum-bags', 'sup-store-cubes'],
+    bundlePriceAud: 99,
+  },
+]
+
+export function getMarketplaceBundleForCategory(
+  categoryId: SupplyCategoryId,
+): MarketplaceBundleDef | null {
+  return MARKETPLACE_BUNDLES.find((b) => b.categoryId === categoryId) ?? null
+}
+
+export function resolveBundleProducts(
+  bundle: MarketplaceBundleDef,
+  productById: ReadonlyMap<string, SupplyProduct>,
+): SupplyProduct[] {
+  const out: SupplyProduct[] = []
+  for (const id of bundle.productIds) {
+    const p = productById.get(id)
+    if (p) out.push(p)
+  }
+  return out
+}
+
+export function bundleRetailTotalAud(products: readonly SupplyProduct[]): number {
+  return products.reduce((sum, p) => sum + p.priceAud, 0)
+}
+
+export function getSupplyProductsByCategory(id: SupplyCategoryId): readonly SupplyProduct[] {
+  return SUPPLY_PRODUCTS.filter((p) => p.categoryId === id)
+}
+
