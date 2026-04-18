@@ -5,6 +5,22 @@ import tailwindcss from '@tailwindcss/vite'
 const fetchDevApiPort = process.env.FETCH_DEV_API_PORT || '8787'
 const fetchDevVitePort = Number(process.env.FETCH_DEV_PORT || 5174)
 
+/** Extra dev/preview hostnames allowed past Vite’s host check (proxies, cloud IDEs, Docker). */
+function extraAllowedHostsFromEnv(): string[] {
+  const split = (value: string | undefined) =>
+    value
+      ?.split(',')
+      .map((h) => h.trim())
+      .filter(Boolean) ?? []
+  const fromFetch = split(process.env.FETCH_VITE_ALLOWED_HOSTS)
+  const fromVite = split(process.env.__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS)
+  return [...new Set([...fromFetch, ...fromVite])]
+}
+
+const extraAllowedHosts = extraAllowedHostsFromEnv()
+const allowedHostsOption =
+  extraAllowedHosts.length > 0 ? { allowedHosts: extraAllowedHosts } : {}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -33,6 +49,7 @@ export default defineConfig({
   server: {
     host: true,
     port: fetchDevVitePort,
+    ...allowedHostsOption,
     proxy: {
       '/api': {
         target: `http://127.0.0.1:${fetchDevApiPort}`,
@@ -52,6 +69,7 @@ export default defineConfig({
     },
   },
   preview: {
+    ...allowedHostsOption,
     proxy: {
       '/api': {
         target: `http://127.0.0.1:${fetchDevApiPort}`,
