@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { loadSession } from '../lib/fetchUserSession'
-import { FETCH_REWARD_CARD_GLOSS, FETCH_REWARD_CARD_SHELL, FETCH_REWARD_CARD_VIGNETTE } from './fetchRewardCardShell'
+import { FETCH_REWARD_CARD_SHELL } from './fetchRewardCardShell'
 
 const DEMO_AVATAR_URLS = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&q=82',
@@ -16,7 +16,7 @@ function avatarIndexFromSession(): number {
   return h % DEMO_AVATAR_URLS.length
 }
 
-/** SVG boomerang — crisp vector for premium glow treatment */
+/** SVG boomerang */
 function BoomerangRewardIcon({ className = '' }: { className?: string }) {
   return (
     <svg
@@ -32,16 +32,8 @@ function BoomerangRewardIcon({ className = '' }: { className?: string }) {
           <stop offset="0.45" stopColor="#fb923c" />
           <stop offset="1" stopColor="#c084fc" />
         </linearGradient>
-        <filter id="fetchBoomGlow" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="3" result="b" />
-          <feMerge>
-            <feMergeNode in="b" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
       </defs>
       <path
-        filter="url(#fetchBoomGlow)"
         fill="url(#fetchBoomBody)"
         d="M44 14c-6.5 8.5-18 14-28 16-3 .7-6 1-8 1.2-.8.1-1.5-.5-1.6-1.3-.1-.8.4-1.5 1.2-1.7 2-.4 5.5-1.4 9.6-3.2 9.8-4.4 17.6-11.8 21-19.6.4-.9 1.3-1.4 2.3-1.3 1 .2 1.7 1 1.8 2 .2 2.8 0 5.9-.8 9.7Z"
       />
@@ -72,22 +64,11 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
       className={[FETCH_REWARD_CARD_SHELL, 'px-3.5 pb-4 pt-4', className].join(' ')}
       aria-label="Your Fetch rank and progress"
     >
-      <div className={FETCH_REWARD_CARD_GLOSS} aria-hidden />
-      <div className={FETCH_REWARD_CARD_VIGNETTE} aria-hidden />
-
       <div className="relative flex gap-3">
         {/* Avatar + ring */}
         <div className="relative shrink-0">
-          <div
-            className="relative size-[4.5rem] rounded-full p-[3px]"
-            style={{
-              background:
-                'conic-gradient(from 210deg, #fbbf24, #f97316, #c084fc, #a855f7, #fbbf24)',
-              boxShadow:
-                '0 0 24px rgba(251,191,36,0.35), 0 0 40px rgba(168,85,247,0.22), inset 0 1px 0 rgba(255,255,255,0.25)',
-            }}
-          >
-            <div className="relative size-full overflow-hidden rounded-full bg-[#0a0a0c] ring-1 ring-black/60">
+          <div className="relative size-[4.5rem] rounded-full ring-2 ring-white/15 ring-offset-2 ring-offset-[#25282f]">
+            <div className="relative size-full overflow-hidden rounded-full bg-[#1a1d22] ring-1 ring-black/40">
               <img
                 src={avatarSrc}
                 alt=""
@@ -101,8 +82,8 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
               />
             </div>
           </div>
-          <div className="absolute -bottom-0.5 left-1/2 z-[2] -translate-x-1/2 whitespace-nowrap rounded-md border border-amber-400/35 bg-[linear-gradient(180deg,rgba(28,22,12,0.95)_0%,rgba(12,10,8,0.98)_100%)] px-2 py-0.5 shadow-[0_4px_12px_rgba(0,0,0,0.5),0_0_12px_rgba(251,191,36,0.25)]">
-            <span className="text-[9px] font-black uppercase tracking-[0.12em] text-amber-100/95">
+          <div className="absolute -bottom-0.5 left-1/2 z-[2] -translate-x-1/2 whitespace-nowrap rounded-md border border-white/12 bg-[#1c1f26] px-2 py-0.5">
+            <span className="text-[9px] font-black uppercase tracking-[0.12em] text-white/90">
               Rank 1
             </span>
           </div>
@@ -111,7 +92,7 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
         {/* Main copy */}
         <div className="min-w-0 flex-1 pt-0.5">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/38">Level 4</p>
-          <h3 className="mt-0.5 truncate bg-gradient-to-br from-white via-white to-white/75 bg-clip-text text-[1.375rem] font-black leading-[1.1] tracking-[-0.03em] text-transparent drop-shadow-[0_1px_24px_rgba(255,255,255,0.08)]">
+          <h3 className="mt-0.5 truncate text-[1.375rem] font-black leading-[1.1] tracking-[-0.03em] text-white">
             Hustler
           </h3>
 
@@ -122,14 +103,14 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
               </span>
             </div>
             <div
-              className="h-2 overflow-hidden rounded-full bg-black/55 ring-1 ring-white/[0.07]"
+              className="h-2 overflow-hidden rounded-full bg-black/40 ring-1 ring-white/[0.06]"
               role="progressbar"
               aria-valuenow={xpCurrent}
               aria-valuemin={0}
               aria-valuemax={xpMax}
             >
               <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-violet-500 shadow-[0_0_16px_rgba(251,146,60,0.45)]"
+                className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-violet-500"
                 style={{ width: `${pct}%` }}
               />
             </div>
@@ -139,10 +120,9 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
         {/* Reward column */}
         <div className="flex w-[5.25rem] shrink-0 flex-col items-end gap-1.5 pt-0.5 text-right">
           <div
-            className="relative flex size-[3.25rem] items-center justify-center rounded-2xl border border-white/[0.08] bg-black/40 shadow-[0_0_24px_rgba(168,85,247,0.25),0_0_18px_rgba(251,191,36,0.15),inset_0_1px_0_rgba(255,255,255,0.12)]"
+            className="relative flex size-[3.25rem] items-center justify-center rounded-xl border border-white/[0.10] bg-[#1a1d22]"
             aria-hidden
           >
-            <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_50%_30%,rgba(251,191,36,0.2)_0%,transparent_65%)]" />
             <BoomerangRewardIcon className="relative z-[1] h-9 w-9" />
           </div>
           <p className="max-w-[5.5rem] text-[10px] font-semibold leading-snug text-white/55">

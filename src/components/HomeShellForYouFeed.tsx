@@ -273,8 +273,8 @@ function ExploreEmbedCategoryTallCarousel({
                   className={[
                     'fetch-explore-embed-category-card__circle relative flex size-[3rem] shrink-0 items-center justify-center rounded-full',
                     selected
-                      ? 'fetch-explore-embed-category-card__circle--active bg-[#ffffff] shadow-[0_0_0_1px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95),0_6px_18px_-9px_rgba(0,0,0,0.45)]'
-                      : 'bg-[#25282f] shadow-[0_0_0_1px_rgba(255,255,255,0.12),inset_0_1px_0_rgba(255,255,255,0.14),0_8px_22px_-12px_rgba(0,0,0,0.55)]',
+                      ? 'fetch-explore-embed-category-card__circle--active bg-[#ffffff] ring-1 ring-black/10'
+                      : 'bg-[#25282f] ring-1 ring-white/[0.10]',
                   ].join(' ')}
                 >
                   <span
@@ -875,13 +875,16 @@ function HomeShellForYouFeedInner({
         role="region"
         aria-label="Explore feed"
       >
-        <div className="sticky top-0 z-10 shrink-0 border-b border-white/[0.08] bg-[#1a1d22] pt-[max(0.5rem,env(safe-area-inset-top))]">
-          <div className="flex flex-col gap-2.5 px-3 pb-3 pt-1">
-            <FetchRankProgressCard />
-            <div className="grid grid-cols-2 gap-2">
-              <FetchDailyStreakCard compact />
-              <FetchWeeklyGoalCard compact />
-            </div>
+        <div className="sticky top-0 z-10 shrink-0 bg-[#1a1d22] pt-[max(0.5rem,env(safe-area-inset-top))]">
+          <header className="border-b border-white/[0.08] px-3 pb-3 pt-2">
+            <h2 className="sr-only">Explore</h2>
+          </header>
+        </div>
+        <div className="flex flex-col gap-2.5 bg-[#1a1d22] px-3 pb-2 pt-5">
+          <FetchRankProgressCard />
+          <div className="grid grid-cols-2 gap-2">
+            <FetchDailyStreakCard compact />
+            <FetchWeeklyGoalCard compact />
           </div>
         </div>
         <ExploreEmbedCategoryTallCarousel
@@ -919,13 +922,16 @@ function HomeShellForYouFeedInner({
       role="region"
       aria-label="For you — items and videos"
     >
-      <div className="shrink-0 border-b border-white/[0.08] bg-[#1a1d22] pb-4 pt-[max(0.25rem,env(safe-area-inset-top))]">
-        <div className="flex flex-col gap-2.5 px-0.5 pt-1">
-          <FetchRankProgressCard />
-          <div className="grid grid-cols-2 gap-2">
-            <FetchDailyStreakCard compact />
-            <FetchWeeklyGoalCard compact />
-          </div>
+      <div className="shrink-0 bg-[#1a1d22] pt-[max(0.25rem,env(safe-area-inset-top))]">
+        <header className="border-b border-white/[0.08] px-0.5 pb-3 pt-2">
+          <h2 className="sr-only">For you</h2>
+        </header>
+      </div>
+      <div className="flex flex-col gap-2.5 border-b border-white/[0.08] bg-[#1a1d22] px-0.5 pb-4 pt-5">
+        <FetchRankProgressCard />
+        <div className="grid grid-cols-2 gap-2">
+          <FetchDailyStreakCard compact />
+          <FetchWeeklyGoalCard compact />
         </div>
       </div>
 

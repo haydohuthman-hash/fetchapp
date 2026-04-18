@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { FETCH_REWARD_CARD_GLOSS, FETCH_REWARD_CARD_SHELL, FETCH_REWARD_CARD_VIGNETTE } from './fetchRewardCardShell'
+import { FETCH_REWARD_CARD_SHELL } from './fetchRewardCardShell'
 
 function PremiumTreasureChest({ uid, size }: { uid: string; size: 'md' | 'sm' }) {
   const gid = `wk-chest-${uid.replace(/:/g, '')}`
@@ -80,57 +80,34 @@ export function FetchWeeklyGoalCard({ className = '', compact = false }: FetchWe
       className={[FETCH_REWARD_CARD_SHELL, pad, 'min-h-0 min-w-0', className].join(' ')}
       aria-label="Weekly goal reward progress"
     >
-      <div className={FETCH_REWARD_CARD_GLOSS} aria-hidden />
-      <div className={FETCH_REWARD_CARD_VIGNETTE} aria-hidden />
-
       <div className="relative flex gap-2 sm:gap-3">
         <div className="min-w-0 flex-1 pt-0.5">
           <p className={`text-[10px] font-bold uppercase ${titleTrack} text-white/38`}>Weekly Goal</p>
-          <p
-            className={`mt-0.5 bg-gradient-to-br from-white via-white to-white/72 bg-clip-text ${headline} font-black tabular-nums leading-none tracking-[-0.03em] text-transparent`}
-          >
+          <p className={`mt-0.5 ${headline} font-black tabular-nums leading-none tracking-[-0.03em] text-white`}>
             {current} / {target}
           </p>
           <p className={`mt-0.5 ${micro} font-medium leading-snug text-white/48`}>Go live or list items</p>
 
           <div className={`${barMt} space-y-1.5`}>
             <div
-              className="h-2 overflow-hidden rounded-full bg-black/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.09]"
+              className="h-2 overflow-hidden rounded-full bg-black/40 ring-1 ring-white/[0.08]"
               role="progressbar"
               aria-valuenow={current}
               aria-valuemin={0}
               aria-valuemax={target}
             >
               <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-violet-500 shadow-[0_0_14px_rgba(251,146,60,0.4)]"
+                className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-violet-500"
                 style={{ width: `${pct}%` }}
               />
             </div>
           </div>
         </div>
 
-        {/* Reward chest — premium capsule + sparkles */}
+        {/* Reward chest */}
         <div className={`relative flex ${chestCol} shrink-0 flex-col items-center justify-center`}>
           <div
-            className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_50%_35%,rgba(251,191,36,0.18)_0%,transparent_62%)]"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute -right-1 top-2 h-1.5 w-1.5 rounded-full bg-amber-200/90 blur-[2px]"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute right-2 top-6 h-1 w-1 rounded-full bg-violet-300/80 blur-[1px]"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute bottom-8 left-1 h-1 w-1 rounded-full bg-orange-300/75 blur-[1px]"
-            aria-hidden
-          />
-
-          <div
-            className={`relative flex ${chestWrap} items-center justify-center rounded-2xl border border-white/[0.10] bg-black/45 shadow-[0_0_28px_rgba(168,85,247,0.24),0_0_22px_rgba(251,191,36,0.16),inset_0_1px_0_rgba(255,255,255,0.14)] ${compact ? 'mx-auto' : ''}`}
-            style={{ filter: 'drop-shadow(0 0 14px rgba(251,191,36,0.2))' }}
+            className={`relative flex ${chestWrap} items-center justify-center rounded-xl border border-white/[0.10] bg-[#1a1d22] ${compact ? 'mx-auto' : ''}`}
           >
             <PremiumTreasureChest uid={uid} size={compact ? 'sm' : 'md'} />
           </div>

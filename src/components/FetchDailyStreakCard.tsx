@@ -1,6 +1,6 @@
 import { useId, useMemo } from 'react'
 import { loadSession } from '../lib/fetchUserSession'
-import { FETCH_REWARD_CARD_GLOSS, FETCH_REWARD_CARD_SHELL, FETCH_REWARD_CARD_VIGNETTE } from './fetchRewardCardShell'
+import { FETCH_REWARD_CARD_SHELL } from './fetchRewardCardShell'
 
 function streakDemoFromSession(): { completedInWeek: number } {
   const email = loadSession()?.email?.trim() ?? ''
@@ -25,7 +25,6 @@ function StreakFlameIcon({ gradientId, className = 'h-9 w-9' }: { gradientId: st
       <path
         fill={`url(#${gradientId})`}
         d="M24 6c-1.2 3.2-4 5.8-4 10.5 0 2.2 1 4.2 2.2 5.8-.5-4 1.8-8.2 5.5-10.8C26.5 15 24 19.5 24 24c0-4 2.8-7.8 6.5-9.5 1.8 2.8 2.5 6.2 2.5 9.5 0 8.2-6.5 14.5-14.8 15.8-.5.1-1 .1-1.5.1C8 39.8 4 34.5 4 28.5c0-5 3-9.5 7.5-11.5C12 12 17.5 8 24 6Z"
-        style={{ filter: 'drop-shadow(0 0 10px rgba(251,146,60,0.55)) drop-shadow(0 0 18px rgba(168,85,247,0.35))' }}
       />
       <path
         fill={`url(#${gradientId})`}
@@ -67,24 +66,18 @@ export function FetchDailyStreakCard({ className = '', compact = false }: FetchD
       className={[FETCH_REWARD_CARD_SHELL, pad, 'min-h-0 min-w-0', className].join(' ')}
       aria-label="Daily streak reward progress"
     >
-      <div className={FETCH_REWARD_CARD_GLOSS} aria-hidden />
-      <div className={FETCH_REWARD_CARD_VIGNETTE} aria-hidden />
-
       <div className="relative flex gap-3">
         {/* Icon tile — same vocabulary as rank card reward capsule */}
         <div
-          className={`relative flex ${iconBox} shrink-0 items-center justify-center rounded-2xl border border-white/[0.10] bg-black/45 shadow-[0_0_28px_rgba(251,146,60,0.22),0_0_22px_rgba(168,85,247,0.18),inset_0_1px_0_rgba(255,255,255,0.14)]`}
+          className={`relative flex ${iconBox} shrink-0 items-center justify-center rounded-xl border border-white/[0.10] bg-[#1a1d22]`}
           aria-hidden
         >
-          <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_40%_25%,rgba(251,191,36,0.22)_0%,transparent_62%)]" />
           <StreakFlameIcon gradientId={flameGradId} className={flameSvg} />
         </div>
 
         <div className="min-w-0 flex-1">
           <p className={`text-[10px] font-bold uppercase ${titleTrack} text-white/38`}>Daily Streak</p>
-          <p
-            className={`mt-0.5 bg-gradient-to-br from-white via-white to-white/70 bg-clip-text ${headlineSize} font-black leading-none tracking-[-0.03em] text-transparent`}
-          >
+          <p className={`mt-0.5 ${headlineSize} font-black leading-none tracking-[-0.03em] text-white`}>
             7 days
           </p>
           <p className={`mt-0.5 ${microSub} font-medium leading-snug text-white/48`}>Keep it going</p>
@@ -97,7 +90,7 @@ export function FetchDailyStreakCard({ className = '', compact = false }: FetchD
             />
             {completedInWeek > 1 ? (
               <div
-                className={`pointer-events-none absolute ${trackTop} h-[2px] -translate-y-1/2 rounded-full bg-gradient-to-r from-amber-400/85 via-orange-500/75 to-violet-500/65 shadow-[0_0_14px_rgba(251,146,60,0.45)]`}
+                className={`pointer-events-none absolute ${trackTop} h-[2px] -translate-y-1/2 rounded-full bg-gradient-to-r from-amber-400/85 via-orange-500/75 to-violet-500/65`}
                 style={{
                   left: `${(100 / 14) * 1}%`,
                   width: `${((completedInWeek - 1) / 7) * 100}%`,
@@ -115,21 +108,15 @@ export function FetchDailyStreakCard({ className = '', compact = false }: FetchD
                       className={[
                         `relative flex ${dotSize} items-center justify-center rounded-full transition-all duration-300`,
                         done
-                          ? 'border border-amber-400/45 bg-[linear-gradient(155deg,rgba(251,191,36,0.35)_0%,rgba(249,115,22,0.22)_45%,rgba(168,85,247,0.2)_100%)] shadow-[0_0_14px_rgba(251,146,60,0.35),inset_0_1px_0_rgba(255,255,255,0.22)]'
+                          ? 'border border-white/15 bg-[#323741]'
                           : 'border border-white/[0.12] bg-black/50 shadow-inner',
-                        isLastDone ? 'ring-2 ring-amber-400/25 ring-offset-2 ring-offset-[#0f1014]' : '',
+                        isLastDone ? 'ring-2 ring-[#00ff6a]/35 ring-offset-2 ring-offset-[#25282f]' : '',
                       ].join(' ')}
                     >
                       {done ? (
                         <>
-                          <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_25%,rgba(255,255,255,0.35)_0%,transparent_55%)] opacity-90" />
+                          <span className="absolute inset-0 rounded-full bg-white/[0.06]" />
                           <span className={`relative ${dotFont} font-black tabular-nums text-white/95`}>{i + 1}</span>
-                          {isLastDone ? (
-                            <span
-                              className="pointer-events-none absolute -inset-[3px] rounded-full opacity-55 blur-[6px] bg-gradient-to-tr from-amber-400/45 via-orange-500/28 to-violet-500/35"
-                              aria-hidden
-                            />
-                          ) : null}
                         </>
                       ) : (
                         <span className={`${dotFont} font-bold tabular-nums text-white/28`}>{i + 1}</span>
