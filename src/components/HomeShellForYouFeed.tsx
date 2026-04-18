@@ -683,72 +683,9 @@ function filterReelsForBrowseFilter(
   })
 }
 
-type EmbedFeedTab = 'local' | 'global'
 type EmbedSectionKey = 'live' | 'sellers' | 'featured' | 'grid'
 
 const EMBED_FEED_SECTION_ORDER: EmbedSectionKey[] = ['live', 'sellers', 'featured', 'grid']
-
-function ForYouPremiumFeedTabs({
-  value,
-  onChange,
-}: {
-  value: EmbedFeedTab
-  onChange: (next: EmbedFeedTab) => void
-}) {
-  const tabs: { id: EmbedFeedTab; label: string }[] = [
-    { id: 'local', label: 'Local' },
-    { id: 'global', label: 'Global' },
-  ]
-  return (
-    <div className="mt-2 w-full min-w-0 self-stretch px-3" role="tablist" aria-label="Feed">
-      <div
-        className={[
-          'relative isolate w-full overflow-hidden rounded-2xl',
-          /* Charcoal-tinted glass — low fill opacity so blur reads through (matches #1a1d22 shell). */
-          'border border-white/[0.1]',
-          'bg-[rgba(26,29,34,0.38)]',
-          'shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_10px_36px_-14px_rgba(0,0,0,0.45)]',
-          'backdrop-blur-2xl backdrop-saturate-[1.35]',
-          '[-webkit-backdrop-filter:blur(24px)_saturate(1.35)]',
-        ].join(' ')}
-      >
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-px bg-gradient-to-r from-transparent via-white/[0.18] to-transparent"
-          aria-hidden
-        />
-        <div className="relative z-[2] flex w-full items-stretch gap-0.5 p-[5px] sm:gap-1 sm:p-1">
-          {tabs.map((t) => {
-            const selected = value === t.id
-            return (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                className={[
-                  'fetch-embed-feed-tab min-w-0 flex-1 rounded-xl px-2 py-2 text-center text-[11px] font-semibold leading-tight tracking-[-0.02em]',
-                  'transition-[color,background-color,box-shadow,transform] duration-200 ease-out',
-                  'sm:px-3 sm:py-2.5 sm:text-[12px]',
-                  selected
-                    ? 'relative z-[1] fetch-embed-feed-tab--active'
-                    : [
-                        'bg-transparent text-white/42',
-                        'shadow-none ring-0',
-                        'hover:text-white/78',
-                        'active:scale-[0.98]',
-                      ].join(' '),
-                ].join(' ')}
-                onClick={() => onChange(t.id)}
-              >
-                <span className="block truncate">{t.label}</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function HomeShellForYouFeedInner({
   onOpenDrops,
@@ -778,7 +715,6 @@ function HomeShellForYouFeedInner({
     return allListings
   }, [browseCategory, allListings])
 
-  const [embedFeedTab, setEmbedFeedTab] = useState<EmbedFeedTab>('local')
   const [embedCategoryId, setEmbedCategoryId] = useState<string>('explore-all')
 
   const embedCategoryHandoff = useMemo((): MarketplacePeerBrowseFilter => {
@@ -810,8 +746,6 @@ function HomeShellForYouFeedInner({
 
   const embedGridListings = useMemo(() => embedFilteredListings.slice(0, 12), [embedFilteredListings])
 
-  const scopeLabel = embedFeedTab === 'local' ? 'near you' : 'worldwide'
-
   const openEmbedMarketplaceFiltered = useCallback(() => {
     if (onOpenMarketplaceBrowse) {
       onOpenMarketplaceBrowse(embedCategoryHandoff)
@@ -827,7 +761,7 @@ function HomeShellForYouFeedInner({
         <section className="mb-1 min-w-0" aria-labelledby="fetch-embed-live-feed-heading">
           <div className="mb-0 flex items-center gap-1 px-3">
             <h3 id="fetch-embed-live-feed-heading" className={EMBED_FEED_SECTION_TITLE_CLASS}>
-              Lives {scopeLabel}
+              Lives near you
             </h3>
             <button
               type="button"
@@ -879,7 +813,7 @@ function HomeShellForYouFeedInner({
         <section className="mb-1 min-w-0" aria-labelledby="fetch-featured-near-you-heading">
           <div className="mb-0 flex items-center gap-1 px-3">
             <h3 id="fetch-featured-near-you-heading" className={EMBED_FEED_SECTION_TITLE_CLASS}>
-              Listings {scopeLabel}
+              Listings near you
             </h3>
             <button
               type="button"
@@ -921,7 +855,6 @@ function HomeShellForYouFeedInner({
     }
   }, [
     embedded,
-    scopeLabel,
     embedFilteredReels,
     embedTopSellers,
     embedFeaturedListings,
@@ -951,7 +884,6 @@ function HomeShellForYouFeedInner({
             </div>
           </div>
         </div>
-        <ForYouPremiumFeedTabs value={embedFeedTab} onChange={setEmbedFeedTab} />
         <ExploreEmbedCategoryTallCarousel
           selectedId={embedCategoryId}
           onSelect={(def) => setEmbedCategoryId(def.id)}
