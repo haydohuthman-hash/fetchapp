@@ -8,13 +8,13 @@
   /* User accent (overridden by FetchAccentProvider + boot script in index.html). */
   --fetch-accent: #00ff6a;
   --fetch-accent-rgb: 0, 255, 106;
-  --fetch-bottom-nav-chrome: #1a1d22;
+  --fetch-bottom-nav-chrome: #ffffff;
   /* Warm secondary (listings / Drops) — use in CSS or Tailwind where needed. */
   --fetch-accent-warm: #00ff6a;
   --fetch-accent-warm-rgb: 0, 255, 106;
-  /* Solid bar behind compact shell tabs (white bar + dark icons). */
-  --fetch-bottom-nav-bar-surface: #1a1d22;
-  --fetch-bottom-nav-bar-border: rgba(255, 255, 255, 0.08);
+  /* Solid bar behind compact shell tabs. */
+  --fetch-bottom-nav-bar-surface: #ffffff;
+  --fetch-bottom-nav-bar-border: rgba(15, 23, 42, 0.08);
   /* Fallback when --orb-glow is not set on a parent (e.g. shared input styles). */
   --orb-glow: 244, 246, 250;
   /* Centered phone column + bottom sheet geometry (shared with TS where noted). */
@@ -55,7 +55,13 @@ body {
 }
 
 html[data-fetch-theme='light'] .fetch-home-phone-stage {
-  background-color: #1a1d22;
+  background-color: #ffffff;
+}
+
+html[data-fetch-theme='dark'] {
+  --fetch-bottom-nav-chrome: #1a1d22;
+  --fetch-bottom-nav-bar-surface: #1a1d22;
+  --fetch-bottom-nav-bar-border: rgba(255, 255, 255, 0.08);
 }
 
 .fetch-home-phone-frame {
@@ -6802,12 +6808,22 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
   border-radius: 0;
+  background: var(--fetch-bottom-nav-bar-surface);
+  border-top: 1px solid var(--fetch-bottom-nav-bar-border);
+  box-shadow:
+    0 14px 32px -10px rgba(15, 23, 42, 0.08),
+    0 6px 14px -6px rgba(15, 23, 42, 0.06);
+  box-sizing: border-box;
+}
+
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
   background: #1a1d22;
+  border-top: none;
   box-shadow:
     0 14px 32px -10px rgba(0, 0, 0, 0.58),
     0 6px 14px -6px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.08);
-  box-sizing: border-box;
 }
 
 /* Auctions / marketplace: mask feed behind floating pill + stronger nav shadow */
@@ -6841,31 +6857,30 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   display: none;
 }
 
-/* Home-wide dark chrome: letterbox + phone column surface (soft charcoal — hair above pure black). */
-.fetch-home-phone-stage {
+/* Dark theme only: charcoal shell + Tailwind surface remaps (light app leaves utilities literal). */
+html[data-fetch-theme='dark'] .fetch-home-phone-stage {
   background-color: #1a1d22 !important;
   color: #fafafa !important;
 }
 
-.fetch-home-vision {
+html[data-fetch-theme='dark'] .fetch-home-vision {
   background-color: #1a1d22 !important;
   color: #fafafa !important;
 }
 
-/* Global app-shell dark theme: soft charcoal everywhere. */
-.fetch-app-shell-bg,
-.fetch-app-shell-inner {
+html[data-fetch-theme='dark'] .fetch-app-shell-bg,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner {
   background-color: #1a1d22 !important;
   color: #fafafa !important;
 }
 
-.fetch-app-shell-inner .bg-fetch-soft-gray,
-.fetch-app-shell-inner .bg-white,
-.fetch-app-shell-inner .bg-zinc-50,
-.fetch-app-shell-inner .bg-zinc-100,
-.fetch-app-shell-inner .bg-zinc-950,
-.fetch-app-shell-inner .bg-zinc-900,
-.fetch-app-shell-inner .bg-zinc-800 {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-fetch-soft-gray,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-white,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-50,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-100,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-950,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-900,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-800 {
   background-color: #1a1d22 !important;
 }
 
@@ -6886,63 +6901,64 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   opacity: 0.88;
 }
 
-.fetch-app-shell-inner .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active {
   background-color: transparent !important;
   box-shadow: none !important;
 }
 
-.fetch-app-shell-inner .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active:hover {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active:hover {
   background-color: transparent !important;
 }
 
-.fetch-app-shell-inner .fetch-explore-embed-category-card__circle--active {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .fetch-explore-embed-category-card__circle--active {
   background-color: #ffffff !important;
   box-shadow: none !important;
 }
 
-.fetch-app-shell-inner
+html[data-fetch-theme='dark']
+  .fetch-app-shell-inner
   .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active
   .fetch-explore-embed-category-card__label {
   color: #fafafa !important;
 }
 
-.fetch-app-shell-inner .bg-white\/95,
-.fetch-app-shell-inner .bg-white\/90,
-.fetch-app-shell-inner .bg-zinc-50\/90,
-.fetch-app-shell-inner .bg-zinc-50\/80,
-.fetch-app-shell-inner .bg-zinc-50\/70,
-.fetch-app-shell-inner .bg-zinc-50\/60,
-.fetch-app-shell-inner .bg-zinc-900\/95,
-.fetch-app-shell-inner .bg-zinc-900\/90,
-.fetch-app-shell-inner .bg-zinc-800\/90 {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-white\/95,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-white\/90,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-50\/90,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-50\/80,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-50\/70,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-50\/60,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-900\/95,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-900\/90,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-800\/90 {
   background-color: #1a1d22 !important;
 }
 
-.fetch-app-shell-inner .border-zinc-100,
-.fetch-app-shell-inner .border-zinc-200,
-.fetch-app-shell-inner .border-zinc-200\/80,
-.fetch-app-shell-inner .border-zinc-200\/90,
-.fetch-app-shell-inner .border-zinc-700,
-.fetch-app-shell-inner .border-zinc-800 {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .border-zinc-100,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .border-zinc-200,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .border-zinc-200\/80,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .border-zinc-200\/90,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .border-zinc-700,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .border-zinc-800 {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-.fetch-app-shell-inner .divide-zinc-200,
-.fetch-app-shell-inner .divide-zinc-200\/95,
-.fetch-app-shell-inner .divide-zinc-700,
-.fetch-app-shell-inner .divide-zinc-800 {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .divide-zinc-200,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .divide-zinc-200\/95,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .divide-zinc-700,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .divide-zinc-800 {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-.fetch-app-shell-inner .text-zinc-900,
-.fetch-app-shell-inner .text-zinc-800,
-.fetch-app-shell-inner .text-zinc-700 {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .text-zinc-900,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .text-zinc-800,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .text-zinc-700 {
   color: #f3f4f6 !important;
 }
 
-.fetch-app-shell-inner .text-zinc-600,
-.fetch-app-shell-inner .text-zinc-500,
-.fetch-app-shell-inner .text-zinc-400 {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .text-zinc-600,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .text-zinc-500,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .text-zinc-400 {
   color: #a1a1aa !important;
 }
 
@@ -7051,7 +7067,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   color: #18181b !important;
 }
 
-/* Explore full-page shell — charcoal (cards stay light via inner components). */
+/* Explore full-page shell — fills with nav chrome token (white in light theme). */
 .fetch-home-phone-stage main[aria-label='Explore'] {
   background-color: var(--fetch-bottom-nav-chrome) !important;
 }
@@ -7089,8 +7105,17 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   opacity: 1;
 }
 
-/* App header host: solid dark background matching bottom menu. */
-.fetch-home-phone-stage .fetch-app-address-header {
+/* App header host — light shell default; dark override below */
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-app-address-header {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border-bottom: 1px solid rgba(228, 228, 231, 0.95) !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-app-address-header {
   background-color: #1a1d22 !important;
   background-image: none !important;
   border: none !important;
@@ -7152,8 +7177,16 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   box-shadow: none !important;
 }
 
-/* Search bar: outline only (no fill); theme may remap generic `button`. */
-.fetch-home-phone-stage .fetch-app-address-header .fetch-header-search-bar {
+/* Search bar — light fill on white header */
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-app-address-header .fetch-header-search-bar {
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: rgba(228, 228, 231, 0.95) !important;
+  background-color: #fafafa !important;
+  background-image: none !important;
+}
+
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-app-address-header .fetch-header-search-bar {
   border-width: 1px !important;
   border-style: solid !important;
   border-color: rgba(255, 255, 255, 0.14) !important;
@@ -7416,50 +7449,86 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   outline-offset: 2px;
 }
 
-/* Home / shop / chat / reels dock: dark bar; muted icons + white active tab. */
+/* Home / shop / chat / reels dock */
 .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
   border-radius: 0;
-  background: #1a1d22;
+  background: var(--fetch-bottom-nav-bar-surface);
+  border-top: 1px solid var(--fetch-bottom-nav-bar-border);
   box-shadow: none;
   box-sizing: border-box;
 }
 
-/* Docked shell: inactive icons read white (same ink as active; weight/size differentiate tab). */
-.fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
-.fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
-.fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
+html[data-fetch-theme='dark'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav,
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
+  background: #1a1d22;
+  border-top: none;
+}
+
+/* Light dock: slate icons; accent green active */
+html[data-fetch-theme='light'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
+html[data-fetch-theme='light'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
+html[data-fetch-theme='light'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
+  color: rgba(17, 24, 39, 0.42) !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-booking-sheet__shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
+html[data-fetch-theme='light'] .fetch-home-marketplace-shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
+html[data-fetch-theme='light'] .fetch-home-reels-shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
+  color: rgba(17, 24, 39, 0.58) !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='light'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='light'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
+  color: var(--fetch-accent, #00ff6a) !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='light'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='light'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
+  color: var(--fetch-accent, #00ff6a) !important;
+}
+
+/* Dark dock: white icons */
+html[data-fetch-theme='dark'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
   color: #ffffff !important;
 }
 
-.fetch-home-booking-sheet__shell-footer
+html[data-fetch-theme='dark'] .fetch-home-booking-sheet__shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
-.fetch-home-marketplace-shell-footer
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
-.fetch-home-reels-shell-footer
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
   color: #ffffff !important;
 }
 
-.fetch-home-booking-sheet__shell-footer
+html[data-fetch-theme='dark'] .fetch-home-booking-sheet__shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active,
-.fetch-home-marketplace-shell-footer
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active,
-.fetch-home-reels-shell-footer
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active {
   color: #ffffff !important;
 }
 
-.fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
-.fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
-.fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
+html[data-fetch-theme='dark'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
   color: #ffffff !important;
 }
 
-.fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
-.fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
-.fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
+html[data-fetch-theme='dark'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
   color: #ffffff !important;
 }
 
@@ -7687,52 +7756,88 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   content: none;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-booking-sheet__shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-marketplace-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
   color: #ffffff !important;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-booking-sheet__shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-marketplace-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
   color: #ffffff !important;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-booking-sheet__shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active,
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-marketplace-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active,
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active {
   color: #ffffff !important;
 }
 
-.fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
-.fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
-.fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
   color: #ffffff !important;
 }
 
-.fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
-.fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
-.fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
   color: #ffffff !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-phone-stage
+  .fetch-home-booking-sheet__shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
+html[data-fetch-theme='light'] .fetch-home-phone-stage
+  .fetch-home-marketplace-shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
+html[data-fetch-theme='light'] .fetch-home-phone-stage
+  .fetch-home-reels-shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
+  color: rgba(17, 24, 39, 0.42) !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-phone-stage
+  .fetch-home-booking-sheet__shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
+html[data-fetch-theme='light'] .fetch-home-phone-stage
+  .fetch-home-marketplace-shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
+html[data-fetch-theme='light'] .fetch-home-phone-stage
+  .fetch-home-reels-shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
+  color: rgba(17, 24, 39, 0.58) !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
+  color: var(--fetch-accent, #00ff6a) !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
+  color: var(--fetch-accent, #00ff6a) !important;
 }
 
 /* Active tab: white glow from bottom — wider spread under icon. */
@@ -7781,13 +7886,32 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   opacity: 1;
 }
 
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active::before,
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active::before,
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active::before,
+html[data-fetch-theme='light']
+  .fetch-home-phone-stage
+  .fetch-home-vision[data-home-shell-tab='search']
+  .fetch-home-intent-bottom-nav__icon--active::before {
+  background: radial-gradient(
+    ellipse 132% 100% at 50% 100%,
+    color-mix(in srgb, var(--fetch-accent, #00ff6a) 78%, transparent) 0%,
+    color-mix(in srgb, var(--fetch-accent, #00ff6a) 38%, transparent) 45%,
+    transparent 82%
+  );
+}
+
 .fetch-home-phone-stage .fetch-home-intent-bottom-nav__icon:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.35);
   outline-offset: 2px;
 }
 
-/* Search → Categories: true black (global shell remap turns bg-zinc-800 tiles charcoal). */
-.fetch-app-shell-inner .fetch-home-search-route {
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-intent-bottom-nav__icon:focus-visible {
+  outline-color: color-mix(in srgb, var(--fetch-accent, #00ff6a) 45%, transparent);
+}
+
+/* Search → Categories: dark chrome remap only when system dark theme is selected. */
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .fetch-home-search-route {
   background-color: #1a1d22 !important;
 }
 .fetch-app-shell-inner .fetch-home-search-categories,
