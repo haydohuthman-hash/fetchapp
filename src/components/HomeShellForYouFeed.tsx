@@ -14,6 +14,7 @@ import { SUPPLY_PRODUCTS, type SupplyProduct } from '../lib/suppliesCatalog'
 import { type MarketplacePeerBrowseFilter } from './ExploreBrowseBanner'
 import { ListingQuickAddPlusCircleIcon } from './icons/HomeShellNavIcons'
 import { ExploreCategoryBrowse } from './ExploreCategoryBrowse'
+import { ExploreCategoryPromoIcon } from './ExploreCategoryRowPromoBanner'
 import { FetchRankProgressCard } from './FetchRankProgressCard'
 import { FetchDailyStreakCard } from './FetchDailyStreakCard'
 import { FetchWeeklyGoalCard } from './FetchWeeklyGoalCard'
@@ -272,19 +273,13 @@ function ExploreEmbedCategoryTallCarousel({
               >
                 <div
                   className={[
-                    'fetch-explore-embed-category-card__thumb-well flex w-full shrink-0 items-start justify-center px-1.5 pt-1.5',
-                    selected ? '' : 'bg-[#1a1d22]',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
+                    'fetch-explore-embed-category-card__thumb-well relative flex h-16 w-full shrink-0 items-center justify-center overflow-hidden rounded-xl px-1 py-1',
+                    selected
+                      ? 'bg-[linear-gradient(155deg,#252830_0%,#1a1d22_100%)] shadow-[0_0_0_1px_rgba(255,255,255,0.14),inset_0_1px_0_rgba(255,255,255,0.18)]'
+                      : 'bg-[#14161b] shadow-[0_0_0_1px_rgba(255,255,255,0.08),inset_0_1px_0_rgba(255,255,255,0.06)]',
+                  ].join(' ')}
                 >
-                  <img
-                    src={def.imageSrc}
-                    alt=""
-                    className="pointer-events-none h-auto max-h-16 w-full object-contain object-top"
-                    loading="lazy"
-                    draggable={false}
-                  />
+                  <ExploreCategoryPromoIcon id={def.id} className="h-[3.25rem] w-[3.25rem] shrink-0" />
                 </div>
                 <div className="flex min-h-[2rem] flex-1 items-center justify-center px-1 py-1.5">
                   <p
@@ -945,13 +940,7 @@ function HomeShellForYouFeedInner({
         aria-label="Explore feed"
       >
         <div className="sticky top-0 z-10 shrink-0 border-b border-white/[0.08] bg-[#1a1d22] pt-[max(0.5rem,env(safe-area-inset-top))]">
-          <header className="px-3 pb-3">
-            <h2 className="text-[1.05rem] font-bold tracking-[-0.03em] text-white">Explore</h2>
-            <p className="mt-0.5 text-[12px] font-medium leading-snug text-white/45">
-              Live sellers, picks, and browse near you.
-            </p>
-          </header>
-          <div className="flex flex-col gap-2.5 px-3 pb-3">
+          <div className="flex flex-col gap-2.5 px-3 pb-3 pt-1">
             <FetchRankProgressCard />
             <div className="grid grid-cols-2 gap-2">
               <FetchDailyStreakCard compact />
@@ -996,15 +985,7 @@ function HomeShellForYouFeedInner({
       aria-label="For you — items and videos"
     >
       <div className="shrink-0 border-b border-white/[0.08] bg-[#1a1d22] pb-4 pt-[max(0.25rem,env(safe-area-inset-top))]">
-        <header className="px-0.5">
-          <h2 className="text-[1.05rem] font-bold tracking-[-0.03em] text-zinc-50">
-            For you
-          </h2>
-          <p className="mt-0.5 text-[12px] font-medium leading-snug text-zinc-400">
-            Drops, local listings, and store picks in one scroll.
-          </p>
-        </header>
-        <div className="mt-3 flex flex-col gap-2.5 px-0.5">
+        <div className="flex flex-col gap-2.5 px-0.5 pt-1">
           <FetchRankProgressCard />
           <div className="grid grid-cols-2 gap-2">
             <FetchDailyStreakCard compact />
