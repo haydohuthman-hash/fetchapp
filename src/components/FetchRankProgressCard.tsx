@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { loadSession } from '../lib/fetchUserSession'
+import { FETCH_REWARD_CARD_GLOSS, FETCH_REWARD_CARD_SHELL, FETCH_REWARD_CARD_VIGNETTE } from './fetchRewardCardShell'
 
 const DEMO_AVATAR_URLS = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&q=82',
@@ -68,25 +69,11 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
 
   return (
     <article
-      className={[
-        'relative isolate overflow-hidden rounded-[1.35rem]',
-        'border border-white/[0.09]',
-        'bg-[linear-gradient(155deg,#16181d_0%,#0b0c0f_48%,#12141a_100%)]',
-        'shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_24px_48px_-28px_rgba(0,0,0,0.85),0_0_40px_-12px_rgba(168,85,247,0.18),0_0_28px_-8px_rgba(251,191,36,0.12)]',
-        'px-3.5 pb-4 pt-4',
-        className,
-      ].join(' ')}
+      className={[FETCH_REWARD_CARD_SHELL, 'px-3.5 pb-4 pt-4', className].join(' ')}
       aria-label="Your Fetch rank and progress"
     >
-      {/* Gloss & vignette */}
-      <div
-        className="pointer-events-none absolute inset-0 rounded-[1.35rem] bg-[radial-gradient(120%_80%_at_18%_-10%,rgba(251,191,36,0.14)_0%,transparent_52%),radial-gradient(90%_70%_at_100%_0%,rgba(168,85,247,0.12)_0%,transparent_48%),linear-gradient(to_bottom,rgba(255,255,255,0.06)_0%,transparent_38%)]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 rounded-b-[1.35rem] bg-gradient-to-t from-black/35 to-transparent"
-        aria-hidden
-      />
+      <div className={FETCH_REWARD_CARD_GLOSS} aria-hidden />
+      <div className={FETCH_REWARD_CARD_VIGNETTE} aria-hidden />
 
       <div className="relative flex gap-3">
         {/* Avatar + ring */}

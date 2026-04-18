@@ -1,26 +1,12 @@
 import { useId } from 'react'
+import { FETCH_REWARD_CARD_GLOSS, FETCH_REWARD_CARD_SHELL, FETCH_REWARD_CARD_VIGNETTE } from './fetchRewardCardShell'
 
-/** Same shell as FetchRankProgressCard / FetchDailyStreakCard */
-const CARD_SHELL = [
-  'relative isolate overflow-hidden rounded-[1.35rem]',
-  'border border-white/[0.09]',
-  'bg-[linear-gradient(155deg,#16181d_0%,#0b0c0f_48%,#12141a_100%)]',
-  'shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_24px_48px_-28px_rgba(0,0,0,0.85),0_0_40px_-12px_rgba(168,85,247,0.18),0_0_28px_-8px_rgba(251,191,36,0.12)]',
-  'px-3.5 pb-4 pt-4',
-].join(' ')
-
-const GLOSS_LAYER =
-  'pointer-events-none absolute inset-0 rounded-[1.35rem] bg-[radial-gradient(120%_80%_at_18%_-10%,rgba(251,191,36,0.14)_0%,transparent_52%),radial-gradient(90%_70%_at_100%_0%,rgba(168,85,247,0.12)_0%,transparent_48%),linear-gradient(to_bottom,rgba(255,255,255,0.06)_0%,transparent_38%)]'
-
-const VIGNETTE_LAYER =
-  'pointer-events-none absolute inset-x-0 bottom-0 h-1/2 rounded-b-[1.35rem] bg-gradient-to-t from-black/35 to-transparent'
-
-function PremiumTreasureChest({ uid }: { uid: string }) {
+function PremiumTreasureChest({ uid, size }: { uid: string; size: 'md' | 'sm' }) {
   const gid = `wk-chest-${uid.replace(/:/g, '')}`
   return (
     <svg
       viewBox="0 0 72 72"
-      className="relative z-[1] h-[4.25rem] w-[4.25rem]"
+      className={size === 'sm' ? 'relative z-[1] h-[3.25rem] w-[3.25rem]' : 'relative z-[1] h-[4.25rem] w-[4.25rem]'}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
@@ -69,33 +55,47 @@ function PremiumTreasureChest({ uid }: { uid: string }) {
 
 export type FetchWeeklyGoalCardProps = {
   className?: string
+  compact?: boolean
 }
 
 /**
  * Weekly goal unlock — paired with rank + streak cards (demo: 4/5 progress).
  */
-export function FetchWeeklyGoalCard({ className = '' }: FetchWeeklyGoalCardProps) {
+export function FetchWeeklyGoalCard({ className = '', compact = false }: FetchWeeklyGoalCardProps) {
   const uid = useId()
   const current = 4
   const target = 5
   const pct = Math.round((current / target) * 100)
 
-  return (
-    <article className={[CARD_SHELL, className].join(' ')} aria-label="Weekly goal reward progress">
-      <div className={GLOSS_LAYER} aria-hidden />
-      <div className={VIGNETTE_LAYER} aria-hidden />
+  const pad = compact ? 'px-2.5 pb-3 pt-3' : 'px-3.5 pb-4 pt-4'
+  const headline = compact ? 'text-xl' : 'text-[1.375rem]'
+  const micro = compact ? 'text-[10px]' : 'text-[11px]'
+  const titleTrack = compact ? 'tracking-[0.14em]' : 'tracking-[0.18em]'
+  const barMt = compact ? 'mt-2.5' : 'mt-3.5'
+  const chestWrap = compact ? 'size-[3.75rem]' : 'size-[4.75rem]'
+  const chestCol = compact ? 'shrink-0' : 'w-[5.25rem]'
 
-      <div className="relative flex gap-3">
+  return (
+    <article
+      className={[FETCH_REWARD_CARD_SHELL, pad, 'min-h-0 min-w-0', className].join(' ')}
+      aria-label="Weekly goal reward progress"
+    >
+      <div className={FETCH_REWARD_CARD_GLOSS} aria-hidden />
+      <div className={FETCH_REWARD_CARD_VIGNETTE} aria-hidden />
+
+      <div className="relative flex gap-2 sm:gap-3">
         <div className="min-w-0 flex-1 pt-0.5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/38">Weekly Goal</p>
-          <p className="mt-1 bg-gradient-to-br from-white via-white to-white/72 bg-clip-text text-[1.375rem] font-black tabular-nums leading-none tracking-[-0.03em] text-transparent">
+          <p className={`text-[10px] font-bold uppercase ${titleTrack} text-white/38`}>Weekly Goal</p>
+          <p
+            className={`mt-0.5 bg-gradient-to-br from-white via-white to-white/72 bg-clip-text ${headline} font-black tabular-nums leading-none tracking-[-0.03em] text-transparent`}
+          >
             {current} / {target}
           </p>
-          <p className="mt-1 text-[11px] font-medium leading-snug text-white/48">Go live or list items</p>
+          <p className={`mt-0.5 ${micro} font-medium leading-snug text-white/48`}>Go live or list items</p>
 
-          <div className="mt-3.5 space-y-1.5">
+          <div className={`${barMt} space-y-1.5`}>
             <div
-              className="h-2 overflow-hidden rounded-full bg-black/55 ring-1 ring-white/[0.07]"
+              className="h-2 overflow-hidden rounded-full bg-black/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.09]"
               role="progressbar"
               aria-valuenow={current}
               aria-valuemin={0}
@@ -110,7 +110,7 @@ export function FetchWeeklyGoalCard({ className = '' }: FetchWeeklyGoalCardProps
         </div>
 
         {/* Reward chest — premium capsule + sparkles */}
-        <div className="relative flex w-[5.25rem] shrink-0 flex-col items-center justify-center">
+        <div className={`relative flex ${chestCol} shrink-0 flex-col items-center justify-center`}>
           <div
             className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_50%_35%,rgba(251,191,36,0.18)_0%,transparent_62%)]"
             aria-hidden
@@ -129,10 +129,10 @@ export function FetchWeeklyGoalCard({ className = '' }: FetchWeeklyGoalCardProps
           />
 
           <div
-            className="relative flex size-[4.75rem] items-center justify-center rounded-2xl border border-white/[0.08] bg-black/45 shadow-[0_0_26px_rgba(168,85,247,0.22),0_0_20px_rgba(251,191,36,0.14),inset_0_1px_0_rgba(255,255,255,0.11)]"
-            style={{ filter: 'drop-shadow(0 0 14px rgba(251,191,36,0.18))' }}
+            className={`relative flex ${chestWrap} items-center justify-center rounded-2xl border border-white/[0.10] bg-black/45 shadow-[0_0_28px_rgba(168,85,247,0.24),0_0_22px_rgba(251,191,36,0.16),inset_0_1px_0_rgba(255,255,255,0.14)] ${compact ? 'mx-auto' : ''}`}
+            style={{ filter: 'drop-shadow(0 0 14px rgba(251,191,36,0.2))' }}
           >
-            <PremiumTreasureChest uid={uid} />
+            <PremiumTreasureChest uid={uid} size={compact ? 'sm' : 'md'} />
           </div>
         </div>
       </div>

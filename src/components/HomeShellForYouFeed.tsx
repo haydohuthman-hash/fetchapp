@@ -953,8 +953,10 @@ function HomeShellForYouFeedInner({
           </header>
           <div className="flex flex-col gap-2.5 px-3 pb-3">
             <FetchRankProgressCard />
-            <FetchDailyStreakCard />
-            <FetchWeeklyGoalCard />
+            <div className="grid grid-cols-2 gap-2">
+              <FetchDailyStreakCard compact />
+              <FetchWeeklyGoalCard compact />
+            </div>
           </div>
         </div>
         <ExploreEmbedCategoryTallCarousel
@@ -1004,8 +1006,10 @@ function HomeShellForYouFeedInner({
         </header>
         <div className="mt-3 flex flex-col gap-2.5 px-0.5">
           <FetchRankProgressCard />
-          <FetchDailyStreakCard />
-          <FetchWeeklyGoalCard />
+          <div className="grid grid-cols-2 gap-2">
+            <FetchDailyStreakCard compact />
+            <FetchWeeklyGoalCard compact />
+          </div>
         </div>
       </div>
 
