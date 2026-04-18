@@ -579,7 +579,7 @@ function ExploreEmbedLiveFeedTile({ reel, onOpenDrops }: { reel: DropReel; onOpe
       className="flex w-[calc((100%-1rem)/2.5)] shrink-0 snap-start flex-col bg-transparent p-0 text-left transition-transform active:scale-[0.98]"
       aria-label={`Live from ${sellerLine}. ${reel.priceLabel}, ${viewersLabel}`}
     >
-      <div className="relative aspect-[9/16] w-full overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
+      <div className="fetch-card-glass-border relative aspect-[9/16] w-full overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800">
         {poster ? (
           <img
             src={poster}
@@ -629,10 +629,10 @@ function ExploreEmbedCategoryTallCarousel({
                 type="button"
                 onClick={() => onSelect(def)}
                 className={[
-                  'fetch-explore-embed-category-card flex w-[max(5.25rem,calc((100cqi-1.5rem)/4.1))] shrink-0 snap-start flex-col overflow-hidden rounded-xl text-left shadow-none transition-[transform,background-color,box-shadow] duration-200 ease-out active:scale-[0.98]',
+                  'fetch-explore-embed-category-card fetch-card-glass-border flex w-[max(5.25rem,calc((100cqi-1.5rem)/4.1))] shrink-0 snap-start flex-col overflow-hidden rounded-2xl text-left shadow-none transition-[transform,background-color,box-shadow] duration-200 ease-out active:scale-[0.98]',
                   selected
                     ? 'fetch-explore-embed-category-card--active ring-0'
-                    : 'bg-[#25282f] ring-1 ring-white/[0.06]',
+                    : 'bg-[#25282f]',
                 ].join(' ')}
                 aria-label={def.ariaLabel}
                 aria-pressed={selected}
@@ -707,7 +707,7 @@ function ExplorePeerListingCard({
       : 'Quick buy — open checkout'
 
   return (
-    <div className="flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-lg bg-[#25282f] text-left text-white shadow-none ring-1 ring-white/[0.06]">
+    <div className="fetch-card-glass-border flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl bg-[#25282f] text-left text-white shadow-none">
       <div className="relative aspect-square w-full min-w-0 bg-[#1e2229]">
         {img ? (
           <img
@@ -804,7 +804,7 @@ function ForYouListingCarouselCard({
       aria-label={`${listing.title}, ${priceStr}, ${fulfillment}, or fetch it from ${fetchFromPrice}`}
       className="flex w-[calc((100%-1rem)/3.1)] shrink-0 flex-col bg-transparent p-0 text-left transition-transform active:scale-[0.98]"
     >
-      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
+      <div className="fetch-card-glass-border relative aspect-square w-full overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800">
         {img ? (
           <img
             src={listingImageAbsoluteUrl(img)}
@@ -909,7 +909,7 @@ function ForYouLocalSellerCarouselCard({
       className="flex w-[calc((100%-1rem)/2.5)] shrink-0 flex-col bg-transparent p-0 text-left transition-transform active:scale-[0.98]"
       aria-label={`${handle}, verified seller, ${ratingLabel} out of 5 stars from ${reviewCount} reviews — open in marketplace`}
     >
-      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
+      <div className="fetch-card-glass-border relative aspect-square w-full overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800">
         <img
           src={portraitSrc}
           alt=""
@@ -1072,11 +1072,9 @@ function ForYouPremiumFeedTabs({
     <div className="mt-2 w-full min-w-0 self-stretch px-3" role="tablist" aria-label="Feed">
       <div
         className={[
-          'relative isolate w-full overflow-hidden rounded-2xl',
+          'fetch-card-glass-border relative isolate w-full overflow-hidden rounded-3xl',
           /* Charcoal-tinted glass — low fill opacity so blur reads through (matches #1a1d22 shell). */
-          'border border-white/[0.1]',
           'bg-[rgba(26,29,34,0.38)]',
-          'shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_10px_36px_-14px_rgba(0,0,0,0.45)]',
           'backdrop-blur-2xl backdrop-saturate-[1.35]',
           '[-webkit-backdrop-filter:blur(24px)_saturate(1.35)]',
         ].join(' ')}
@@ -1095,7 +1093,7 @@ function ForYouPremiumFeedTabs({
                 role="tab"
                 aria-selected={selected}
                 className={[
-                  'fetch-embed-feed-tab min-w-0 flex-1 rounded-xl px-2 py-2 text-center text-[11px] font-semibold leading-tight tracking-[-0.02em]',
+                  'fetch-embed-feed-tab min-w-0 flex-1 rounded-2xl px-2 py-2 text-center text-[11px] font-semibold leading-tight tracking-[-0.02em]',
                   'transition-[color,background-color,box-shadow,transform] duration-200 ease-out',
                   'sm:px-3 sm:py-2.5 sm:text-[12px]',
                   selected
@@ -1397,7 +1395,7 @@ function HomeShellForYouFeedInner({
                   type="button"
                   onClick={onOpenDrops}
                   aria-label={`${profileLine}: ${r.title}. ${r.priceLabel}`}
-                  className="group relative h-[10rem] w-[7.25rem] shrink-0 overflow-hidden rounded-2xl bg-zinc-900 text-left shadow-none ring-1 ring-black/10 active:scale-[0.98] dark:ring-white/10"
+                  className="fetch-card-glass-border group relative h-[10rem] w-[7.25rem] shrink-0 overflow-hidden rounded-3xl bg-zinc-900 text-left shadow-none active:scale-[0.98]"
                 >
                   {poster ? (
                     <img
@@ -1474,7 +1472,7 @@ function HomeShellForYouFeedInner({
               key={p.id}
               type="button"
               onClick={onOpenMarketplace}
-              className="flex w-[7.5rem] shrink-0 flex-col overflow-hidden rounded-2xl border border-zinc-200/90 bg-white text-left shadow-none active:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:active:bg-zinc-800/80"
+              className="fetch-card-glass-border flex w-[7.5rem] shrink-0 flex-col overflow-hidden rounded-3xl bg-white text-left shadow-none active:bg-zinc-50 dark:bg-zinc-900 dark:active:bg-zinc-800/80"
             >
               <div className="relative aspect-square w-full bg-zinc-50 dark:bg-zinc-800">
                 <img
