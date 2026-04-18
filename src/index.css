@@ -7122,12 +7122,23 @@ html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-app-address-header 
   backdrop-filter: none !important;
 }
 
-/* Explore full-page home: header fully transparent over the hero (no fill, no blur). */
-.fetch-home-phone-stage
+/* Explore full-page home (dark theme only): transparent header over hero — glass pill rules below. */
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header {
   background-color: transparent !important;
   background-image: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Light Explore full-page: solid chrome bar — no transparency / blur on the strip */
+html[data-fetch-theme='light']
+  .fetch-home-phone-stage
+  .fetch-home-vision[data-services-explore-full-page='true']
+  .fetch-app-address-header {
+  background-color: #ffffff !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
@@ -7195,8 +7206,9 @@ html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-app-address-header 
   background-image: none !important;
 }
 
-/* Explore full-page (hero behind header): glass search pill + glass icon hits — white border & copy. */
-.fetch-home-phone-stage
+/* Explore full-page + dark theme only: frosted glass search pill + icon hits over hero */
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header
   .fetch-header-search-bar {
@@ -7215,7 +7227,8 @@ html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-app-address-header 
     0 6px 28px rgba(0, 0, 0, 0.18) !important;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header
   .fetch-header-search-bar:hover {
@@ -7223,7 +7236,8 @@ html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-app-address-header 
   background-color: rgba(255, 255, 255, 0.22) !important;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header
   .fetch-header-search-bar
@@ -7231,7 +7245,8 @@ html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-app-address-header 
   color: rgba(255, 255, 255, 0.95) !important;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header
   .fetch-header-search-bar
@@ -7240,13 +7255,13 @@ html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-app-address-header 
   stroke: rgba(255, 255, 255, 0.92) !important;
 }
 
-/* Light theme: dark ink on search pill (including Explore full-page glass bar). */
+/* Light theme: dark ink on search pill — flat white pill from rules above */
 html[data-fetch-theme='light']
   .fetch-home-phone-stage
   .fetch-app-address-header
   .fetch-header-search-bar
   .fetch-header-search-hint {
-  color: #18181b !important;
+  color: #0a0a0a !important;
 }
 
 html[data-fetch-theme='light']
@@ -7254,11 +7269,12 @@ html[data-fetch-theme='light']
   .fetch-app-address-header
   .fetch-header-search-bar
   svg {
-  color: #18181b !important;
-  stroke: #18181b !important;
+  color: #0a0a0a !important;
+  stroke: #0a0a0a !important;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header
   .fetch-header-chrome-icon-btn {
@@ -7277,11 +7293,36 @@ html[data-fetch-theme='light']
     0 4px 18px rgba(0, 0, 0, 0.16) !important;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header
   .fetch-header-chrome-icon-btn:hover {
   background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Light Explore full-page: opaque icon tiles (component styles); kill any leftover glass */
+html[data-fetch-theme='light']
+  .fetch-home-phone-stage
+  .fetch-home-vision[data-services-explore-full-page='true']
+  .fetch-app-address-header
+  .fetch-header-chrome-icon-btn {
+  border-radius: 0.75rem !important;
+  border: 1px solid rgba(228, 228, 231, 0.95) !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+}
+
+html[data-fetch-theme='light']
+  .fetch-home-phone-stage
+  .fetch-home-vision[data-services-explore-full-page='true']
+  .fetch-app-address-header
+  .fetch-header-chrome-icon-btn:hover {
+  border-color: rgba(212, 212, 216, 1) !important;
+  background-color: #ffffff !important;
 }
 
 @keyframes fetch-header-search-hint {

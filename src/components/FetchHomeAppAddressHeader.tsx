@@ -80,7 +80,7 @@ export function FetchItWordmark({
  * Header icon hits — uniform tap + glyph size (see `.fetch-header-chrome-icon-btn` in CSS).
  */
 const headerChromeIconBtn =
-  'fetch-header-chrome-icon-btn fetch-apple-warp-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-zinc-200/95 bg-white p-0 text-zinc-800 shadow-[0_2px_8px_rgba(15,23,42,0.06)] ring-0 transition-[transform,box-shadow,opacity] hover:border-zinc-300 hover:shadow-[0_4px_14px_rgba(15,23,42,0.09)] active:scale-[0.96]'
+  'fetch-header-chrome-icon-btn fetch-apple-warp-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-zinc-200/95 bg-white p-0 text-neutral-950 shadow-[0_2px_8px_rgba(15,23,42,0.06)] ring-0 transition-[transform,box-shadow,opacity] hover:border-zinc-300 hover:shadow-[0_4px_14px_rgba(15,23,42,0.09)] active:scale-[0.96]'
 const headerChromeIconGlyph = 'block h-6 w-6 shrink-0'
 
 const headerEase =
@@ -151,7 +151,7 @@ export function FetchHomeAppAddressHeader({
   return (
     <header
       className={[
-        'fetch-app-address-header pointer-events-auto fixed left-0 right-0 top-0 z-[56] border-b border-zinc-200/95 bg-white/98 shadow-[0_8px_28px_-8px_rgba(15,23,42,0.12)] backdrop-blur-[10px]',
+        'fetch-app-address-header pointer-events-auto fixed left-0 right-0 top-0 z-[56] border-b border-zinc-200/95 bg-white shadow-[0_8px_28px_-8px_rgba(15,23,42,0.12)]',
         chromeShellSlide,
         'translate-y-0',
       ].join(' ')}
@@ -172,10 +172,10 @@ export function FetchHomeAppAddressHeader({
             className="fetch-header-search-bar fetch-apple-warp-btn flex min-h-[2.5rem] min-w-0 flex-1 items-center gap-2 rounded-full border border-zinc-300/90 bg-white py-0 pl-3 pr-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_4px_18px_-6px_rgba(15,23,42,0.12)] ring-2 ring-black/[0.035] transition-[border-color,box-shadow,opacity,transform] hover:border-zinc-400 hover:shadow-[0_6px_22px_-8px_rgba(15,23,42,0.16)] active:scale-[0.99]"
             aria-label={`Search — ${searchHint}`}
           >
-            <SearchGlyph className="shrink-0 text-zinc-900" />
+            <SearchGlyph className="shrink-0 text-neutral-950" />
             <span
               key={hintIdx}
-              className="fetch-header-search-hint min-w-0 truncate text-[14px] font-semibold text-zinc-900"
+              className="fetch-header-search-hint min-w-0 truncate text-[14px] font-semibold text-neutral-950"
             >
               {searchHint}
             </span>
