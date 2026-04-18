@@ -253,7 +253,7 @@ function ExploreEmbedCategoryTallCarousel({
   return (
     <section className="min-w-0" aria-label="Shop by category">
       <div className="w-full min-w-0 [container-type:inline-size]">
-        <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-pl-3 py-0.5 pb-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
+        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-pl-3 py-1 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
           <div className="w-3 shrink-0 snap-none select-none" aria-hidden />
           {EXPLORE_CATEGORY_ROW_PROMOS.map((def) => {
             const selected = def.id === selectedId
@@ -263,36 +263,39 @@ function ExploreEmbedCategoryTallCarousel({
                 type="button"
                 onClick={() => onSelect(def)}
                 className={[
-                  'fetch-explore-embed-category-card flex w-[max(5.25rem,calc((100cqi-1.5rem)/4.1))] shrink-0 snap-start flex-col overflow-hidden rounded-xl text-left shadow-none transition-[transform,background-color,box-shadow] duration-200 ease-out active:scale-[0.98]',
-                  selected
-                    ? 'fetch-explore-embed-category-card--active ring-0'
-                    : 'bg-[#25282f] ring-1 ring-white/[0.06]',
+                  'fetch-explore-embed-category-card group flex w-[max(4.5rem,calc((100cqi-1.5rem)/4.6))] shrink-0 snap-start flex-col items-center gap-1.5 overflow-visible rounded-none bg-transparent p-0 text-center shadow-none ring-0 transition-transform duration-200 ease-out active:scale-[0.96]',
+                  selected ? 'fetch-explore-embed-category-card--active' : '',
                 ].join(' ')}
                 aria-label={def.ariaLabel}
                 aria-pressed={selected}
               >
                 <div
                   className={[
-                    'fetch-explore-embed-category-card__thumb-well relative flex h-16 w-full shrink-0 items-center justify-center overflow-hidden rounded-xl px-1 py-1',
+                    'fetch-explore-embed-category-card__circle relative flex size-[3.75rem] shrink-0 items-center justify-center rounded-full',
                     selected
-                      ? 'bg-[linear-gradient(155deg,#252830_0%,#1a1d22_100%)] shadow-[0_0_0_1px_rgba(255,255,255,0.14),inset_0_1px_0_rgba(255,255,255,0.18)]'
-                      : 'bg-[#14161b] shadow-[0_0_0_1px_rgba(255,255,255,0.08),inset_0_1px_0_rgba(255,255,255,0.06)]',
+                      ? 'fetch-explore-embed-category-card__circle--active bg-[#ffffff] shadow-[0_0_0_1px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95),0_8px_22px_-10px_rgba(0,0,0,0.45)]'
+                      : 'bg-[#25282f] shadow-[0_0_0_1px_rgba(255,255,255,0.12),inset_0_1px_0_rgba(255,255,255,0.14),0_10px_28px_-14px_rgba(0,0,0,0.55)]',
                   ].join(' ')}
                 >
-                  <ExploreCategoryPromoIcon id={def.id} className="h-[3.25rem] w-[3.25rem] shrink-0" />
-                </div>
-                <div className="flex min-h-[2rem] flex-1 items-center justify-center px-1 py-1.5">
-                  <p
+                  <span
                     className={[
-                      'fetch-explore-embed-category-card__label line-clamp-2 text-center text-[9px] font-extrabold uppercase leading-[1.15] tracking-[0.04em] sm:text-[10px]',
-                      selected ? '' : 'text-white',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
+                      'fetch-explore-embed-category-card__icon-wrap flex size-[2.5rem] items-center justify-center',
+                      selected
+                        ? 'fetch-explore-embed-category-card__icon-wrap--on-light'
+                        : 'fetch-explore-embed-category-card__icon-wrap--on-dark',
+                    ].join(' ')}
                   >
-                    {def.title}
-                  </p>
+                    <ExploreCategoryPromoIcon id={def.id} className="h-full w-full" />
+                  </span>
                 </div>
+                <p
+                  className={[
+                    'fetch-explore-embed-category-card__label line-clamp-2 min-h-[2rem] w-full px-0.5 text-center text-[9px] font-extrabold uppercase leading-[1.15] tracking-[0.04em] text-white/88 sm:text-[10px]',
+                    selected ? 'text-white' : '',
+                  ].join(' ')}
+                >
+                  {def.title}
+                </p>
               </button>
             )
           })}
@@ -948,11 +951,11 @@ function HomeShellForYouFeedInner({
             </div>
           </div>
         </div>
+        <ForYouPremiumFeedTabs value={embedFeedTab} onChange={setEmbedFeedTab} />
         <ExploreEmbedCategoryTallCarousel
           selectedId={embedCategoryId}
           onSelect={(def) => setEmbedCategoryId(def.id)}
         />
-        <ForYouPremiumFeedTabs value={embedFeedTab} onChange={setEmbedFeedTab} />
         {embedFeedSections
           ? EMBED_FEED_SECTION_ORDER.map((key, idx) => (
               <Fragment key={key}>

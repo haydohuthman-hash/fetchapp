@@ -1771,14 +1771,14 @@ html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-top-banner-sli
 }
 
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active {
-  background-color: #ffffff !important;
+  background-color: transparent !important;
 }
 
 html[data-fetch-theme='light']
   .fetch-app-shell-inner
   .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active
   .fetch-explore-embed-category-card__label {
-  color: #0f0f0f !important;
+  color: #fafafa !important;
 }
 
 /* Hyper-green pills: .text-black above is for “dark chrome”; keep real black on neon badges */
