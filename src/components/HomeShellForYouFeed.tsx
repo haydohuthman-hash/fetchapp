@@ -116,7 +116,8 @@ function ForYouGameStatCards({ embedded }: { embedded?: boolean }) {
   const roman = ['I', 'II', 'III', 'IV'][seed % 4]
   const boomerangLabel = `${boomerangTiers[tierIdx]} ${roman}`
 
-  const padClass = embedded ? 'px-3' : 'px-0.5'
+  /** Embedded: horizontal padding comes from Explore header band wrapper. */
+  const padClass = embedded ? '' : 'px-0.5'
 
   const cards = [
     {
@@ -146,7 +147,7 @@ function ForYouGameStatCards({ embedded }: { embedded?: boolean }) {
   ] as const
 
   return (
-    <div className={`${padClass} pb-0.5 pt-0`} role="region" aria-label="Your stats">
+    <div className={`${padClass} pb-0 pt-0`} role="region" aria-label="Your stats">
       <div className="grid grid-cols-3 gap-2">
         {cards.map((c) => (
           <div
@@ -1018,7 +1019,17 @@ function HomeShellForYouFeedInner({
         role="region"
         aria-label="Explore feed"
       >
-        <ForYouGameStatCards embedded />
+        <div className="sticky top-0 z-10 shrink-0 border-b border-white/[0.08] bg-[#1a1d22] pt-[max(0.5rem,env(safe-area-inset-top))]">
+          <header className="px-3 pb-3">
+            <h2 className="text-[1.05rem] font-bold tracking-[-0.03em] text-white">Explore</h2>
+            <p className="mt-0.5 text-[12px] font-medium leading-snug text-white/45">
+              Live sellers, picks, and browse near you.
+            </p>
+          </header>
+          <div className="px-3 pb-3">
+            <ForYouGameStatCards embedded />
+          </div>
+        </div>
         <ExploreEmbedCategoryTallCarousel
           selectedId={embedCategoryId}
           onSelect={(def) => setEmbedCategoryId(def.id)}
@@ -1055,16 +1066,19 @@ function HomeShellForYouFeedInner({
       role="region"
       aria-label="For you — items and videos"
     >
-      <header className="shrink-0 px-0.5">
-        <h2 className="text-[1.05rem] font-bold tracking-[-0.03em] text-zinc-50">
-          For you
-        </h2>
-        <p className="mt-0.5 text-[12px] font-medium leading-snug text-zinc-400">
-          Drops, local listings, and store picks in one scroll.
-        </p>
-      </header>
-
-      <ForYouGameStatCards />
+      <div className="shrink-0 border-b border-white/[0.08] bg-[#1a1d22] pb-4 pt-[max(0.25rem,env(safe-area-inset-top))]">
+        <header className="px-0.5">
+          <h2 className="text-[1.05rem] font-bold tracking-[-0.03em] text-zinc-50">
+            For you
+          </h2>
+          <p className="mt-0.5 text-[12px] font-medium leading-snug text-zinc-400">
+            Drops, local listings, and store picks in one scroll.
+          </p>
+        </header>
+        <div className="mt-3">
+          <ForYouGameStatCards />
+        </div>
+      </div>
 
       <section aria-labelledby="fetch-for-you-videos-heading" className="min-w-0">
         <div className="mb-2 flex items-end justify-between gap-2 px-0.5">
