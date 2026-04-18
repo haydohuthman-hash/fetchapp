@@ -253,7 +253,7 @@ function ExploreEmbedCategoryTallCarousel({
   return (
     <section className="min-w-0" aria-label="Shop by category">
       <div className="w-full min-w-0 [container-type:inline-size]">
-        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-pl-3 py-1 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
+        <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-pl-3 py-0.5 pb-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
           <div className="w-3 shrink-0 snap-none select-none" aria-hidden />
           {EXPLORE_CATEGORY_ROW_PROMOS.map((def) => {
             const selected = def.id === selectedId
@@ -263,7 +263,7 @@ function ExploreEmbedCategoryTallCarousel({
                 type="button"
                 onClick={() => onSelect(def)}
                 className={[
-                  'fetch-explore-embed-category-card group flex w-[max(4.5rem,calc((100cqi-1.5rem)/4.6))] shrink-0 snap-start flex-col items-center gap-1.5 overflow-visible rounded-none bg-transparent p-0 text-center shadow-none ring-0 transition-transform duration-200 ease-out active:scale-[0.96]',
+                  'fetch-explore-embed-category-card group flex w-[max(3.75rem,calc((100cqi-1.5rem)/5.4))] shrink-0 snap-start flex-col items-center gap-1 overflow-visible rounded-none bg-transparent p-0 text-center shadow-none ring-0 transition-transform duration-200 ease-out active:scale-[0.96]',
                   selected ? 'fetch-explore-embed-category-card--active' : '',
                 ].join(' ')}
                 aria-label={def.ariaLabel}
@@ -271,15 +271,15 @@ function ExploreEmbedCategoryTallCarousel({
               >
                 <div
                   className={[
-                    'fetch-explore-embed-category-card__circle relative flex size-[3.75rem] shrink-0 items-center justify-center rounded-full',
+                    'fetch-explore-embed-category-card__circle relative flex size-[3rem] shrink-0 items-center justify-center rounded-full',
                     selected
-                      ? 'fetch-explore-embed-category-card__circle--active bg-[#ffffff] shadow-[0_0_0_1px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95),0_8px_22px_-10px_rgba(0,0,0,0.45)]'
-                      : 'bg-[#25282f] shadow-[0_0_0_1px_rgba(255,255,255,0.12),inset_0_1px_0_rgba(255,255,255,0.14),0_10px_28px_-14px_rgba(0,0,0,0.55)]',
+                      ? 'fetch-explore-embed-category-card__circle--active bg-[#ffffff] shadow-[0_0_0_1px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95),0_6px_18px_-9px_rgba(0,0,0,0.45)]'
+                      : 'bg-[#25282f] shadow-[0_0_0_1px_rgba(255,255,255,0.12),inset_0_1px_0_rgba(255,255,255,0.14),0_8px_22px_-12px_rgba(0,0,0,0.55)]',
                   ].join(' ')}
                 >
                   <span
                     className={[
-                      'fetch-explore-embed-category-card__icon-wrap flex size-[2.5rem] items-center justify-center',
+                      'fetch-explore-embed-category-card__icon-wrap flex size-[2rem] items-center justify-center',
                       selected
                         ? 'fetch-explore-embed-category-card__icon-wrap--on-light'
                         : 'fetch-explore-embed-category-card__icon-wrap--on-dark',
@@ -290,7 +290,7 @@ function ExploreEmbedCategoryTallCarousel({
                 </div>
                 <p
                   className={[
-                    'fetch-explore-embed-category-card__label line-clamp-2 min-h-[2rem] w-full px-0.5 text-center text-[9px] font-extrabold uppercase leading-[1.15] tracking-[0.04em] text-white/88 sm:text-[10px]',
+                    'fetch-explore-embed-category-card__label line-clamp-2 min-h-[1.55rem] w-full px-0 text-center text-[8px] font-extrabold uppercase leading-[1.1] tracking-[0.03em] text-white/88 sm:min-h-[1.65rem] sm:text-[9px]',
                     selected ? 'text-white' : '',
                   ].join(' ')}
                 >
