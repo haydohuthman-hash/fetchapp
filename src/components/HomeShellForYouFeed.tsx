@@ -1,15 +1,4 @@
-import {
-  Fragment,
-  memo,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-  type ReactNode,
-} from 'react'
+import { Fragment, memo, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { CURATED_DROP_REELS } from '../lib/drops/constants'
 import type { DropReel } from '../lib/drops/types'
 import { EXPLORE_CATEGORY_ROW_PROMOS, type ExploreCategoryRowPromoDef } from '../lib/exploreCategoryRowPromos'
@@ -23,69 +12,12 @@ import {
 import { MARKETPLACE_MOCK_PEER_LISTINGS } from '../lib/marketplaceMockPeerListings'
 import { SUPPLY_PRODUCTS, type SupplyProduct } from '../lib/suppliesCatalog'
 import { type MarketplacePeerBrowseFilter } from './ExploreBrowseBanner'
-import { MyFetchRewardsBanner } from './MyFetchRewardsBanner'
 import { ListingQuickAddPlusCircleIcon } from './icons/HomeShellNavIcons'
 import { ExploreCategoryBrowse } from './ExploreCategoryBrowse'
-import homeBannerGarageUrl from '../assets/home-banner-garage-sale.png'
-import homeBannerStreetwearUrl from '../assets/home-banner-streetwear.png'
-import homeBannerFurnitureUrl from '../assets/home-banner-furniture.png'
-import homeBannerCarsUrl from '../assets/home-banner-cars.png'
-
-type HomeBannerSlide = { src: string; headline?: string; subtext?: string }
-
-/** Fixed Explore hero carousel: always 10 slides (not tied to reel count). */
-const HOME_TOP_BANNER_SLIDES: readonly HomeBannerSlide[] = [
-  {
-    src: homeBannerGarageUrl,
-    headline: 'GO LIVE FROM YOUR DRIVEWAY',
-    subtext: 'Chat, haggle, and clear the clutter — buyers tune in from your block and beyond.',
-  },
-  {
-    src: homeBannerStreetwearUrl,
-    headline: 'STREETWEAR DROPS, LIVE ON CAMERA',
-    subtext: 'Show fit, fabric, and tags on stream so hype pieces sell with zero guesswork.',
-  },
-  {
-    src: homeBannerFurnitureUrl,
-    headline: 'COUCHES TO LAMPS — SELL IT LIVE',
-    subtext: 'Pan every angle, prove condition, and book pickup while viewers are still watching.',
-  },
-  {
-    src: homeBannerCarsUrl,
-    headline: 'LOT TO LOT: CARS & DEALS LIVE',
-    subtext: 'Walk the lot, fire up the engine, and answer serious buyers in real time.',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=1200&q=82',
-    headline: 'TECH & GADGETS, PRICE IT LIVE',
-    subtext: 'Demo ports, battery health, and accessories live — fewer returns, faster sales.',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=82',
-    headline: 'VINTAGE & THRIFT HAULS, LIVE',
-    subtext: 'Rack-to-rack storytelling that makes one-of-a-kind finds impossible to scroll past.',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200&q=82',
-    headline: 'SPORTS GEAR FLYING OFF LIVE',
-    subtext: 'Size it, stress-test it on camera, and move inventory before the weekend games.',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200&q=82',
-    headline: 'JEWELRY & WATCHES — BID LIVE',
-    subtext: 'Macro close-ups, certs on screen, and instant offers while the sparkle is fresh.',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1416879595882-3373a0010e7b?w=1200&q=82',
-    headline: 'PLANTS & DECOR FROM REAL SELLERS',
-    subtext: 'Natural light tours, care tips live, and local pickup slots that actually stick.',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1607082349224-0cc4e94f0266?w=1200&q=82',
-    headline: 'YOUR STAGE. YOUR SALE. ALL LIVE.',
-    subtext: 'One tap to broadcast, built-in chat, and a crowd that shops like they’re on the lawn with you.',
-  },
-]
+import { ExploreCategoryPromoIcon } from './ExploreCategoryRowPromoBanner'
+import { FetchRankProgressCard } from './FetchRankProgressCard'
+import { FetchDailyStreakCard } from './FetchDailyStreakCard'
+import { FetchWeeklyGoalCard } from './FetchWeeklyGoalCard'
 
 export type HomeShellForYouFeedProps = {
   onOpenDrops: () => void
@@ -167,304 +99,6 @@ function reelPosterUrl(r: DropReel): string | undefined {
   const first = r.imageUrls?.[0]?.trim()
   if (first) return first
   return r.poster?.trim() || undefined
-}
-
-function bannerRubberBandDx(dx: number, slideIndex: number, n: number): number {
-  if (n <= 1) return 0
-  if (slideIndex === 0 && dx > 0) return dx * 0.35
-  if (slideIndex === n - 1 && dx < 0) return dx * 0.35
-  return dx
-}
-
-function HomeTopBannerSlideshow({
-  onOpenDrops,
-  onOpenPremium,
-  onViewAll,
-}: {
-  onOpenDrops: () => void
-  /** Opens premium / search discovery (e.g. Explore categories). */
-  onOpenPremium?: () => void
-  /** Opens full marketplace / browse-all surface. */
-  onViewAll?: () => void
-}) {
-  const safeSlides = HOME_TOP_BANNER_SLIDES
-  const slideCount = safeSlides.length
-  const [index, setIndex] = useState(0)
-  const indexRef = useRef(0)
-  indexRef.current = index
-
-  const viewportRef = useRef<HTMLDivElement>(null)
-  const [viewportW, setViewportW] = useState(0)
-  const [dragPx, setDragPx] = useState(0)
-  const [isDragging, setIsDragging] = useState(false)
-  const pointerStartRef = useRef<{ x: number; y: number } | null>(null)
-  const pointerDownRef = useRef(false)
-
-  useLayoutEffect(() => {
-    const el = viewportRef.current
-    if (!el) return
-    const measure = () => setViewportW(el.getBoundingClientRect().width)
-    measure()
-    const ro = new ResizeObserver(measure)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-
-  useEffect(() => {
-    setIndex(0)
-  }, [slideCount])
-
-  const goNext = useCallback(() => {
-    if (slideCount <= 1) return
-    setIndex((i) => (i + 1) % slideCount)
-  }, [slideCount])
-
-  const goPrev = useCallback(() => {
-    if (slideCount <= 1) return
-    setIndex((i) => (i - 1 + slideCount) % slideCount)
-  }, [slideCount])
-
-  const goTo = useCallback(
-    (i: number) => {
-      if (slideCount <= 1) return
-      setIndex(Math.max(0, Math.min(slideCount - 1, i)))
-    },
-    [slideCount],
-  )
-
-  /** At most three pagination dots: sliding window over slides when there are more than three. */
-  const bannerVisibleDotIndices = useMemo(() => {
-    if (slideCount <= 1) return []
-    if (slideCount <= 3) return Array.from({ length: slideCount }, (_, i) => i)
-    const start = Math.max(0, Math.min(index - 1, slideCount - 3))
-    return [start, start + 1, start + 2]
-  }, [slideCount, index])
-
-  const onBannerPointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLElement).closest('button')) return
-    pointerDownRef.current = true
-    pointerStartRef.current = { x: e.clientX, y: e.clientY }
-    setIsDragging(true)
-    setDragPx(0)
-    e.currentTarget.setPointerCapture(e.pointerId)
-  }, [])
-
-  const onBannerPointerMove = useCallback(
-    (e: ReactPointerEvent<HTMLDivElement>) => {
-      if (!pointerDownRef.current || !pointerStartRef.current) return
-      const start = pointerStartRef.current
-      const rawDx = e.clientX - start.x
-      const rawDy = e.clientY - start.y
-      if (Math.abs(rawDy) > Math.abs(rawDx) + 18 && Math.abs(rawDx) < 24) return
-      setDragPx(bannerRubberBandDx(rawDx, indexRef.current, slideCount))
-    },
-    [slideCount],
-  )
-
-  const onBannerPointerUp = useCallback(
-    (e: ReactPointerEvent<HTMLDivElement>) => {
-      if ((e.target as HTMLElement).closest('button')) {
-        pointerDownRef.current = false
-        pointerStartRef.current = null
-        setIsDragging(false)
-        setDragPx(0)
-        return
-      }
-      pointerDownRef.current = false
-      try {
-        e.currentTarget.releasePointerCapture(e.pointerId)
-      } catch {
-        /* capture may already be released */
-      }
-      const start = pointerStartRef.current
-      pointerStartRef.current = null
-      setIsDragging(false)
-
-      if (!start) {
-        setDragPx(0)
-        return
-      }
-
-      const dx = e.clientX - start.x
-      const dy = e.clientY - start.y
-      const ax = Math.abs(dx)
-      const ay = Math.abs(dy)
-      const w = viewportW
-
-      if (ay > ax && ay > 22) {
-        setDragPx(0)
-        return
-      }
-
-      if (ax < 12 && ay < 12) {
-        setDragPx(0)
-        onOpenDrops()
-        return
-      }
-
-      const threshold = w > 0 ? Math.max(48, w * 0.14) : 56
-      if (ax > ay && ax > 8) {
-        if (dx < -threshold) goNext()
-        else if (dx > threshold) goPrev()
-      }
-
-      setDragPx(0)
-    },
-    [goNext, goPrev, onOpenDrops, viewportW],
-  )
-
-  const onBannerPointerCancel = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
-    pointerDownRef.current = false
-    try {
-      e.currentTarget.releasePointerCapture(e.pointerId)
-    } catch {
-      /* noop */
-    }
-    pointerStartRef.current = null
-    setIsDragging(false)
-    setDragPx(0)
-  }, [])
-
-  return (
-    <section
-      className="fetch-home-top-banner-slideshow relative mt-0 w-full max-w-none px-0"
-      aria-label="Featured live deals banner"
-    >
-      <div
-        role="region"
-        aria-roledescription="carousel"
-        aria-label="Promo slides"
-        className="relative w-full cursor-grab overflow-hidden rounded-none bg-[#1a1d22] shadow-none ring-0 touch-pan-y active:cursor-grabbing"
-        onPointerDown={onBannerPointerDown}
-        onPointerMove={onBannerPointerMove}
-        onPointerUp={onBannerPointerUp}
-        onPointerCancel={onBannerPointerCancel}
-      >
-        <div ref={viewportRef} className="relative aspect-[5/6] w-full overflow-hidden">
-          <div
-            className={[
-              'flex h-full flex-row flex-nowrap will-change-transform',
-              !isDragging
-                ? 'transition-[transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none'
-                : '',
-            ].join(' ')}
-            style={
-              viewportW > 0
-                ? {
-                    width: viewportW * slideCount,
-                    transform: `translate3d(${-index * viewportW + dragPx}px,0,0)`,
-                  }
-                : {
-                    width: `${slideCount * 100}%`,
-                    transform: `translateX(calc(-100% * ${index} / ${slideCount}))`,
-                  }
-            }
-          >
-            {safeSlides.map((slide, i) => (
-              <div
-                key={`${i}-${slide.src}`}
-                className="relative h-full shrink-0 overflow-hidden"
-                style={
-                  viewportW > 0
-                    ? { width: viewportW, flex: '0 0 auto' }
-                    : { width: `${100 / slideCount}%` }
-                }
-                aria-hidden={i !== index}
-              >
-                <img
-                  src={slide.src || undefined}
-                  alt=""
-                  draggable={false}
-                  className="pointer-events-none h-full w-full select-none object-cover"
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Top fade — darkens under the glass header / search row. */}
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 z-[3] h-[52%] bg-[linear-gradient(to_bottom,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.42)_42%,rgba(0,0,0,0.14)_72%,transparent_100%)]"
-            aria-hidden
-          />
-          {/* Bottom blur + tint — frosted falloff for headline area. */}
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[72%] bg-[linear-gradient(to_top,rgba(26,29,34,0.97)_0%,rgba(26,29,34,0.72)_40%,rgba(26,29,34,0.2)_68%,transparent_100%)] backdrop-blur-xl [-webkit-backdrop-filter:blur(20px)_saturate(1.1)] [mask-image:linear-gradient(to_top,black_0%,black_30%,transparent_90%)] [-webkit-mask-image:linear-gradient(to_top,black_0%,black_30%,transparent_90%)]"
-            aria-hidden
-          />
-
-          {safeSlides[index]?.headline || slideCount > 1 ? (
-            <div className="absolute inset-0 z-[4] flex min-h-0 flex-col items-center justify-end gap-3 px-3 pb-4 pt-12 sm:px-3.5 sm:pb-5">
-              {safeSlides[index]?.headline ? (
-                <p className="pointer-events-none max-w-full text-center text-[0.9375rem] font-black uppercase leading-tight tracking-[0.035em] text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.92),0_1px_2px_rgba(0,0,0,0.6)] [text-wrap:balance] sm:text-lg sm:tracking-[0.03em]">
-                  {safeSlides[index]!.headline}
-                </p>
-              ) : null}
-              {onOpenPremium || onViewAll ? (
-                <div className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-2">
-                  {onOpenPremium ? (
-                    <button
-                      type="button"
-                      className="fetch-home-banner-premium-pill rounded-full bg-white px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[0.06em] text-black shadow-[0_4px_18px_rgba(0,0,0,0.35)] transition-[transform,opacity] active:scale-[0.97] motion-reduce:transition-none sm:px-5 sm:text-xs"
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        onOpenPremium()
-                      }}
-                    >
-                      Fetch Premium
-                    </button>
-                  ) : null}
-                  {onViewAll ? (
-                    <button
-                      type="button"
-                      className="rounded-full border border-white/40 bg-white/10 px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[0.06em] text-white shadow-[0_2px_14px_rgba(0,0,0,0.25)] backdrop-blur-md transition-[transform,background-color] active:scale-[0.97] motion-reduce:transition-none sm:px-5 sm:text-xs"
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        onViewAll()
-                      }}
-                    >
-                      View All
-                    </button>
-                  ) : null}
-                </div>
-              ) : null}
-              {slideCount > 1 ? (
-                <div
-                  className="fetch-home-banner-dots pointer-events-auto flex w-full max-w-full shrink-0 justify-center gap-2 bg-transparent py-0"
-                  role="tablist"
-                  aria-label="Banner slides"
-                >
-                  {bannerVisibleDotIndices.map((slideIdx) => (
-                    <button
-                      key={`dot-${slideIdx}`}
-                      type="button"
-                      role="tab"
-                      aria-selected={slideIdx === index}
-                      aria-label={`Slide ${slideIdx + 1}`}
-                      className={[
-                        'rounded-full border-0 p-0 outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-0',
-                        'transition-[width,height,min-width,opacity,transform] duration-[480ms] motion-reduce:transition-none',
-                        'ease-[cubic-bezier(0.175,0.885,0.32,1.275)]',
-                        slideIdx === index ? 'h-2 w-6 min-w-[1.5rem]' : 'h-1.5 w-1.5 min-w-[6px]',
-                      ].join(' ')}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        goTo(slideIdx)
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </section>
-  )
 }
 
 function reelProfileDisplayLine(r: DropReel): string {
@@ -629,42 +263,39 @@ function ExploreEmbedCategoryTallCarousel({
                 type="button"
                 onClick={() => onSelect(def)}
                 className={[
-                  'fetch-explore-embed-category-card flex w-[max(5.25rem,calc((100cqi-1.5rem)/4.1))] shrink-0 snap-start flex-col overflow-hidden rounded-xl text-left shadow-none transition-[transform,background-color,box-shadow] duration-200 ease-out active:scale-[0.98]',
-                  selected
-                    ? 'fetch-explore-embed-category-card--active ring-0'
-                    : 'bg-[#25282f] ring-1 ring-white/[0.06]',
+                  'fetch-explore-embed-category-card group flex w-[max(3.75rem,calc((100cqi-1.5rem)/5.4))] shrink-0 snap-start flex-col items-center gap-1 overflow-visible rounded-none bg-transparent p-0 text-center shadow-none ring-0 transition-transform duration-200 ease-out active:scale-[0.96]',
+                  selected ? 'fetch-explore-embed-category-card--active' : '',
                 ].join(' ')}
                 aria-label={def.ariaLabel}
                 aria-pressed={selected}
               >
                 <div
                   className={[
-                    'fetch-explore-embed-category-card__thumb-well flex w-full shrink-0 items-start justify-center px-1.5 pt-1.5',
-                    selected ? '' : 'bg-[#1a1d22]',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
+                    'fetch-explore-embed-category-card__circle relative flex size-[3rem] shrink-0 items-center justify-center rounded-full',
+                    selected
+                      ? 'fetch-explore-embed-category-card__circle--active bg-[#ffffff] ring-1 ring-black/10'
+                      : 'bg-[#25282f] ring-1 ring-white/[0.10]',
+                  ].join(' ')}
                 >
-                  <img
-                    src={def.imageSrc}
-                    alt=""
-                    className="pointer-events-none h-auto max-h-16 w-full object-contain object-top"
-                    loading="lazy"
-                    draggable={false}
-                  />
-                </div>
-                <div className="flex min-h-[2rem] flex-1 items-center justify-center px-1 py-1.5">
-                  <p
+                  <span
                     className={[
-                      'fetch-explore-embed-category-card__label line-clamp-2 text-center text-[9px] font-extrabold uppercase leading-[1.15] tracking-[0.04em] sm:text-[10px]',
-                      selected ? '' : 'text-white',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
+                      'fetch-explore-embed-category-card__icon-wrap flex size-[2rem] items-center justify-center',
+                      selected
+                        ? 'fetch-explore-embed-category-card__icon-wrap--on-light'
+                        : 'fetch-explore-embed-category-card__icon-wrap--on-dark',
+                    ].join(' ')}
                   >
-                    {def.title}
-                  </p>
+                    <ExploreCategoryPromoIcon id={def.id} className="h-full w-full" />
+                  </span>
                 </div>
+                <p
+                  className={[
+                    'fetch-explore-embed-category-card__label line-clamp-2 min-h-[1.55rem] w-full px-0 text-center text-[8px] font-extrabold uppercase leading-[1.1] tracking-[0.03em] text-white/88 sm:min-h-[1.65rem] sm:text-[9px]',
+                    selected ? 'text-white' : '',
+                  ].join(' ')}
+                >
+                  {def.title}
+                </p>
               </button>
             )
           })}
@@ -909,7 +540,7 @@ function ForYouLocalSellerCarouselCard({
       className="flex w-[calc((100%-1rem)/2.5)] shrink-0 flex-col bg-transparent p-0 text-left transition-transform active:scale-[0.98]"
       aria-label={`${handle}, verified seller, ${ratingLabel} out of 5 stars from ${reviewCount} reviews — open in marketplace`}
     >
-      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
+      <div className="relative aspect-square w-full overflow-hidden rounded-full bg-zinc-100 ring-1 ring-black/10 dark:bg-zinc-800 dark:ring-white/[0.12]">
         <img
           src={portraitSrc}
           alt=""
@@ -932,11 +563,11 @@ function ForYouLocalSellerCarouselCard({
             />
           </svg>
         </div>
-        <div className="pointer-events-none absolute bottom-0 left-0 z-[2] max-w-full min-w-0 pr-1">
+        <div className="pointer-events-none absolute bottom-1.5 left-1/2 z-[2] max-w-[calc(100%-0.75rem)] min-w-0 -translate-x-1/2">
           <div
             className={[
-              'inline-flex max-w-full min-w-0 items-center gap-1 border border-l-0 border-white/14',
-              'rounded-r-lg bg-black/75 py-1 pl-2 pr-2 shadow-[0_6px_18px_rgba(0,0,0,0.42)]',
+              'inline-flex max-w-full min-w-0 items-center gap-0.5 rounded-full border border-white/14',
+              'bg-black/78 px-2 py-0.5 shadow-[0_6px_18px_rgba(0,0,0,0.42)]',
               'backdrop-blur-[5px] [-webkit-backdrop-filter:blur(5px)]',
             ].join(' ')}
           >
@@ -1052,77 +683,14 @@ function filterReelsForBrowseFilter(
   })
 }
 
-type EmbedFeedTab = 'local' | 'global'
 type EmbedSectionKey = 'live' | 'sellers' | 'featured' | 'grid'
 
 const EMBED_FEED_SECTION_ORDER: EmbedSectionKey[] = ['live', 'sellers', 'featured', 'grid']
 
-function ForYouPremiumFeedTabs({
-  value,
-  onChange,
-}: {
-  value: EmbedFeedTab
-  onChange: (next: EmbedFeedTab) => void
-}) {
-  const tabs: { id: EmbedFeedTab; label: string }[] = [
-    { id: 'local', label: 'Local' },
-    { id: 'global', label: 'Global' },
-  ]
-  return (
-    <div className="mt-2 w-full min-w-0 self-stretch px-3" role="tablist" aria-label="Feed">
-      <div
-        className={[
-          'relative isolate w-full overflow-hidden rounded-2xl',
-          /* Charcoal-tinted glass — low fill opacity so blur reads through (matches #1a1d22 shell). */
-          'border border-white/[0.1]',
-          'bg-[rgba(26,29,34,0.38)]',
-          'shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_10px_36px_-14px_rgba(0,0,0,0.45)]',
-          'backdrop-blur-2xl backdrop-saturate-[1.35]',
-          '[-webkit-backdrop-filter:blur(24px)_saturate(1.35)]',
-        ].join(' ')}
-      >
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-px bg-gradient-to-r from-transparent via-white/[0.18] to-transparent"
-          aria-hidden
-        />
-        <div className="relative z-[2] flex w-full items-stretch gap-0.5 p-[5px] sm:gap-1 sm:p-1">
-          {tabs.map((t) => {
-            const selected = value === t.id
-            return (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                className={[
-                  'fetch-embed-feed-tab min-w-0 flex-1 rounded-xl px-2 py-2 text-center text-[11px] font-semibold leading-tight tracking-[-0.02em]',
-                  'transition-[color,background-color,box-shadow,transform] duration-200 ease-out',
-                  'sm:px-3 sm:py-2.5 sm:text-[12px]',
-                  selected
-                    ? 'relative z-[1] fetch-embed-feed-tab--active'
-                    : [
-                        'bg-transparent text-white/42',
-                        'shadow-none ring-0',
-                        'hover:text-white/78',
-                        'active:scale-[0.98]',
-                      ].join(' '),
-                ].join(' ')}
-                onClick={() => onChange(t.id)}
-              >
-                <span className="block truncate">{t.label}</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function HomeShellForYouFeedInner({
   onOpenDrops,
   onOpenMarketplace,
-  onOpenSearch,
+  onOpenSearch: _onOpenSearch,
   onOpenMarketplaceBrowse,
   onOpenPeerListing,
   onQuickBuyPeerListing,
@@ -1147,7 +715,6 @@ function HomeShellForYouFeedInner({
     return allListings
   }, [browseCategory, allListings])
 
-  const [embedFeedTab, setEmbedFeedTab] = useState<EmbedFeedTab>('local')
   const [embedCategoryId, setEmbedCategoryId] = useState<string>('explore-all')
 
   const embedCategoryHandoff = useMemo((): MarketplacePeerBrowseFilter => {
@@ -1179,8 +746,6 @@ function HomeShellForYouFeedInner({
 
   const embedGridListings = useMemo(() => embedFilteredListings.slice(0, 12), [embedFilteredListings])
 
-  const scopeLabel = embedFeedTab === 'local' ? 'near you' : 'worldwide'
-
   const openEmbedMarketplaceFiltered = useCallback(() => {
     if (onOpenMarketplaceBrowse) {
       onOpenMarketplaceBrowse(embedCategoryHandoff)
@@ -1196,7 +761,7 @@ function HomeShellForYouFeedInner({
         <section className="mb-1 min-w-0" aria-labelledby="fetch-embed-live-feed-heading">
           <div className="mb-0 flex items-center gap-1 px-3">
             <h3 id="fetch-embed-live-feed-heading" className={EMBED_FEED_SECTION_TITLE_CLASS}>
-              Lives {scopeLabel}
+              Lives near you
             </h3>
             <button
               type="button"
@@ -1248,7 +813,7 @@ function HomeShellForYouFeedInner({
         <section className="mb-1 min-w-0" aria-labelledby="fetch-featured-near-you-heading">
           <div className="mb-0 flex items-center gap-1 px-3">
             <h3 id="fetch-featured-near-you-heading" className={EMBED_FEED_SECTION_TITLE_CLASS}>
-              Listings {scopeLabel}
+              Listings near you
             </h3>
             <button
               type="button"
@@ -1290,7 +855,6 @@ function HomeShellForYouFeedInner({
     }
   }, [
     embedded,
-    scopeLabel,
     embedFilteredReels,
     embedTopSellers,
     embedFeaturedListings,
@@ -1311,16 +875,22 @@ function HomeShellForYouFeedInner({
         role="region"
         aria-label="Explore feed"
       >
-        <HomeTopBannerSlideshow
-          onOpenDrops={onOpenDrops}
-          onOpenPremium={onOpenSearch}
-          onViewAll={onOpenMarketplace}
-        />
+        <div className="sticky top-0 z-10 shrink-0 bg-[#1a1d22] pt-[max(0.5rem,env(safe-area-inset-top))]">
+          <header className="border-b border-white/[0.08] px-3 pb-3 pt-2">
+            <h2 className="sr-only">Explore</h2>
+          </header>
+        </div>
+        <div className="flex flex-col gap-2.5 bg-[#1a1d22] px-3 pb-2 pt-5">
+          <FetchRankProgressCard />
+          <div className="grid grid-cols-2 gap-2">
+            <FetchDailyStreakCard compact />
+            <FetchWeeklyGoalCard compact />
+          </div>
+        </div>
         <ExploreEmbedCategoryTallCarousel
           selectedId={embedCategoryId}
           onSelect={(def) => setEmbedCategoryId(def.id)}
         />
-        <ForYouPremiumFeedTabs value={embedFeedTab} onChange={setEmbedFeedTab} />
         {embedFeedSections
           ? EMBED_FEED_SECTION_ORDER.map((key, idx) => (
               <Fragment key={key}>
@@ -1352,17 +922,17 @@ function HomeShellForYouFeedInner({
       role="region"
       aria-label="For you — items and videos"
     >
-      <header className="shrink-0 px-0.5">
-        <h2 className="text-[1.05rem] font-bold tracking-[-0.03em] text-zinc-50">
-          For you
-        </h2>
-        <p className="mt-0.5 text-[12px] font-medium leading-snug text-zinc-400">
-          Drops, local listings, and store picks in one scroll.
-        </p>
-      </header>
-
-      <div className="shrink-0 px-0.5">
-        <MyFetchRewardsBanner layout="standalone" />
+      <div className="shrink-0 bg-[#1a1d22] pt-[max(0.25rem,env(safe-area-inset-top))]">
+        <header className="border-b border-white/[0.08] px-0.5 pb-3 pt-2">
+          <h2 className="sr-only">For you</h2>
+        </header>
+      </div>
+      <div className="flex flex-col gap-2.5 border-b border-white/[0.08] bg-[#1a1d22] px-0.5 pb-4 pt-5">
+        <FetchRankProgressCard />
+        <div className="grid grid-cols-2 gap-2">
+          <FetchDailyStreakCard compact />
+          <FetchWeeklyGoalCard compact />
+        </div>
       </div>
 
       <section aria-labelledby="fetch-for-you-videos-heading" className="min-w-0">

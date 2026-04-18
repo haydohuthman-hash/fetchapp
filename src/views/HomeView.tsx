@@ -67,6 +67,7 @@ import {
   EXPLORE_CATEGORY_ROW_PROMOS,
   type ExploreCategoryRowPromoDef,
 } from '../lib/exploreCategoryRowPromos'
+import { ExploreCategoryPromoIcon } from '../components/ExploreCategoryRowPromoBanner'
 import { BookingCompletionSummary } from '../components/booking/BookingCompletionSummary'
 import { TripSheetCard } from '../components/booking/TripSheetCard'
 import { TripDriverStatusStrip } from '../components/booking/TripDriverStatusStrip'
@@ -7839,14 +7840,8 @@ export default function HomeView({
                         }}
                         aria-label={`${item.ariaLabel} · ${viewers} people viewing now`}
                       >
-                        <span className="fetch-home-search-categories__icon-well fetch-home-search-categories__icon-well--photo flex h-24 w-24 shrink-0 overflow-hidden rounded-xl">
-                          <img
-                            src={item.imageSrc}
-                            alt=""
-                            className="max-h-full max-w-full object-contain object-center"
-                            loading="lazy"
-                            decoding="async"
-                          />
+                        <span className="fetch-home-search-categories__icon-well flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-zinc-900/50 p-1.5">
+                          <ExploreCategoryPromoIcon id={item.id} className="h-full w-full" />
                         </span>
                         <span className="line-clamp-2 mt-1 min-h-[2.8rem] px-0.5 text-[12px] font-extrabold leading-snug tracking-tight text-white">
                           {item.title}
