@@ -540,7 +540,7 @@ function ForYouLocalSellerCarouselCard({
       className="flex w-[calc((100%-1rem)/2.5)] shrink-0 flex-col bg-transparent p-0 text-left transition-transform active:scale-[0.98]"
       aria-label={`${handle}, verified seller, ${ratingLabel} out of 5 stars from ${reviewCount} reviews — open in marketplace`}
     >
-      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
+      <div className="relative aspect-square w-full overflow-hidden rounded-full bg-zinc-100 ring-1 ring-black/10 dark:bg-zinc-800 dark:ring-white/[0.12]">
         <img
           src={portraitSrc}
           alt=""
@@ -563,11 +563,11 @@ function ForYouLocalSellerCarouselCard({
             />
           </svg>
         </div>
-        <div className="pointer-events-none absolute bottom-0 left-0 z-[2] max-w-full min-w-0 pr-1">
+        <div className="pointer-events-none absolute bottom-1.5 left-1/2 z-[2] max-w-[calc(100%-0.75rem)] min-w-0 -translate-x-1/2">
           <div
             className={[
-              'inline-flex max-w-full min-w-0 items-center gap-1 border border-l-0 border-white/14',
-              'rounded-r-lg bg-black/75 py-1 pl-2 pr-2 shadow-[0_6px_18px_rgba(0,0,0,0.42)]',
+              'inline-flex max-w-full min-w-0 items-center gap-0.5 rounded-full border border-white/14',
+              'bg-black/78 px-2 py-0.5 shadow-[0_6px_18px_rgba(0,0,0,0.42)]',
               'backdrop-blur-[5px] [-webkit-backdrop-filter:blur(5px)]',
             ].join(' ')}
           >
