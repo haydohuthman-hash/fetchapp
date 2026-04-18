@@ -1,5 +1,4 @@
 import { Fragment, memo, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Flame, Medal, Trophy } from 'lucide-react'
 import { CURATED_DROP_REELS } from '../lib/drops/constants'
 import type { DropReel } from '../lib/drops/types'
 import { EXPLORE_CATEGORY_ROW_PROMOS, type ExploreCategoryRowPromoDef } from '../lib/exploreCategoryRowPromos'
@@ -15,6 +14,7 @@ import { SUPPLY_PRODUCTS, type SupplyProduct } from '../lib/suppliesCatalog'
 import { type MarketplacePeerBrowseFilter } from './ExploreBrowseBanner'
 import { ListingQuickAddPlusCircleIcon } from './icons/HomeShellNavIcons'
 import { ExploreCategoryBrowse } from './ExploreCategoryBrowse'
+import { FetchRankProgressCard } from './FetchRankProgressCard'
 
 export type HomeShellForYouFeedProps = {
   onOpenDrops: () => void
@@ -96,83 +96,6 @@ function reelPosterUrl(r: DropReel): string | undefined {
   const first = r.imageUrls?.[0]?.trim()
   if (first) return first
   return r.poster?.trim() || undefined
-}
-
-function hashPlayerSeed(): number {
-  const email = loadSession()?.email?.trim() ?? ''
-  if (!email) return 0x9e3779b9
-  let h = 0
-  for (let i = 0; i < email.length; i += 1) h = (h * 31 + email.charCodeAt(i)) >>> 0
-  return h || 0x9e3779b9
-}
-
-/** Compact game-style stat tiles (demo values seeded per session email). */
-function ForYouGameStatCards({ embedded }: { embedded?: boolean }) {
-  const seed = useMemo(() => hashPlayerSeed(), [])
-  const streakDays = 3 + (seed % 14)
-  const rankingPlace = 28 + (seed % 184)
-  const boomerangTiers = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond'] as const
-  const tierIdx = seed % boomerangTiers.length
-  const roman = ['I', 'II', 'III', 'IV'][seed % 4]
-  const boomerangLabel = `${boomerangTiers[tierIdx]} ${roman}`
-
-  /** Embedded: horizontal padding comes from Explore header band wrapper. */
-  const padClass = embedded ? '' : 'px-0.5'
-
-  const cards = [
-    {
-      key: 'streak',
-      label: 'Daily streak',
-      value: `${streakDays}d`,
-      sub: 'Keep it rolling',
-      icon: Flame,
-      accent: 'from-amber-500/35 via-orange-500/20 to-transparent',
-    },
-    {
-      key: 'rank',
-      label: 'Ranking',
-      value: `#${rankingPlace}`,
-      sub: 'Local movers',
-      icon: Medal,
-      accent: 'from-sky-500/30 via-violet-500/15 to-transparent',
-    },
-    {
-      key: 'boomerang',
-      label: 'Boomerang rank',
-      value: boomerangLabel,
-      sub: 'Throw score',
-      icon: Trophy,
-      accent: 'from-emerald-500/35 via-[#00ff6a]/15 to-transparent',
-    },
-  ] as const
-
-  return (
-    <div className={`${padClass} pb-0 pt-0`} role="region" aria-label="Your stats">
-      <div className="grid grid-cols-3 gap-2">
-        {cards.map((c) => (
-          <div
-            key={c.key}
-            className="fetch-card-glass-border relative flex min-h-[5.25rem] min-w-0 flex-col overflow-hidden rounded-2xl bg-[#25282f] px-2 py-2.5 text-left shadow-none"
-          >
-            <div
-              className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${c.accent} opacity-90`}
-              aria-hidden
-            />
-            <div className="relative flex items-start justify-between gap-1">
-              <span className="min-w-0 truncate text-[9px] font-extrabold uppercase tracking-[0.06em] text-white/72">
-                {c.label}
-              </span>
-              <c.icon className="size-4 shrink-0 text-white/85" strokeWidth={2.25} aria-hidden />
-            </div>
-            <p className="relative mt-1 min-w-0 truncate text-[15px] font-black tabular-nums leading-none tracking-tight text-white">
-              {c.value}
-            </p>
-            <p className="relative mt-auto pt-1 text-[9px] font-semibold leading-tight text-white/45">{c.sub}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
 }
 
 function reelProfileDisplayLine(r: DropReel): string {
@@ -1027,7 +950,7 @@ function HomeShellForYouFeedInner({
             </p>
           </header>
           <div className="px-3 pb-3">
-            <ForYouGameStatCards embedded />
+            <FetchRankProgressCard />
           </div>
         </div>
         <ExploreEmbedCategoryTallCarousel
@@ -1075,8 +998,8 @@ function HomeShellForYouFeedInner({
             Drops, local listings, and store picks in one scroll.
           </p>
         </header>
-        <div className="mt-3">
-          <ForYouGameStatCards />
+        <div className="mt-3 px-0.5">
+          <FetchRankProgressCard />
         </div>
       </div>
 
