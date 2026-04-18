@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { FETCH_REWARD_CARD_SHELL } from './fetchRewardCardShell'
+import { FETCH_REWARD_CARD_SHELL, FETCH_REWARD_CARD_SHELL_LIGHT } from './fetchRewardCardShell'
 
 function PremiumTreasureChest({ uid, size }: { uid: string; size: 'md' | 'sm' }) {
   const gid = `wk-chest-${uid.replace(/:/g, '')}`
@@ -69,6 +69,7 @@ export function FetchWeeklyGoalCard({ className = '', compact = false }: FetchWe
   const target = 5
   const pct = Math.round((current / target) * 100)
 
+  const shell = compact ? FETCH_REWARD_CARD_SHELL_LIGHT : FETCH_REWARD_CARD_SHELL
   const pad = compact ? 'px-2 pb-2 pt-2' : 'px-3.5 pb-4 pt-4'
   const headline = compact ? 'text-lg' : 'text-[1.375rem]'
   const micro = compact ? 'text-[9px] leading-tight' : 'text-[11px]'
@@ -82,22 +83,32 @@ export function FetchWeeklyGoalCard({ className = '', compact = false }: FetchWe
 
   return (
     <article
-      className={[FETCH_REWARD_CARD_SHELL, pad, 'min-h-0 min-w-0', compact ? 'rounded-lg' : '', className]
-        .filter(Boolean)
-        .join(' ')}
+      className={[shell, pad, 'min-h-0 min-w-0', compact ? 'rounded-lg' : '', className].filter(Boolean).join(' ')}
       aria-label="Weekly goal reward progress"
     >
       <div className={`relative flex ${flexGap}`}>
         <div className={`min-w-0 flex-1 ${compact ? 'pt-0' : 'pt-0.5'}`}>
-          <p className={`${titleSz} font-bold uppercase ${titleTrack} text-white/38`}>Weekly Goal</p>
-          <p className={`mt-px ${headline} font-black tabular-nums leading-none tracking-[-0.03em] text-white`}>
+          <p
+            className={`${titleSz} font-bold uppercase ${titleTrack} ${compact ? 'text-zinc-500' : 'text-white/38'}`}
+          >
+            Weekly Goal
+          </p>
+          <p
+            className={`mt-px ${headline} font-black tabular-nums leading-none tracking-[-0.03em] ${
+              compact ? 'text-zinc-900' : 'text-white'
+            }`}
+          >
             {current} / {target}
           </p>
-          <p className={`mt-px ${micro} font-medium text-white/48`}>Go live or list items</p>
+          <p className={`mt-px ${micro} font-medium ${compact ? 'text-zinc-600' : 'text-white/48'}`}>
+            Go live or list items
+          </p>
 
           <div className={`${barMt} space-y-1.5`}>
             <div
-              className={`${barH} overflow-hidden rounded-full bg-black/40 ring-1 ring-white/[0.08]`}
+              className={`${barH} overflow-hidden rounded-full ${
+                compact ? 'bg-zinc-100 ring-1 ring-zinc-200/90' : 'bg-black/40 ring-1 ring-white/[0.08]'
+              }`}
               role="progressbar"
               aria-valuenow={current}
               aria-valuemin={0}
@@ -114,7 +125,11 @@ export function FetchWeeklyGoalCard({ className = '', compact = false }: FetchWe
         {/* Reward chest */}
         <div className={`relative flex ${chestCol} shrink-0 flex-col items-center justify-center`}>
           <div
-            className={`relative flex ${chestWrap} items-center justify-center ${compact ? 'rounded-lg' : 'rounded-xl'} border border-white/[0.10] bg-[#1a1d22] ${compact ? 'mx-auto' : ''}`}
+            className={`relative flex ${chestWrap} items-center justify-center ${compact ? 'rounded-lg' : 'rounded-xl'} ${
+              compact
+                ? 'border border-violet-200/90 bg-gradient-to-b from-violet-50 to-fuchsia-50/80'
+                : 'border border-white/[0.10] bg-[#1a1d22]'
+            } ${compact ? 'mx-auto' : ''}`}
           >
             <PremiumTreasureChest uid={uid} size={compact ? 'sm' : 'md'} />
           </div>

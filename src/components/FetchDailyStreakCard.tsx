@@ -1,6 +1,6 @@
 import { useId, useMemo } from 'react'
 import { loadSession } from '../lib/fetchUserSession'
-import { FETCH_REWARD_CARD_SHELL } from './fetchRewardCardShell'
+import { FETCH_REWARD_CARD_SHELL, FETCH_REWARD_CARD_SHELL_LIGHT } from './fetchRewardCardShell'
 
 function streakDemoFromSession(): { completedInWeek: number } {
   const email = loadSession()?.email?.trim() ?? ''
@@ -50,6 +50,7 @@ export function FetchDailyStreakCard({ className = '', compact = false }: FetchD
   const { completedInWeek } = useMemo(() => streakDemoFromSession(), [])
   const weekLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
+  const shell = compact ? FETCH_REWARD_CARD_SHELL_LIGHT : FETCH_REWARD_CARD_SHELL
   const pad = compact ? 'px-2 pb-2 pt-2' : 'px-3.5 pb-4 pt-4'
   const iconBox = compact ? 'size-[2.75rem]' : 'size-[4.5rem]'
   const flameSvg = compact ? 'h-6 w-6' : 'h-9 w-9'
@@ -65,31 +66,43 @@ export function FetchDailyStreakCard({ className = '', compact = false }: FetchD
 
   return (
     <article
-      className={[FETCH_REWARD_CARD_SHELL, pad, 'min-h-0 min-w-0', compact ? 'rounded-lg' : '', className]
-        .filter(Boolean)
-        .join(' ')}
+      className={[shell, pad, 'min-h-0 min-w-0', compact ? 'rounded-lg' : '', className].filter(Boolean).join(' ')}
       aria-label="Daily streak reward progress"
     >
       <div className={`relative flex ${rowGap}`}>
         {/* Icon tile — same vocabulary as rank card reward capsule */}
         <div
-          className={`relative flex ${iconBox} shrink-0 items-center justify-center ${compact ? 'rounded-lg' : 'rounded-xl'} border border-white/[0.10] bg-[#1a1d22]`}
+          className={`relative flex ${iconBox} shrink-0 items-center justify-center ${compact ? 'rounded-lg' : 'rounded-xl'} ${
+            compact
+              ? 'border border-amber-200/90 bg-gradient-to-b from-amber-50 to-orange-50/90'
+              : 'border border-white/[0.10] bg-[#1a1d22]'
+          }`}
           aria-hidden
         >
           <StreakFlameIcon gradientId={flameGradId} className={flameSvg} />
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className={`${compact ? 'text-[9px]' : 'text-[10px]'} font-bold uppercase ${titleTrack} text-white/38`}>
+          <p
+            className={`${compact ? 'text-[9px]' : 'text-[10px]'} font-bold uppercase ${titleTrack} ${
+              compact ? 'text-zinc-500' : 'text-white/38'
+            }`}
+          >
             Daily Streak
           </p>
-          <p className={`mt-px ${headlineSize} font-black leading-none tracking-[-0.03em] text-white`}>7 days</p>
-          <p className={`mt-px ${microSub} font-medium text-white/48`}>Keep it going</p>
+          <p
+            className={`mt-px ${headlineSize} font-black leading-none tracking-[-0.03em] ${compact ? 'text-zinc-900' : 'text-white'}`}
+          >
+            7 days
+          </p>
+          <p className={`mt-px ${microSub} font-medium ${compact ? 'text-zinc-600' : 'text-white/48'}`}>Keep it going</p>
 
           {/* Week path — centers at (2i+1)/14; active segment from day 1 → last completed */}
           <div className={`relative ${weekMt}`}>
             <div
-              className={`pointer-events-none absolute inset-x-0 ${trackTop} h-px rounded-full bg-white/[0.07]`}
+              className={`pointer-events-none absolute inset-x-0 ${trackTop} h-px rounded-full ${
+                compact ? 'bg-zinc-200' : 'bg-white/[0.07]'
+              }`}
               aria-hidden
             />
             {completedInWeek > 1 ? (
@@ -111,26 +124,47 @@ export function FetchDailyStreakCard({ className = '', compact = false }: FetchD
                     <div
                       className={[
                         `relative flex ${dotSize} items-center justify-center rounded-full transition-all duration-300`,
-                        done
-                          ? 'border border-white/15 bg-[#323741]'
-                          : 'border border-white/[0.12] bg-black/50 shadow-inner',
-                        isLastDone
-                          ? compact
-                            ? 'ring-1 ring-[#00ff6a]/40 ring-offset-1 ring-offset-[#25282f]'
-                            : 'ring-2 ring-[#00ff6a]/35 ring-offset-2 ring-offset-[#25282f]'
+                        compact
+                          ? done
+                            ? 'border border-zinc-300 bg-zinc-100 shadow-sm'
+                            : 'border border-zinc-200 bg-white shadow-inner'
+                          : done
+                            ? 'border border-white/15 bg-[#323741]'
+                            : 'border border-white/[0.12] bg-black/50 shadow-inner',
+                        isLastDone && compact ? 'ring-2 ring-[#00ff6a]/50 ring-offset-1 ring-offset-white' : '',
+                        isLastDone && !compact
+                          ? 'ring-2 ring-[#00ff6a]/35 ring-offset-2 ring-offset-[#25282f]'
                           : '',
-                      ].join(' ')}
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                     >
                       {done ? (
                         <>
-                          <span className="absolute inset-0 rounded-full bg-white/[0.06]" />
-                          <span className={`relative ${dotFont} font-black tabular-nums text-white/95`}>{i + 1}</span>
+                          {!compact ? <span className="absolute inset-0 rounded-full bg-white/[0.06]" /> : null}
+                          <span
+                            className={`relative ${dotFont} font-black tabular-nums ${
+                              compact ? 'text-zinc-900' : 'text-white/95'
+                            }`}
+                          >
+                            {i + 1}
+                          </span>
                         </>
                       ) : (
-                        <span className={`${dotFont} font-bold tabular-nums text-white/28`}>{i + 1}</span>
+                        <span
+                          className={`${dotFont} font-bold tabular-nums ${compact ? 'text-zinc-400' : 'text-white/28'}`}
+                        >
+                          {i + 1}
+                        </span>
                       )}
                     </div>
-                    <span className={`${labelFont} font-semibold uppercase tracking-[0.05em] text-white/28`}>{label}</span>
+                    <span
+                      className={`${labelFont} font-semibold uppercase tracking-[0.05em] ${
+                        compact ? 'text-zinc-400' : 'text-white/28'
+                      }`}
+                    >
+                      {label}
+                    </span>
                   </li>
                 )
               })}
