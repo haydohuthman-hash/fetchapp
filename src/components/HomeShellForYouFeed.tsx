@@ -15,6 +15,7 @@ import { type MarketplacePeerBrowseFilter } from './ExploreBrowseBanner'
 import { ListingQuickAddPlusCircleIcon } from './icons/HomeShellNavIcons'
 import { ExploreCategoryBrowse } from './ExploreCategoryBrowse'
 import { FetchRankProgressCard } from './FetchRankProgressCard'
+import { FetchDailyStreakCard } from './FetchDailyStreakCard'
 
 export type HomeShellForYouFeedProps = {
   onOpenDrops: () => void
@@ -949,8 +950,9 @@ function HomeShellForYouFeedInner({
               Live sellers, picks, and browse near you.
             </p>
           </header>
-          <div className="px-3 pb-3">
+          <div className="flex flex-col gap-2.5 px-3 pb-3">
             <FetchRankProgressCard />
+            <FetchDailyStreakCard />
           </div>
         </div>
         <ExploreEmbedCategoryTallCarousel
@@ -998,8 +1000,9 @@ function HomeShellForYouFeedInner({
             Drops, local listings, and store picks in one scroll.
           </p>
         </header>
-        <div className="mt-3 px-0.5">
+        <div className="mt-3 flex flex-col gap-2.5 px-0.5">
           <FetchRankProgressCard />
+          <FetchDailyStreakCard />
         </div>
       </div>
 
