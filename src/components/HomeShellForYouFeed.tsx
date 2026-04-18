@@ -16,6 +16,7 @@ import { ListingQuickAddPlusCircleIcon } from './icons/HomeShellNavIcons'
 import { ExploreCategoryBrowse } from './ExploreCategoryBrowse'
 import { FetchRankProgressCard } from './FetchRankProgressCard'
 import { FetchDailyStreakCard } from './FetchDailyStreakCard'
+import { FetchWeeklyGoalCard } from './FetchWeeklyGoalCard'
 
 export type HomeShellForYouFeedProps = {
   onOpenDrops: () => void
@@ -953,6 +954,7 @@ function HomeShellForYouFeedInner({
           <div className="flex flex-col gap-2.5 px-3 pb-3">
             <FetchRankProgressCard />
             <FetchDailyStreakCard />
+            <FetchWeeklyGoalCard />
           </div>
         </div>
         <ExploreEmbedCategoryTallCarousel
@@ -1003,6 +1005,7 @@ function HomeShellForYouFeedInner({
         <div className="mt-3 flex flex-col gap-2.5 px-0.5">
           <FetchRankProgressCard />
           <FetchDailyStreakCard />
+          <FetchWeeklyGoalCard />
         </div>
       </div>
 
