@@ -61,7 +61,12 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
 
   return (
     <article
-      className={[FETCH_REWARD_CARD_SHELL, 'px-3.5 pb-4 pt-4', className].join(' ')}
+      className={[
+        FETCH_REWARD_CARD_SHELL,
+        'fetch-home-rank-profile-card',
+        'px-3.5 pb-4 pt-4',
+        className,
+      ].join(' ')}
       aria-label="Your Fetch rank and progress"
     >
       <div className="relative flex gap-3">
