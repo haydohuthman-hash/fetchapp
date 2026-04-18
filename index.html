@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1a1d22" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Fetch" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <!-- Safari iOS: PWA uses default status bar; accent chrome still via --fetch-bottom-nav-chrome in src/index.css -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <title>Fetch</title>
+    <script>
+      (function () {
+        try {
+          localStorage.setItem('fetch.themePreference', 'light')
+        } catch (e) {}
+        document.documentElement.setAttribute('data-fetch-theme', 'light')
+        try {
+          var ah = localStorage.getItem('fetch.accentHex')
+          if (ah && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(ah.trim())) {
+            var h = ah.trim()
+            if (h.length === 4) {
+              h = '#' + h[1] + h[1] + h[2] + h[2] + h[3] + h[3]
+            }
+            var n = parseInt(h.slice(1), 16)
+            var rr = (n >> 16) & 255
+            var gg = (n >> 8) & 255
+            var bb = n & 255
+            document.documentElement.style.setProperty('--fetch-accent', h.toLowerCase())
+            document.documentElement.style.setProperty('--fetch-accent-rgb', rr + ', ' + gg + ', ' + bb)
+            /* Shell / status bar stay charcoal — accent is for CTAs only, not browser chrome. */
+            var tm = document.querySelector('meta[name="theme-color"]')
+            if (tm) tm.setAttribute('content', '#1a1d22')
+          }
+        } catch (e2) {}
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
