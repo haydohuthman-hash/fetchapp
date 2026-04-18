@@ -50,47 +50,51 @@ export function FetchDailyStreakCard({ className = '', compact = false }: FetchD
   const { completedInWeek } = useMemo(() => streakDemoFromSession(), [])
   const weekLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
-  const pad = compact ? 'px-2.5 pb-3 pt-3' : 'px-3.5 pb-4 pt-4'
-  const iconBox = compact ? 'size-[3.25rem]' : 'size-[4.5rem]'
-  const flameSvg = compact ? 'h-7 w-7' : 'h-9 w-9'
-  const headlineSize = compact ? 'text-xl' : 'text-[1.375rem]'
-  const dotSize = compact ? 'size-[1.25rem]' : 'size-[1.65rem]'
-  const dotFont = compact ? 'text-[8px]' : 'text-[9px]'
-  const labelFont = compact ? 'text-[7px]' : 'text-[8px]'
-  const trackTop = compact ? 'top-[0.625rem]' : 'top-[0.825rem]'
-  const microSub = compact ? 'text-[10px]' : 'text-[11px]'
-  const titleTrack = compact ? 'tracking-[0.14em]' : 'tracking-[0.18em]'
+  const pad = compact ? 'px-2 pb-2 pt-2' : 'px-3.5 pb-4 pt-4'
+  const iconBox = compact ? 'size-[2.75rem]' : 'size-[4.5rem]'
+  const flameSvg = compact ? 'h-6 w-6' : 'h-9 w-9'
+  const headlineSize = compact ? 'text-lg' : 'text-[1.375rem]'
+  const dotSize = compact ? 'size-[1.0625rem]' : 'size-[1.65rem]'
+  const dotFont = compact ? 'text-[7px]' : 'text-[9px]'
+  const labelFont = compact ? 'text-[6px]' : 'text-[8px]'
+  const trackTop = compact ? 'top-[0.53rem]' : 'top-[0.825rem]'
+  const microSub = compact ? 'text-[9px] leading-tight' : 'text-[11px]'
+  const titleTrack = compact ? 'tracking-[0.12em]' : 'tracking-[0.18em]'
+  const rowGap = compact ? 'gap-2' : 'gap-3'
+  const weekMt = compact ? 'mt-2' : 'mt-3.5'
 
   return (
     <article
-      className={[FETCH_REWARD_CARD_SHELL, pad, 'min-h-0 min-w-0', className].join(' ')}
+      className={[FETCH_REWARD_CARD_SHELL, pad, 'min-h-0 min-w-0', compact ? 'rounded-lg' : '', className]
+        .filter(Boolean)
+        .join(' ')}
       aria-label="Daily streak reward progress"
     >
-      <div className="relative flex gap-3">
+      <div className={`relative flex ${rowGap}`}>
         {/* Icon tile — same vocabulary as rank card reward capsule */}
         <div
-          className={`relative flex ${iconBox} shrink-0 items-center justify-center rounded-xl border border-white/[0.10] bg-[#1a1d22]`}
+          className={`relative flex ${iconBox} shrink-0 items-center justify-center ${compact ? 'rounded-lg' : 'rounded-xl'} border border-white/[0.10] bg-[#1a1d22]`}
           aria-hidden
         >
           <StreakFlameIcon gradientId={flameGradId} className={flameSvg} />
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className={`text-[10px] font-bold uppercase ${titleTrack} text-white/38`}>Daily Streak</p>
-          <p className={`mt-0.5 ${headlineSize} font-black leading-none tracking-[-0.03em] text-white`}>
-            7 days
+          <p className={`${compact ? 'text-[9px]' : 'text-[10px]'} font-bold uppercase ${titleTrack} text-white/38`}>
+            Daily Streak
           </p>
-          <p className={`mt-0.5 ${microSub} font-medium leading-snug text-white/48`}>Keep it going</p>
+          <p className={`mt-px ${headlineSize} font-black leading-none tracking-[-0.03em] text-white`}>7 days</p>
+          <p className={`mt-px ${microSub} font-medium text-white/48`}>Keep it going</p>
 
           {/* Week path — centers at (2i+1)/14; active segment from day 1 → last completed */}
-          <div className={`relative ${compact ? 'mt-2.5' : 'mt-3.5'}`}>
+          <div className={`relative ${weekMt}`}>
             <div
               className={`pointer-events-none absolute inset-x-0 ${trackTop} h-px rounded-full bg-white/[0.07]`}
               aria-hidden
             />
             {completedInWeek > 1 ? (
               <div
-                className={`pointer-events-none absolute ${trackTop} h-[2px] -translate-y-1/2 rounded-full bg-gradient-to-r from-amber-400/85 via-orange-500/75 to-violet-500/65`}
+                className={`pointer-events-none absolute ${trackTop} ${compact ? 'h-px' : 'h-[2px]'} -translate-y-1/2 rounded-full bg-gradient-to-r from-amber-400/85 via-orange-500/75 to-violet-500/65`}
                 style={{
                   left: `${(100 / 14) * 1}%`,
                   width: `${((completedInWeek - 1) / 7) * 100}%`,
@@ -103,14 +107,18 @@ export function FetchDailyStreakCard({ className = '', compact = false }: FetchD
                 const done = i < completedInWeek
                 const isLastDone = done && i === completedInWeek - 1
                 return (
-                  <li key={`streak-day-${i}`} className="flex min-w-0 flex-col items-center gap-0.5">
+                  <li key={`streak-day-${i}`} className={`flex min-w-0 flex-col items-center ${compact ? 'gap-px' : 'gap-0.5'}`}>
                     <div
                       className={[
                         `relative flex ${dotSize} items-center justify-center rounded-full transition-all duration-300`,
                         done
                           ? 'border border-white/15 bg-[#323741]'
                           : 'border border-white/[0.12] bg-black/50 shadow-inner',
-                        isLastDone ? 'ring-2 ring-[#00ff6a]/35 ring-offset-2 ring-offset-[#25282f]' : '',
+                        isLastDone
+                          ? compact
+                            ? 'ring-1 ring-[#00ff6a]/40 ring-offset-1 ring-offset-[#25282f]'
+                            : 'ring-2 ring-[#00ff6a]/35 ring-offset-2 ring-offset-[#25282f]'
+                          : '',
                       ].join(' ')}
                     >
                       {done ? (

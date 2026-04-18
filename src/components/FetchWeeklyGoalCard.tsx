@@ -6,7 +6,9 @@ function PremiumTreasureChest({ uid, size }: { uid: string; size: 'md' | 'sm' })
   return (
     <svg
       viewBox="0 0 72 72"
-      className={size === 'sm' ? 'relative z-[1] h-[3.25rem] w-[3.25rem]' : 'relative z-[1] h-[4.25rem] w-[4.25rem]'}
+      className={
+        size === 'sm' ? 'relative z-[1] h-[2.75rem] w-[2.75rem]' : 'relative z-[1] h-[4.25rem] w-[4.25rem]'
+      }
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
@@ -67,30 +69,35 @@ export function FetchWeeklyGoalCard({ className = '', compact = false }: FetchWe
   const target = 5
   const pct = Math.round((current / target) * 100)
 
-  const pad = compact ? 'px-2.5 pb-3 pt-3' : 'px-3.5 pb-4 pt-4'
-  const headline = compact ? 'text-xl' : 'text-[1.375rem]'
-  const micro = compact ? 'text-[10px]' : 'text-[11px]'
-  const titleTrack = compact ? 'tracking-[0.14em]' : 'tracking-[0.18em]'
-  const barMt = compact ? 'mt-2.5' : 'mt-3.5'
-  const chestWrap = compact ? 'size-[3.75rem]' : 'size-[4.75rem]'
+  const pad = compact ? 'px-2 pb-2 pt-2' : 'px-3.5 pb-4 pt-4'
+  const headline = compact ? 'text-lg' : 'text-[1.375rem]'
+  const micro = compact ? 'text-[9px] leading-tight' : 'text-[11px]'
+  const titleTrack = compact ? 'tracking-[0.12em]' : 'tracking-[0.18em]'
+  const barMt = compact ? 'mt-2' : 'mt-3.5'
+  const chestWrap = compact ? 'size-[3rem]' : 'size-[4.75rem]'
   const chestCol = compact ? 'shrink-0' : 'w-[5.25rem]'
+  const barH = compact ? 'h-[5px]' : 'h-2'
+  const titleSz = compact ? 'text-[9px]' : 'text-[10px]'
+  const flexGap = compact ? 'gap-2' : 'gap-2 sm:gap-3'
 
   return (
     <article
-      className={[FETCH_REWARD_CARD_SHELL, pad, 'min-h-0 min-w-0', className].join(' ')}
+      className={[FETCH_REWARD_CARD_SHELL, pad, 'min-h-0 min-w-0', compact ? 'rounded-lg' : '', className]
+        .filter(Boolean)
+        .join(' ')}
       aria-label="Weekly goal reward progress"
     >
-      <div className="relative flex gap-2 sm:gap-3">
-        <div className="min-w-0 flex-1 pt-0.5">
-          <p className={`text-[10px] font-bold uppercase ${titleTrack} text-white/38`}>Weekly Goal</p>
-          <p className={`mt-0.5 ${headline} font-black tabular-nums leading-none tracking-[-0.03em] text-white`}>
+      <div className={`relative flex ${flexGap}`}>
+        <div className={`min-w-0 flex-1 ${compact ? 'pt-0' : 'pt-0.5'}`}>
+          <p className={`${titleSz} font-bold uppercase ${titleTrack} text-white/38`}>Weekly Goal</p>
+          <p className={`mt-px ${headline} font-black tabular-nums leading-none tracking-[-0.03em] text-white`}>
             {current} / {target}
           </p>
-          <p className={`mt-0.5 ${micro} font-medium leading-snug text-white/48`}>Go live or list items</p>
+          <p className={`mt-px ${micro} font-medium text-white/48`}>Go live or list items</p>
 
           <div className={`${barMt} space-y-1.5`}>
             <div
-              className="h-2 overflow-hidden rounded-full bg-black/40 ring-1 ring-white/[0.08]"
+              className={`${barH} overflow-hidden rounded-full bg-black/40 ring-1 ring-white/[0.08]`}
               role="progressbar"
               aria-valuenow={current}
               aria-valuemin={0}
@@ -107,7 +114,7 @@ export function FetchWeeklyGoalCard({ className = '', compact = false }: FetchWe
         {/* Reward chest */}
         <div className={`relative flex ${chestCol} shrink-0 flex-col items-center justify-center`}>
           <div
-            className={`relative flex ${chestWrap} items-center justify-center rounded-xl border border-white/[0.10] bg-[#1a1d22] ${compact ? 'mx-auto' : ''}`}
+            className={`relative flex ${chestWrap} items-center justify-center ${compact ? 'rounded-lg' : 'rounded-xl'} border border-white/[0.10] bg-[#1a1d22] ${compact ? 'mx-auto' : ''}`}
           >
             <PremiumTreasureChest uid={uid} size={compact ? 'sm' : 'md'} />
           </div>
