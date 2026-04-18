@@ -7240,6 +7240,24 @@ html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-app-address-header 
   stroke: rgba(255, 255, 255, 0.92) !important;
 }
 
+/* Light theme: dark ink on search pill (including Explore full-page glass bar). */
+html[data-fetch-theme='light']
+  .fetch-home-phone-stage
+  .fetch-app-address-header
+  .fetch-header-search-bar
+  .fetch-header-search-hint {
+  color: #18181b !important;
+}
+
+html[data-fetch-theme='light']
+  .fetch-home-phone-stage
+  .fetch-app-address-header
+  .fetch-header-search-bar
+  svg {
+  color: #18181b !important;
+  stroke: #18181b !important;
+}
+
 .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header

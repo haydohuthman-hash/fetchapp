@@ -172,10 +172,10 @@ export function FetchHomeAppAddressHeader({
             className="fetch-header-search-bar fetch-apple-warp-btn flex min-h-[2.5rem] min-w-0 flex-1 items-center gap-2 rounded-full border border-zinc-300/90 bg-white py-0 pl-3 pr-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_4px_18px_-6px_rgba(15,23,42,0.12)] ring-2 ring-black/[0.035] transition-[border-color,box-shadow,opacity,transform] hover:border-zinc-400 hover:shadow-[0_6px_22px_-8px_rgba(15,23,42,0.16)] active:scale-[0.99]"
             aria-label={`Search — ${searchHint}`}
           >
-            <SearchGlyph className="shrink-0 text-zinc-600" />
+            <SearchGlyph className="shrink-0 text-zinc-900" />
             <span
               key={hintIdx}
-              className="fetch-header-search-hint min-w-0 truncate text-[14px] font-semibold text-zinc-700"
+              className="fetch-header-search-hint min-w-0 truncate text-[14px] font-semibold text-zinc-900"
             >
               {searchHint}
             </span>
