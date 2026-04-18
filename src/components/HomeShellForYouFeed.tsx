@@ -25,6 +25,7 @@ import { SUPPLY_PRODUCTS, type SupplyProduct } from '../lib/suppliesCatalog'
 import { type MarketplacePeerBrowseFilter } from './ExploreBrowseBanner'
 import { MyFetchRewardsBanner } from './MyFetchRewardsBanner'
 import { ListingQuickAddPlusCircleIcon } from './icons/HomeShellNavIcons'
+import { ChevronRight } from 'lucide-react'
 import { ExploreCategoryBrowse } from './ExploreCategoryBrowse'
 import homeBannerGarageUrl from '../assets/home-banner-garage-sale.png'
 import homeBannerStreetwearUrl from '../assets/home-banner-streetwear.png'
@@ -404,7 +405,7 @@ function HomeTopBannerSlideshow({
                   {onOpenPremium ? (
                     <button
                       type="button"
-                      className="fetch-home-banner-premium-pill rounded-full bg-white px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[0.06em] text-black shadow-[0_4px_18px_rgba(0,0,0,0.35)] transition-[transform,opacity] active:scale-[0.97] motion-reduce:transition-none sm:px-5 sm:text-xs"
+                      className="fetch-home-banner-premium-pill rounded-full bg-white px-7 py-3 text-center text-sm font-bold uppercase tracking-[0.06em] text-black shadow-[0_4px_18px_rgba(0,0,0,0.35)] transition-[transform,opacity] active:scale-[0.97] motion-reduce:transition-none sm:px-9 sm:py-3.5 sm:text-base"
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.preventDefault()
@@ -418,7 +419,8 @@ function HomeTopBannerSlideshow({
                   {onViewAll ? (
                     <button
                       type="button"
-                      className="rounded-full border border-white/40 bg-white/10 px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[0.06em] text-white shadow-[0_2px_14px_rgba(0,0,0,0.25)] backdrop-blur-md transition-[transform,background-color] active:scale-[0.97] motion-reduce:transition-none sm:px-5 sm:text-xs"
+                      aria-label="View all"
+                      className="flex size-11 shrink-0 items-center justify-center rounded-full border border-white/40 bg-white/10 text-white shadow-[0_2px_14px_rgba(0,0,0,0.25)] backdrop-blur-md transition-[transform,background-color] active:scale-[0.97] motion-reduce:transition-none sm:size-12"
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.preventDefault()
@@ -426,7 +428,7 @@ function HomeTopBannerSlideshow({
                         onViewAll()
                       }}
                     >
-                      View All
+                      <ChevronRight className="size-6 shrink-0 stroke-[2.5]" aria-hidden />
                     </button>
                   ) : null}
                 </div>
