@@ -64,8 +64,8 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
       className={[FETCH_REWARD_CARD_SHELL_LIGHT, 'px-3.5 pb-4 pt-4', className].join(' ')}
       aria-label="Your Fetch rank and progress"
     >
-      <div className="relative flex gap-3">
-        <div className="relative shrink-0">
+      <div className="relative grid grid-cols-[auto,minmax(0,1fr),auto] gap-x-3 gap-y-3">
+        <div className="relative row-span-1 shrink-0">
           <div className="relative size-[4.5rem] rounded-full ring-2 ring-zinc-200 ring-offset-2 ring-offset-white">
             <div className="relative size-full overflow-hidden rounded-full bg-zinc-100 ring-1 ring-zinc-200/90">
               <img
@@ -88,31 +88,11 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
           </div>
         </div>
 
-        <div className="min-w-0 flex-1 pt-0.5">
+        <div className="min-w-0 pt-0.5">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Level 4</p>
           <h3 className="mt-0.5 truncate text-[1.375rem] font-black leading-[1.1] tracking-[-0.03em] text-neutral-950">
             Hustler
           </h3>
-
-          <div className="mt-3 space-y-1.5">
-            <div className="flex items-end justify-between gap-2">
-              <span className="text-[11px] font-semibold tabular-nums text-zinc-700">
-                {xpCurrent.toLocaleString()} / {xpMax.toLocaleString()} XP
-              </span>
-            </div>
-            <div
-              className="h-2 overflow-hidden rounded-full bg-zinc-100 ring-1 ring-zinc-200/90"
-              role="progressbar"
-              aria-valuenow={xpCurrent}
-              aria-valuemin={0}
-              aria-valuemax={xpMax}
-            >
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-violet-500"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-          </div>
         </div>
 
         <div className="flex w-[5.25rem] shrink-0 flex-col items-end gap-1.5 pt-0.5 text-right">
@@ -128,6 +108,27 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
           <p className="max-w-[6rem] text-[11px] font-bold leading-tight tracking-[-0.02em] text-neutral-950">
             Rank 2 Boomerang
           </p>
+        </div>
+
+        {/* XP bar on the left — spans avatar + title columns only (not under reward stack) */}
+        <div className="col-span-2 min-w-0 space-y-1.5">
+          <div className="flex items-end justify-between gap-2">
+            <span className="text-[11px] font-semibold tabular-nums text-zinc-700">
+              {xpCurrent.toLocaleString()} / {xpMax.toLocaleString()} XP
+            </span>
+          </div>
+          <div
+            className="h-2 overflow-hidden rounded-full bg-zinc-100 ring-1 ring-zinc-200/90"
+            role="progressbar"
+            aria-valuenow={xpCurrent}
+            aria-valuemin={0}
+            aria-valuemax={xpMax}
+          >
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-violet-500"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
         </div>
       </div>
     </article>
