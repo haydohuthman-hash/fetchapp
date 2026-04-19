@@ -883,7 +883,7 @@ function HomeShellForYouFeedInner({
         <div className="flex flex-col gap-2.5 bg-white px-3 pb-2 pt-5">
           <FetchRankProgressCard />
           <div className="grid grid-cols-2 gap-2">
-            <FetchDailyStreakCard compact />
+            <FetchDailyStreakCard compact celebrateOnMount />
             <FetchWeeklyGoalCard compact />
           </div>
         </div>
@@ -930,7 +930,7 @@ function HomeShellForYouFeedInner({
       <div className="flex flex-col gap-2.5 border-b border-zinc-200/90 bg-white px-0.5 pb-4 pt-5">
         <FetchRankProgressCard />
         <div className="grid grid-cols-2 gap-2">
-          <FetchDailyStreakCard compact />
+          <FetchDailyStreakCard compact celebrateOnMount />
           <FetchWeeklyGoalCard compact />
         </div>
       </div>

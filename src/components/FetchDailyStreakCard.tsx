@@ -1,5 +1,6 @@
-import { useId, useMemo } from 'react'
+import { useEffect, useId, useMemo, useRef } from 'react'
 import { loadSession } from '../lib/fetchUserSession'
+import { playStreakCelebrationSound } from '../lib/playStreakCelebrationSound'
 import { FETCH_REWARD_CARD_SHELL, FETCH_REWARD_CARD_SHELL_LIGHT } from './fetchRewardCardShell'
 
 function streakDemoFromSession(): { completedInWeek: number } {
@@ -39,40 +40,74 @@ export type FetchDailyStreakCardProps = {
   className?: string
   /** Narrow column layout for pairing with Weekly Goal (`grid-cols-2`). */
   compact?: boolean
+  /** One-time swoosh + pulse when the card mounts (home open). */
+  celebrateOnMount?: boolean
 }
+
+/** Yellow progress styling shared between compact + full streak bars. */
+const STREAK_BAR_FILL_CLASS =
+  'rounded-full bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]'
 
 /**
  * Daily streak reward surface — paired visually with `FetchRankProgressCard`.
  */
-export function FetchDailyStreakCard({ className = '', compact = false }: FetchDailyStreakCardProps) {
+export function FetchDailyStreakCard({
+  className = '',
+  compact = false,
+  celebrateOnMount = false,
+}: FetchDailyStreakCardProps) {
   const uid = useId()
+  const rootRef = useRef<HTMLElement>(null)
   const flameGradId = `fetch-streak-flame-${uid.replace(/:/g, '')}`
   const { completedInWeek } = useMemo(() => streakDemoFromSession(), [])
   const weekLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
   const shell = compact ? FETCH_REWARD_CARD_SHELL_LIGHT : FETCH_REWARD_CARD_SHELL
-  const pad = compact ? 'px-2 pb-2 pt-2' : 'px-3.5 pb-4 pt-4'
-  const iconBox = compact ? 'size-[2.75rem]' : 'size-[4.5rem]'
-  const flameSvg = compact ? 'h-6 w-6' : 'h-9 w-9'
-  const headlineSize = compact ? 'text-lg' : 'text-[1.375rem]'
-  const dotSize = compact ? 'size-[1.0625rem]' : 'size-[1.65rem]'
-  const dotFont = compact ? 'text-[7px]' : 'text-[9px]'
-  const labelFont = compact ? 'text-[6px]' : 'text-[8px]'
-  const trackTop = compact ? 'top-[0.53rem]' : 'top-[0.825rem]'
-  const microSub = compact ? 'text-[9px] leading-tight' : 'text-[11px]'
-  const titleTrack = compact ? 'tracking-[0.12em]' : 'tracking-[0.18em]'
-  const rowGap = compact ? 'gap-2' : 'gap-3'
-  const weekMt = compact ? 'mt-2' : 'mt-3.5'
+  const pad = compact ? 'px-2 pb-1.5 pt-1.5' : 'px-3.5 pb-4 pt-4'
+  const iconBox = compact ? 'size-[2.5rem]' : 'size-[4.5rem]'
+  const flameSvg = compact ? 'h-5 w-5' : 'h-9 w-9'
+  const headlineSize = compact ? 'text-base' : 'text-[1.375rem]'
+  const dotSize = compact ? 'size-[1rem]' : 'size-[1.65rem]'
+  const dotFont = compact ? 'text-[6px]' : 'text-[9px]'
+  const labelFont = compact ? 'text-[5px]' : 'text-[8px]'
+  const trackTop = compact ? 'top-[0.48rem]' : 'top-[0.825rem]'
+  const microSub = compact ? 'text-[8px] leading-tight' : 'text-[11px]'
+  const titleTrack = compact ? 'tracking-[0.1em]' : 'tracking-[0.18em]'
+  const rowGap = compact ? 'gap-1.5' : 'gap-3'
+  const weekMt = compact ? 'mt-1.5' : 'mt-3.5'
+
+  useEffect(() => {
+    if (!celebrateOnMount) return
+    let cancelled = false
+    const root = rootRef.current
+    const run = () => {
+      if (cancelled || !root) return
+      root.classList.add('fetch-daily-streak-card--celebrate')
+      playStreakCelebrationSound()
+      window.setTimeout(() => {
+        root.classList.remove('fetch-daily-streak-card--celebrate')
+      }, 900)
+    }
+    const id = window.requestAnimationFrame(() => window.requestAnimationFrame(run))
+    return () => {
+      cancelled = true
+      window.cancelAnimationFrame(id)
+    }
+  }, [celebrateOnMount])
 
   return (
     <article
+      ref={rootRef}
       className={[shell, pad, 'min-h-0 min-w-0', compact ? 'rounded-lg' : '', className].filter(Boolean).join(' ')}
       aria-label="Daily streak reward progress"
     >
-      <div className={`relative flex ${rowGap}`}>
-        {/* Icon tile — same vocabulary as rank card reward capsule */}
+      {/* Swoosh highlight passes over card on celebration */}
+      <div className="fetch-daily-streak-card__swoosh pointer-events-none absolute inset-0 z-[2] opacity-0" aria-hidden />
+
+      <div className={`relative z-[1] flex ${rowGap}`}>
+        {/* Icon tile */}
         <div
-          className={`relative flex ${iconBox} shrink-0 items-center justify-center ${compact ? 'rounded-lg' : 'rounded-xl'} ${
+          className={`relative flex ${iconBox} shrink-0 items-center justify-center ${compact ? 'rounded-md' : 'rounded-xl'} ${
             compact
               ? 'border border-amber-200/90 bg-gradient-to-b from-amber-50 to-orange-50/90'
               : 'border border-white/[0.10] bg-[#1a1d22]'
@@ -84,7 +119,7 @@ export function FetchDailyStreakCard({ className = '', compact = false }: FetchD
 
         <div className="min-w-0 flex-1">
           <p
-            className={`${compact ? 'text-[9px]' : 'text-[10px]'} font-bold uppercase ${titleTrack} ${
+            className={`${compact ? 'text-[8px]' : 'text-[10px]'} font-bold uppercase ${titleTrack} ${
               compact ? 'text-zinc-500' : 'text-white/38'
             }`}
           >
@@ -97,17 +132,22 @@ export function FetchDailyStreakCard({ className = '', compact = false }: FetchD
           </p>
           <p className={`mt-px ${microSub} font-medium ${compact ? 'text-zinc-600' : 'text-white/48'}`}>Keep it going</p>
 
-          {/* Week path — centers at (2i+1)/14; active segment from day 1 → last completed */}
+          {/* Thin yellow progress bar (compact) */}
+          <div className={`${compact ? 'mt-1.5' : 'mt-2'} h-1 overflow-hidden rounded-full ${compact ? 'bg-amber-100 ring-1 ring-amber-200/80' : 'bg-black/40 ring-1 ring-white/[0.08]'}`}>
+            <div className={`h-full ${STREAK_BAR_FILL_CLASS}`} style={{ width: `${Math.min(100, (completedInWeek / 7) * 100)}%` }} />
+          </div>
+
+          {/* Week path */}
           <div className={`relative ${weekMt}`}>
             <div
               className={`pointer-events-none absolute inset-x-0 ${trackTop} h-px rounded-full ${
-                compact ? 'bg-zinc-200' : 'bg-white/[0.07]'
+                compact ? 'bg-amber-100' : 'bg-white/[0.07]'
               }`}
               aria-hidden
             />
             {completedInWeek > 1 ? (
               <div
-                className={`pointer-events-none absolute ${trackTop} ${compact ? 'h-px' : 'h-[2px]'} -translate-y-1/2 rounded-full bg-gradient-to-r from-amber-400/85 via-orange-500/75 to-violet-500/65`}
+                className={`pointer-events-none absolute ${trackTop} ${compact ? 'h-[3px]' : 'h-[2px]'} -translate-y-1/2 rounded-full ${STREAK_BAR_FILL_CLASS}`}
                 style={{
                   left: `${(100 / 14) * 1}%`,
                   width: `${((completedInWeek - 1) / 7) * 100}%`,
@@ -126,15 +166,13 @@ export function FetchDailyStreakCard({ className = '', compact = false }: FetchD
                         `relative flex ${dotSize} items-center justify-center rounded-full transition-all duration-300`,
                         compact
                           ? done
-                            ? 'border border-zinc-300 bg-zinc-100 shadow-sm'
+                            ? 'border border-amber-300/90 bg-gradient-to-b from-amber-50 to-amber-100/90 shadow-sm'
                             : 'border border-zinc-200 bg-white shadow-inner'
                           : done
                             ? 'border border-white/15 bg-[#323741]'
                             : 'border border-white/[0.12] bg-black/50 shadow-inner',
-                        isLastDone && compact ? 'ring-2 ring-[#00ff6a]/50 ring-offset-1 ring-offset-white' : '',
-                        isLastDone && !compact
-                          ? 'ring-2 ring-[#00ff6a]/35 ring-offset-2 ring-offset-[#25282f]'
-                          : '',
+                        isLastDone && compact ? 'ring-2 ring-amber-400/70 ring-offset-1 ring-offset-white' : '',
+                        isLastDone && !compact ? 'ring-2 ring-[#00ff6a]/35 ring-offset-2 ring-offset-[#25282f]' : '',
                       ]
                         .filter(Boolean)
                         .join(' ')}
@@ -144,16 +182,14 @@ export function FetchDailyStreakCard({ className = '', compact = false }: FetchD
                           {!compact ? <span className="absolute inset-0 rounded-full bg-white/[0.06]" /> : null}
                           <span
                             className={`relative ${dotFont} font-black tabular-nums ${
-                              compact ? 'text-zinc-900' : 'text-white/95'
+                              compact ? 'text-amber-950' : 'text-white/95'
                             }`}
                           >
                             {i + 1}
                           </span>
                         </>
                       ) : (
-                        <span
-                          className={`${dotFont} font-bold tabular-nums ${compact ? 'text-zinc-400' : 'text-white/28'}`}
-                        >
+                        <span className={`${dotFont} font-bold tabular-nums ${compact ? 'text-zinc-400' : 'text-white/28'}`}>
                           {i + 1}
                         </span>
                       )}
