@@ -9,7 +9,8 @@ type RowProps = {
   onOpen: (handoff: MarketplacePeerBrowseFilter) => void
 }
 
-function ExploreCategoryPromoIcon({ id, className = '' }: { id: ExploreCategoryRowPromoDef['id']; className?: string }) {
+/** Category glyph — reused in carousel tiles (PNG-free). */
+export function ExploreCategoryPromoIcon({ id, className = '' }: { id: ExploreCategoryRowPromoDef['id']; className?: string }) {
   const svg = (children: ReactNode) => (
     <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden>
       <ellipse cx="24" cy="41.5" rx="12.5" ry="2.8" fill="#0F172A" opacity="0.12" />

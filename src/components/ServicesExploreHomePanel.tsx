@@ -100,9 +100,9 @@ export function ServicesExploreHomePanel({
   flushExploreScroll.current = onExploreFeedScrollTop
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[#1a1d22]">
+    <div className="flex min-h-0 flex-1 flex-col bg-white">
       <div
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#1a1d22] [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         onScroll={
           onExploreFeedScrollTop
             ? (e) => {

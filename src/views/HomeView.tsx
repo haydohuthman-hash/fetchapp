@@ -67,6 +67,7 @@ import {
   EXPLORE_CATEGORY_ROW_PROMOS,
   type ExploreCategoryRowPromoDef,
 } from '../lib/exploreCategoryRowPromos'
+import { ExploreCategoryPromoIcon } from '../components/ExploreCategoryRowPromoBanner'
 import { BookingCompletionSummary } from '../components/booking/BookingCompletionSummary'
 import { TripSheetCard } from '../components/booking/TripSheetCard'
 import { TripDriverStatusStrip } from '../components/booking/TripDriverStatusStrip'
@@ -5727,10 +5728,10 @@ export default function HomeView({
 
       {!brainImmersive && servicesExploreFullPage ? (
         <>
-        <div className="fetch-explore-full-page-shell absolute inset-0 z-[52] flex min-h-dvh flex-col bg-[#1a1d22]">
+        <div className="fetch-explore-full-page-shell absolute inset-0 z-[52] flex min-h-dvh flex-col bg-white">
           {!forYouLoaded ? (
             <main
-              className="mx-auto flex min-h-0 w-full max-w-none flex-1 flex-col bg-[#1a1d22] pb-2 pt-0"
+              className="mx-auto flex min-h-0 w-full max-w-none flex-1 flex-col bg-white pb-2 pt-0"
               role="main"
               aria-label="Loading"
             >
@@ -5738,7 +5739,7 @@ export default function HomeView({
             </main>
           ) : (
             <main
-              className="mx-auto flex min-h-0 w-full max-w-none flex-1 flex-col bg-[#1a1d22] px-0 pb-2 pt-0 animate-[fetch-for-you-fadein_0.45s_ease_both]"
+              className="mx-auto flex min-h-0 w-full max-w-none flex-1 flex-col bg-white px-0 pb-2 pt-0 animate-[fetch-for-you-fadein_0.45s_ease_both]"
               role="main"
               aria-label="Explore"
             >
@@ -7776,9 +7777,9 @@ export default function HomeView({
       homeShellTab === 'search' &&
       cardVisible &&
       homeBrainFlow == null ? (
-        <div className="fetch-home-search-route absolute inset-0 z-[52] flex min-h-dvh flex-col bg-[#1a1d22]">
+        <div className="fetch-home-search-route absolute inset-0 z-[52] flex min-h-dvh flex-col bg-white">
           <main
-            className="fetch-home-search-categories mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#1a1d22] px-3 pb-2 pt-0"
+            className="fetch-home-search-categories mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-white px-3 pb-2 pt-0"
             style={{
               paddingTop: `calc(max(0.5rem, env(safe-area-inset-top, 0px)) + ${FETCH_HOME_APP_ADDRESS_HEADER_BELOW_REM})`,
             }}
@@ -7839,14 +7840,8 @@ export default function HomeView({
                         }}
                         aria-label={`${item.ariaLabel} · ${viewers} people viewing now`}
                       >
-                        <span className="fetch-home-search-categories__icon-well fetch-home-search-categories__icon-well--photo flex h-24 w-24 shrink-0 overflow-hidden rounded-xl">
-                          <img
-                            src={item.imageSrc}
-                            alt=""
-                            className="max-h-full max-w-full object-contain object-center"
-                            loading="lazy"
-                            decoding="async"
-                          />
+                        <span className="fetch-home-search-categories__icon-well flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-zinc-900/50 p-1.5">
+                          <ExploreCategoryPromoIcon id={item.id} className="h-full w-full" />
                         </span>
                         <span className="line-clamp-2 mt-1 min-h-[2.8rem] px-0.5 text-[12px] font-extrabold leading-snug tracking-tight text-white">
                           {item.title}
