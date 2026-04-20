@@ -18,7 +18,17 @@ html {
 }
 
 html[data-fetch-theme='light'] {
-  /* Global app shell: match Home dark theme across all pages. */
+  --fetch-chrome-bg: #ffffff;
+  --fetch-app-bg: #ffffff;
+  --fetch-shell-ring: rgba(15, 23, 42, 0.08);
+  --fetch-map-placeholder-bg: #f4f4f5;
+  --color-fetch-charcoal: #18181b;
+  --color-fetch-muted: #71717a;
+  --color-fetch-soft-gray: #f4f4f5;
+  --orb-glow: 244, 246, 250;
+}
+
+html[data-fetch-theme='dark'] {
   --fetch-chrome-bg: #1a1d22;
   --fetch-app-bg: #1a1d22;
   --fetch-shell-ring: rgba(70, 74, 83, 0.28);
@@ -1611,207 +1621,23 @@ html[data-fetch-theme='light'] .fetch-seq-waitlist-pulse {
 }
 
 /* ------------------------------------------------------------
- * Global Home Theme Lock (all app pages/routes)
+ * Dark app shell — default surfaces.
  * ------------------------------------------------------------ */
-html[data-fetch-theme='light'] .fetch-app-shell-bg,
-html[data-fetch-theme='light'] .fetch-app-shell-inner {
+.fetch-app-shell-bg,
+.fetch-app-shell-inner {
   background: #1a1d22 !important;
-  color: #f3f4f6 !important;
+  color: #e4e4e7 !important;
 }
 
-/* Explore full-page: full-bleed hero — beat global shell lock above. */
-html[data-fetch-theme='light'] .fetch-app-shell-bg:has(.fetch-home-vision[data-services-explore-full-page='true']),
-html[data-fetch-theme='light']
-  .fetch-app-shell-inner:has(.fetch-home-vision[data-services-explore-full-page='true']) {
-  background: transparent !important;
-}
-
-html[data-fetch-theme='light']
-  .fetch-app-shell-inner:has(.fetch-home-vision[data-services-explore-full-page='true']) {
-  max-width: none !important;
-}
-
-html[data-fetch-theme='light'] .fetch-home-phone-stage:has(.fetch-home-vision[data-services-explore-full-page='true']) {
-  background-color: transparent !important;
-}
-
-html[data-fetch-theme='light']
-  .fetch-home-vision.fetch-home-phone-frame[data-services-explore-full-page='true'] {
-  max-width: none !important;
-  width: 100%;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-theme-chrome,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-auth-screen,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-account-screen,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-account-screen--home-glow::before {
+.fetch-app-shell-inner .fetch-theme-chrome {
   background: #1a1d22 !important;
 }
 
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-account-card,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-advanced-service-panel,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-map-side-menu,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-map-help-dialog,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-maps-explore-suggestions,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-maps-explore-category-card,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-maps-explore-carousel-card,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-service-segment,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-service-segment--selected,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-booking-sheet,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-sheet-surface {
+.fetch-app-shell-inner .fetch-sheet-surface {
   background: #1a1d22 !important;
-  background-image: none !important;
-  border-color: #2d3138 !important;
-  color: #f3f4f6 !important;
-  box-shadow: none !important;
+  color: #e4e4e7 !important;
 }
 
-/* Side menu title row: step above panel charcoal so the header reads a touch lighter. */
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-map-side-menu .fetch-home-map-side-menu-header {
-  background: #22272f !important;
-}
-
-/* Dark chrome sheet: menu row icons + close — neutral zinc, not brand red. */
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-map-side-menu nav button svg {
-  color: #a1a1aa !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-map-side-menu-dismiss {
-  color: #d4d4d8 !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-map-side-menu-dismiss:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-auth-input,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-account-input,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-address-input,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-maps-explore-input,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-stage-text-input,
-html[data-fetch-theme='light'] .fetch-app-shell-inner input,
-html[data-fetch-theme='light'] .fetch-app-shell-inner textarea,
-html[data-fetch-theme='light'] .fetch-app-shell-inner select {
-  background: #1a1d22 !important;
-  border-color: #2d3138 !important;
-  color: #f3f4f6 !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner input::placeholder,
-html[data-fetch-theme='light'] .fetch-app-shell-inner textarea::placeholder {
-  color: #a1a1aa !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-secondary-btn,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-account-btn-ghost,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-sheet-chrome-btn,
-html[data-fetch-theme='light'] .fetch-app-shell-inner button {
-  border-color: #2d3138;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-zinc-900,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-zinc-800,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-zinc-700 {
-  color: #f3f4f6 !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-zinc-600,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-zinc-500,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-zinc-400 {
-  color: #a1a1aa !important;
-}
-
-/* Catch remaining utility classes so every route stays dark. */
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-white,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-black,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-gray-50,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-gray-100,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-gray-200,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-slate-50,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-slate-100,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-neutral-50,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-neutral-100,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-stone-50,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-stone-100 {
-  background-color: #1a1d22 !important;
-}
-
-/* Search → Categories: `.bg-black` remap above becomes charcoal; force route + main + scroll. */
-html[data-fetch-theme='light'] .fetch-app-shell-inner div.fetch-home-search-route,
-html[data-fetch-theme='light'] .fetch-app-shell-inner main.fetch-home-search-categories,
-html[data-fetch-theme='light'] .fetch-app-shell-inner div.fetch-home-search-categories__scroll {
-  background-color: #1a1d22 !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-white\/95,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-white\/90,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-white\/80,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-gray-50\/90,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-slate-50\/90,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-neutral-50\/90 {
-  background-color: #1f232a !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-black,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-gray-900,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-gray-800,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-slate-900,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-slate-800,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-neutral-900,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-neutral-800,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-stone-900,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-stone-800 {
-  color: #f3f4f6 !important;
-}
-
-/* Explore hero Fetch Premium pill — undo `.bg-white` / `.text-black` charcoal remap in light theme. */
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-top-banner-slideshow .fetch-home-banner-premium-pill {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active {
-  background-color: #ffffff !important;
-}
-
-html[data-fetch-theme='light']
-  .fetch-app-shell-inner
-  .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active
-  .fetch-explore-embed-category-card__label {
-  color: #0f0f0f !important;
-}
-
-/* Hyper-green pills: .text-black above is for “dark chrome”; keep real black on neon badges */
-html[data-fetch-theme='light'] .fetch-app-shell-inner [class*='bg-[#00ff6a]'] .text-black,
-html[data-fetch-theme='light'] .fetch-app-shell-inner [class*='bg-[#00ff6a]'].text-black,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-fetch-red .text-black,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-fetch-red.text-black {
-  color: #000000 !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-gray-600,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-gray-500,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-slate-600,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-slate-500,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-neutral-600,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-neutral-500,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-stone-600,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .text-stone-500 {
-  color: #a1a1aa !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .border-white,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .border-gray-100,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .border-gray-200,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .border-slate-100,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .border-slate-200,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .border-neutral-100,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .border-neutral-200,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .border-stone-100,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .border-stone-200 {
-  border-color: #2d3138 !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner {
+.fetch-app-shell-inner {
   color-scheme: dark;
 }

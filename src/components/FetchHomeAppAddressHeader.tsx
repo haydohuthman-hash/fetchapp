@@ -66,7 +66,7 @@ export function FetchItWordmark({
         width={128}
         height={128}
         draggable={false}
-        style={{ mixBlendMode: 'screen' }}
+        style={{ mixBlendMode: 'multiply' }}
         className={
           imageClassName ??
           'h-[2.1rem] w-auto object-contain object-left sm:h-[2.3rem]'
@@ -80,7 +80,7 @@ export function FetchItWordmark({
  * Header icon hits — uniform tap + glyph size (see `.fetch-header-chrome-icon-btn` in CSS).
  */
 const headerChromeIconBtn =
-  'fetch-header-chrome-icon-btn fetch-apple-warp-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-md border-0 bg-transparent p-0 text-white shadow-none ring-0 transition-[transform,opacity] hover:opacity-75 active:scale-[0.96]'
+  'fetch-header-chrome-icon-btn fetch-apple-warp-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.06] p-0 text-zinc-300 shadow-none ring-0 transition-[transform,box-shadow,opacity] hover:border-white/[0.14] hover:text-zinc-100 active:scale-[0.96]'
 const headerChromeIconGlyph = 'block h-6 w-6 shrink-0'
 
 const headerEase =
@@ -151,7 +151,7 @@ export function FetchHomeAppAddressHeader({
   return (
     <header
       className={[
-        'fetch-app-address-header pointer-events-auto fixed left-0 right-0 top-0 z-[56] bg-[#1a1d22]',
+        'fetch-app-address-header pointer-events-auto fixed left-0 right-0 top-0 z-[56] border-b border-white/[0.06] bg-[#1a1d22] shadow-[0_8px_28px_-8px_rgba(0,0,0,0.4)]',
         chromeShellSlide,
         'translate-y-0',
       ].join(' ')}
@@ -169,13 +169,13 @@ export function FetchHomeAppAddressHeader({
           <button
             type="button"
             onClick={handleOpenSearch}
-            className="fetch-header-search-bar fetch-apple-warp-btn flex min-h-[2.5rem] min-w-0 flex-1 items-center gap-2 rounded-full border border-white/[0.14] bg-transparent py-0 pl-3 pr-3 text-left transition-[border-color,opacity,transform] hover:border-white/25 active:scale-[0.99]"
+            className="fetch-header-search-bar fetch-apple-warp-btn flex min-h-[2.5rem] min-w-0 flex-1 items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.06] py-0 pl-3 pr-3 text-left shadow-none ring-0 transition-[border-color,box-shadow,opacity,transform] hover:border-white/[0.14] active:scale-[0.99]"
             aria-label={`Search — ${searchHint}`}
           >
-            <SearchGlyph className="shrink-0 text-white/55" />
+            <SearchGlyph className="shrink-0 text-zinc-400" />
             <span
               key={hintIdx}
-              className="fetch-header-search-hint min-w-0 truncate text-[14px] font-medium text-white/45"
+              className="fetch-header-search-hint min-w-0 truncate text-[14px] font-semibold text-zinc-300"
             >
               {searchHint}
             </span>

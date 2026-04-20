@@ -12,11 +12,11 @@
   /* Warm secondary (listings / Drops) — use in CSS or Tailwind where needed. */
   --fetch-accent-warm: #00ff6a;
   --fetch-accent-warm-rgb: 0, 255, 106;
-  /* Solid bar behind compact shell tabs (white bar + dark icons). */
+  /* Solid bar behind compact shell tabs. */
   --fetch-bottom-nav-bar-surface: #1a1d22;
   --fetch-bottom-nav-bar-border: rgba(255, 255, 255, 0.08);
   /* Fallback when --orb-glow is not set on a parent (e.g. shared input styles). */
-  --orb-glow: 244, 246, 250;
+  --orb-glow: 32, 36, 42;
   /* Centered phone column + bottom sheet geometry (shared with TS where noted). */
   --fetch-home-frame-max-w: 430px;
   --fetch-home-sheet-radius: 0.78rem;
@@ -55,7 +55,13 @@ body {
 }
 
 html[data-fetch-theme='light'] .fetch-home-phone-stage {
-  background-color: #1a1d22;
+  background-color: #ffffff;
+}
+
+html[data-fetch-theme='dark'] {
+  --fetch-bottom-nav-chrome: #1a1d22;
+  --fetch-bottom-nav-bar-surface: #1a1d22;
+  --fetch-bottom-nav-bar-border: rgba(255, 255, 255, 0.08);
 }
 
 .fetch-home-phone-frame {
@@ -6802,12 +6808,22 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
   border-radius: 0;
+  background: var(--fetch-bottom-nav-bar-surface);
+  border-top: 1px solid var(--fetch-bottom-nav-bar-border);
+  box-shadow:
+    0 14px 32px -10px rgba(15, 23, 42, 0.08),
+    0 6px 14px -6px rgba(15, 23, 42, 0.06);
+  box-sizing: border-box;
+}
+
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
   background: #1a1d22;
+  border-top: none;
   box-shadow:
     0 14px 32px -10px rgba(0, 0, 0, 0.58),
     0 6px 14px -6px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.08);
-  box-sizing: border-box;
 }
 
 /* Auctions / marketplace: mask feed behind floating pill + stronger nav shadow */
@@ -6841,31 +6857,30 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   display: none;
 }
 
-/* Home-wide dark chrome: letterbox + phone column surface (soft charcoal — hair above pure black). */
-.fetch-home-phone-stage {
+/* Dark theme only: charcoal shell + Tailwind surface remaps (light app leaves utilities literal). */
+html[data-fetch-theme='dark'] .fetch-home-phone-stage {
   background-color: #1a1d22 !important;
   color: #fafafa !important;
 }
 
-.fetch-home-vision {
+html[data-fetch-theme='dark'] .fetch-home-vision {
   background-color: #1a1d22 !important;
   color: #fafafa !important;
 }
 
-/* Global app-shell dark theme: soft charcoal everywhere. */
-.fetch-app-shell-bg,
-.fetch-app-shell-inner {
+html[data-fetch-theme='dark'] .fetch-app-shell-bg,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner {
   background-color: #1a1d22 !important;
   color: #fafafa !important;
 }
 
-.fetch-app-shell-inner .bg-fetch-soft-gray,
-.fetch-app-shell-inner .bg-white,
-.fetch-app-shell-inner .bg-zinc-50,
-.fetch-app-shell-inner .bg-zinc-100,
-.fetch-app-shell-inner .bg-zinc-950,
-.fetch-app-shell-inner .bg-zinc-900,
-.fetch-app-shell-inner .bg-zinc-800 {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-fetch-soft-gray,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-white,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-50,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-100,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-950,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-900,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-800 {
   background-color: #1a1d22 !important;
 }
 
@@ -6875,84 +6890,75 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   color: #000000 !important;
 }
 
-/* Explore embed feed — Local/Global tabs: solid white selected segment (shell remaps `.bg-white`). */
-.fetch-app-shell-inner .fetch-embed-feed-tab.fetch-embed-feed-tab--active {
+/* Explore embed — circular category chips (button stays transparent; selected ring is white circle). */
+.fetch-explore-embed-category-card__icon-wrap--on-dark svg {
+  filter: brightness(0) invert(1);
+  opacity: 0.92;
+}
+
+.fetch-explore-embed-category-card__icon-wrap--on-light svg {
+  filter: brightness(0);
+  opacity: 0.88;
+}
+
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active:hover {
+  background-color: transparent !important;
+}
+
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .fetch-explore-embed-category-card__circle--active {
   background-color: #ffffff !important;
-  background-image: none !important;
-  color: #0f0f0f !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 10px 28px -12px rgba(0, 0, 0, 0.45) !important;
+  box-shadow: none !important;
 }
 
-.fetch-app-shell-inner .fetch-embed-feed-tab.fetch-embed-feed-tab--active:hover {
-  background-color: #fafafa !important;
-  color: #0f0f0f !important;
-}
-
-/* Explore embed — category chips: solid white selected card (shell remaps generic white utilities). */
-.fetch-app-shell-inner .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active {
-  background-color: #ffffff !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 10px 28px -12px rgba(0, 0, 0, 0.45) !important;
-}
-
-.fetch-app-shell-inner .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active:hover {
-  background-color: #fafafa !important;
-}
-
-.fetch-app-shell-inner
-  .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active
-  .fetch-explore-embed-category-card__thumb-well {
-  background-color: #f4f4f5 !important;
-}
-
-.fetch-app-shell-inner
+html[data-fetch-theme='dark']
+  .fetch-app-shell-inner
   .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active
   .fetch-explore-embed-category-card__label {
-  color: #0f0f0f !important;
+  color: #fafafa !important;
 }
 
-.fetch-app-shell-inner .bg-white\/95,
-.fetch-app-shell-inner .bg-white\/90,
-.fetch-app-shell-inner .bg-zinc-50\/90,
-.fetch-app-shell-inner .bg-zinc-50\/80,
-.fetch-app-shell-inner .bg-zinc-50\/70,
-.fetch-app-shell-inner .bg-zinc-50\/60,
-.fetch-app-shell-inner .bg-zinc-900\/95,
-.fetch-app-shell-inner .bg-zinc-900\/90,
-.fetch-app-shell-inner .bg-zinc-800\/90 {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-white\/95,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-white\/90,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-50\/90,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-50\/80,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-50\/70,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-50\/60,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-900\/95,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-900\/90,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .bg-zinc-800\/90 {
   background-color: #1a1d22 !important;
 }
 
-.fetch-app-shell-inner .border-zinc-100,
-.fetch-app-shell-inner .border-zinc-200,
-.fetch-app-shell-inner .border-zinc-200\/80,
-.fetch-app-shell-inner .border-zinc-200\/90,
-.fetch-app-shell-inner .border-zinc-700,
-.fetch-app-shell-inner .border-zinc-800 {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .border-zinc-100,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .border-zinc-200,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .border-zinc-200\/80,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .border-zinc-200\/90,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .border-zinc-700,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .border-zinc-800 {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-.fetch-app-shell-inner .divide-zinc-200,
-.fetch-app-shell-inner .divide-zinc-200\/95,
-.fetch-app-shell-inner .divide-zinc-700,
-.fetch-app-shell-inner .divide-zinc-800 {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .divide-zinc-200,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .divide-zinc-200\/95,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .divide-zinc-700,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .divide-zinc-800 {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-.fetch-app-shell-inner .text-zinc-900,
-.fetch-app-shell-inner .text-zinc-800,
-.fetch-app-shell-inner .text-zinc-700 {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .text-zinc-900,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .text-zinc-800,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .text-zinc-700 {
   color: #f3f4f6 !important;
 }
 
-.fetch-app-shell-inner .text-zinc-600,
-.fetch-app-shell-inner .text-zinc-500,
-.fetch-app-shell-inner .text-zinc-400 {
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .text-zinc-600,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .text-zinc-500,
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .text-zinc-400 {
   color: #a1a1aa !important;
 }
 
@@ -7061,7 +7067,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   color: #18181b !important;
 }
 
-/* Explore full-page shell — charcoal (cards stay light via inner components). */
+/* Explore full-page shell — fills with nav chrome token (white in light theme). */
 .fetch-home-phone-stage main[aria-label='Explore'] {
   background-color: var(--fetch-bottom-nav-chrome) !important;
 }
@@ -7099,8 +7105,15 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   opacity: 1;
 }
 
-/* App header host: solid dark background matching bottom menu. */
-.fetch-home-phone-stage .fetch-app-address-header {
+/* App header host — light shell default; dark override below */
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-app-address-header {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  background-image: none !important;
+  border-bottom: 1px solid rgba(228, 228, 231, 0.95) !important;
+  /* Let component Tailwind handle elevation + blur */
+}
+
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-app-address-header {
   background-color: #1a1d22 !important;
   background-image: none !important;
   border: none !important;
@@ -7109,12 +7122,23 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   backdrop-filter: none !important;
 }
 
-/* Explore full-page home: header fully transparent over the hero (no fill, no blur). */
-.fetch-home-phone-stage
+/* Explore full-page home (dark theme only): transparent header over hero — glass pill rules below. */
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header {
   background-color: transparent !important;
   background-image: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Light Explore full-page: solid chrome bar — no transparency / blur on the strip */
+html[data-fetch-theme='light']
+  .fetch-home-phone-stage
+  .fetch-home-vision[data-services-explore-full-page='true']
+  .fetch-app-address-header {
+  background-color: #ffffff !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
@@ -7153,8 +7177,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   width: 100%;
 }
 
-/* Strip light-theme `button` border chrome — icons are glyph-only. */
-.fetch-home-phone-stage .fetch-app-address-header .fetch-header-chrome-icon-btn {
+/* Dark header: glyph-only icon hits */
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-app-address-header .fetch-header-chrome-icon-btn {
   border-width: 0 !important;
   border-style: none !important;
   background-color: transparent !important;
@@ -7162,8 +7186,19 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   box-shadow: none !important;
 }
 
-/* Search bar: outline only (no fill); theme may remap generic `button`. */
-.fetch-home-phone-stage .fetch-app-address-header .fetch-header-search-bar {
+/* Search bar — light: strong pill (matches FetchHomeAppAddressHeader) */
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-app-address-header .fetch-header-search-bar {
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: rgba(82, 82, 91, 0.35) !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 4px 18px -6px rgba(15, 23, 42, 0.12) !important;
+}
+
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-app-address-header .fetch-header-search-bar {
   border-width: 1px !important;
   border-style: solid !important;
   border-color: rgba(255, 255, 255, 0.14) !important;
@@ -7171,8 +7206,9 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   background-image: none !important;
 }
 
-/* Explore full-page (hero behind header): glass search pill + glass icon hits — white border & copy. */
-.fetch-home-phone-stage
+/* Explore full-page + dark theme only: frosted glass search pill + icon hits over hero */
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header
   .fetch-header-search-bar {
@@ -7191,7 +7227,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
     0 6px 28px rgba(0, 0, 0, 0.18) !important;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header
   .fetch-header-search-bar:hover {
@@ -7199,7 +7236,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   background-color: rgba(255, 255, 255, 0.22) !important;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header
   .fetch-header-search-bar
@@ -7207,7 +7245,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   color: rgba(255, 255, 255, 0.95) !important;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header
   .fetch-header-search-bar
@@ -7216,7 +7255,26 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   stroke: rgba(255, 255, 255, 0.92) !important;
 }
 
-.fetch-home-phone-stage
+/* Light theme: dark ink on search pill — flat white pill from rules above */
+html[data-fetch-theme='light']
+  .fetch-home-phone-stage
+  .fetch-app-address-header
+  .fetch-header-search-bar
+  .fetch-header-search-hint {
+  color: #0a0a0a !important;
+}
+
+html[data-fetch-theme='light']
+  .fetch-home-phone-stage
+  .fetch-app-address-header
+  .fetch-header-search-bar
+  svg {
+  color: #0a0a0a !important;
+  stroke: #0a0a0a !important;
+}
+
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header
   .fetch-header-chrome-icon-btn {
@@ -7235,11 +7293,36 @@ html[data-fetch-theme='light'] .fetch-home-vision {
     0 4px 18px rgba(0, 0, 0, 0.16) !important;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark']
+  .fetch-home-phone-stage
   .fetch-home-vision[data-services-explore-full-page='true']
   .fetch-app-address-header
   .fetch-header-chrome-icon-btn:hover {
   background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Light Explore full-page: opaque icon tiles (component styles); kill any leftover glass */
+html[data-fetch-theme='light']
+  .fetch-home-phone-stage
+  .fetch-home-vision[data-services-explore-full-page='true']
+  .fetch-app-address-header
+  .fetch-header-chrome-icon-btn {
+  border-radius: 0.75rem !important;
+  border: 1px solid rgba(228, 228, 231, 0.95) !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+}
+
+html[data-fetch-theme='light']
+  .fetch-home-phone-stage
+  .fetch-home-vision[data-services-explore-full-page='true']
+  .fetch-app-address-header
+  .fetch-header-chrome-icon-btn:hover {
+  border-color: rgba(212, 212, 216, 1) !important;
+  background-color: #ffffff !important;
 }
 
 @keyframes fetch-header-search-hint {
@@ -7426,50 +7509,86 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   outline-offset: 2px;
 }
 
-/* Home / shop / chat / reels dock: dark bar; muted icons + white active tab. */
+/* Home / shop / chat / reels dock */
 .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
   border-radius: 0;
-  background: #1a1d22;
+  background: var(--fetch-bottom-nav-bar-surface);
+  border-top: 1px solid var(--fetch-bottom-nav-bar-border);
   box-shadow: none;
   box-sizing: border-box;
 }
 
-/* Docked shell: inactive icons read white (same ink as active; weight/size differentiate tab). */
-.fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
-.fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
-.fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
+html[data-fetch-theme='dark'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav,
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
+  background: #1a1d22;
+  border-top: none;
+}
+
+/* Light dock: slate icons; accent green active */
+html[data-fetch-theme='light'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
+html[data-fetch-theme='light'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
+html[data-fetch-theme='light'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
+  color: rgba(17, 24, 39, 0.42) !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-booking-sheet__shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
+html[data-fetch-theme='light'] .fetch-home-marketplace-shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
+html[data-fetch-theme='light'] .fetch-home-reels-shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
+  color: rgba(17, 24, 39, 0.58) !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='light'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='light'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
+  color: var(--fetch-accent, #00ff6a) !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='light'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='light'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
+  color: var(--fetch-accent, #00ff6a) !important;
+}
+
+/* Dark dock: white icons */
+html[data-fetch-theme='dark'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
   color: #ffffff !important;
 }
 
-.fetch-home-booking-sheet__shell-footer
+html[data-fetch-theme='dark'] .fetch-home-booking-sheet__shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
-.fetch-home-marketplace-shell-footer
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
-.fetch-home-reels-shell-footer
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
   color: #ffffff !important;
 }
 
-.fetch-home-booking-sheet__shell-footer
+html[data-fetch-theme='dark'] .fetch-home-booking-sheet__shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active,
-.fetch-home-marketplace-shell-footer
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active,
-.fetch-home-reels-shell-footer
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active {
   color: #ffffff !important;
 }
 
-.fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
-.fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
-.fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
+html[data-fetch-theme='dark'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
   color: #ffffff !important;
 }
 
-.fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
-.fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
-.fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
+html[data-fetch-theme='dark'] .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='dark'] .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='dark'] .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
   color: #ffffff !important;
 }
 
@@ -7697,52 +7816,88 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   content: none;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-booking-sheet__shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-marketplace-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
   color: #ffffff !important;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-booking-sheet__shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-marketplace-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
   color: #ffffff !important;
 }
 
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-booking-sheet__shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active,
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-marketplace-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active,
-.fetch-home-phone-stage
+html[data-fetch-theme='dark'] .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active {
   color: #ffffff !important;
 }
 
-.fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
-.fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
-.fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
   color: #ffffff !important;
 }
 
-.fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
-.fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
-.fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='dark'] .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
   color: #ffffff !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-phone-stage
+  .fetch-home-booking-sheet__shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
+html[data-fetch-theme='light'] .fetch-home-phone-stage
+  .fetch-home-marketplace-shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
+html[data-fetch-theme='light'] .fetch-home-phone-stage
+  .fetch-home-reels-shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
+  color: rgba(17, 24, 39, 0.42) !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-phone-stage
+  .fetch-home-booking-sheet__shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
+html[data-fetch-theme='light'] .fetch-home-phone-stage
+  .fetch-home-marketplace-shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
+html[data-fetch-theme='light'] .fetch-home-phone-stage
+  .fetch-home-reels-shell-footer
+  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
+  color: rgba(17, 24, 39, 0.58) !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
+  color: var(--fetch-accent, #00ff6a) !important;
+}
+
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
+  color: var(--fetch-accent, #00ff6a) !important;
 }
 
 /* Active tab: white glow from bottom — wider spread under icon. */
@@ -7791,13 +7946,32 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   opacity: 1;
 }
 
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active::before,
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active::before,
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active::before,
+html[data-fetch-theme='light']
+  .fetch-home-phone-stage
+  .fetch-home-vision[data-home-shell-tab='search']
+  .fetch-home-intent-bottom-nav__icon--active::before {
+  background: radial-gradient(
+    ellipse 132% 100% at 50% 100%,
+    color-mix(in srgb, var(--fetch-accent, #00ff6a) 78%, transparent) 0%,
+    color-mix(in srgb, var(--fetch-accent, #00ff6a) 38%, transparent) 45%,
+    transparent 82%
+  );
+}
+
 .fetch-home-phone-stage .fetch-home-intent-bottom-nav__icon:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.35);
   outline-offset: 2px;
 }
 
-/* Search → Categories: true black (global shell remap turns bg-zinc-800 tiles charcoal). */
-.fetch-app-shell-inner .fetch-home-search-route {
+html[data-fetch-theme='light'] .fetch-home-phone-stage .fetch-home-intent-bottom-nav__icon:focus-visible {
+  outline-color: color-mix(in srgb, var(--fetch-accent, #00ff6a) 45%, transparent);
+}
+
+/* Search → Categories: dark chrome remap only when system dark theme is selected. */
+html[data-fetch-theme='dark'] .fetch-app-shell-inner .fetch-home-search-route {
   background-color: #1a1d22 !important;
 }
 .fetch-app-shell-inner .fetch-home-search-categories,
@@ -12649,6 +12823,151 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
 
   100% {
     transform: translate(-50%, -50%) rotate(900deg) scale(1.38);
+  }
+}
+
+/* Daily streak — swoosh pulse on home mount */
+.fetch-daily-streak-card__swoosh::before {
+  content: '';
+  position: absolute;
+  inset: -40% -30%;
+  background: linear-gradient(
+    115deg,
+    transparent 38%,
+    rgba(253, 224, 71, 0.35) 48%,
+    rgba(250, 204, 21, 0.65) 50%,
+    rgba(253, 224, 71, 0.35) 52%,
+    transparent 62%
+  );
+  transform: translateX(-110%) skewX(-12deg);
+  filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fetch-daily-streak-card--celebrate {
+  animation: fetch-streak-celebrate-pulse 0.82s cubic-bezier(0.34, 1.35, 0.64, 1) both;
+}
+
+.fetch-daily-streak-card--celebrate .fetch-daily-streak-card__swoosh {
+  animation: fetch-streak-swoosh-shine 0.88s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fetch-daily-streak-card--celebrate .fetch-daily-streak-card__swoosh::before {
+  animation: fetch-streak-swoosh-slide 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fetch-streak-celebrate-pulse {
+  0% {
+    filter: brightness(1);
+    transform: scale(1);
+    box-shadow: none;
+  }
+
+  35% {
+    filter: brightness(1.06);
+    transform: scale(1.018);
+    box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.35), 0 12px 36px -18px rgba(234, 179, 8, 0.45);
+  }
+
+  100% {
+    filter: brightness(1);
+    transform: scale(1);
+    box-shadow: none;
+  }
+}
+
+@keyframes fetch-streak-swoosh-shine {
+  0% {
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fetch-streak-swoosh-slide {
+  0% {
+    transform: translateX(-115%) skewX(-12deg);
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(115%) skewX(-12deg);
+    opacity: 0;
+  }
+}
+
+/* Weekly chest fullscreen overlay — lid, shake, particles, prizes */
+.fetch-chest-overlay__lid-group {
+  transition: transform 0.65s cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+
+.fetch-chest-overlay__stage--open .fetch-chest-overlay__lid-group {
+  transform: rotate(-42deg) translateY(-8px);
+}
+
+.fetch-chest-overlay__stage--shake {
+  animation: fetch-chest-shake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.fetch-chest-overlay__rays {
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  transform: scale(0.7);
+}
+
+.fetch-chest-overlay__stage--open .fetch-chest-overlay__rays {
+  transform: scale(1);
+}
+
+.fetch-chest-overlay__prize {
+  animation: fetch-chest-prize-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fetch-chest-overlay__particle {
+  animation: fetch-chest-particle-rise 2.5s ease-out infinite;
+}
+
+@keyframes fetch-chest-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-3px) rotate(-0.5deg); }
+  30% { transform: translateX(3px) rotate(0.5deg); }
+  45% { transform: translateX(-2px); }
+  60% { transform: translateX(2px); }
+  75% { transform: translateX(-1px); }
+}
+
+@keyframes fetch-chest-prize-in {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fetch-chest-particle-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  15% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-120px) scale(0.2);
   }
 }
 
