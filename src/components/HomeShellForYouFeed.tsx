@@ -1,7 +1,6 @@
 import { Fragment, memo, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { CURATED_DROP_REELS } from '../lib/drops/constants'
 import type { DropReel } from '../lib/drops/types'
-import { EXPLORE_CATEGORY_ROW_PROMOS, type ExploreCategoryRowPromoDef } from '../lib/exploreCategoryRowPromos'
 import { loadSession } from '../lib/fetchUserSession'
 import {
   isPublicDemoListingId,
@@ -14,7 +13,6 @@ import { SUPPLY_PRODUCTS, type SupplyProduct } from '../lib/suppliesCatalog'
 import { type MarketplacePeerBrowseFilter } from './ExploreBrowseBanner'
 import { ListingQuickAddPlusCircleIcon } from './icons/HomeShellNavIcons'
 import { ExploreCategoryBrowse } from './ExploreCategoryBrowse'
-import { ExploreCategoryPromoIcon } from './ExploreCategoryRowPromoBanner'
 import { FetchRankProgressCard } from './FetchRankProgressCard'
 import { FetchDailyStreakCard } from './FetchDailyStreakCard'
 import { FetchWeeklyGoalCard } from './FetchWeeklyGoalCard'
@@ -240,69 +238,6 @@ function ExploreEmbedLiveFeedTile({ reel, onOpenDrops }: { reel: DropReel; onOpe
         </p>
       </div>
     </button>
-  )
-}
-
-function ExploreEmbedCategoryTallCarousel({
-  selectedId,
-  onSelect,
-}: {
-  selectedId: string
-  onSelect: (def: ExploreCategoryRowPromoDef) => void
-}) {
-  return (
-    <section className="min-w-0" aria-label="Shop by category">
-      <div className="w-full min-w-0 [container-type:inline-size]">
-        <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-pl-3 py-0.5 pb-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
-          <div className="w-3 shrink-0 snap-none select-none" aria-hidden />
-          {EXPLORE_CATEGORY_ROW_PROMOS.map((def) => {
-            const selected = def.id === selectedId
-            return (
-              <button
-                key={def.id}
-                type="button"
-                onClick={() => onSelect(def)}
-                className={[
-                  'fetch-explore-embed-category-card group flex w-[max(3.75rem,calc((100cqi-1.5rem)/5.4))] shrink-0 snap-start flex-col items-center gap-1 overflow-visible rounded-none bg-transparent p-0 text-center shadow-none ring-0 transition-transform duration-200 ease-out active:scale-[0.96]',
-                  selected ? 'fetch-explore-embed-category-card--active' : '',
-                ].join(' ')}
-                aria-label={def.ariaLabel}
-                aria-pressed={selected}
-              >
-                <div
-                  className={[
-                    'fetch-explore-embed-category-card__circle relative flex size-[3rem] shrink-0 items-center justify-center rounded-full',
-                    selected
-                      ? 'fetch-explore-embed-category-card__circle--active bg-[#ffffff] ring-1 ring-black/10'
-                      : 'bg-zinc-100 ring-1 ring-zinc-200/90',
-                  ].join(' ')}
-                >
-                  <span
-                    className={[
-                      'fetch-explore-embed-category-card__icon-wrap flex size-[2rem] items-center justify-center',
-                      selected
-                        ? 'fetch-explore-embed-category-card__icon-wrap--on-light'
-                        : 'fetch-explore-embed-category-card__icon-wrap--on-light',
-                    ].join(' ')}
-                  >
-                    <ExploreCategoryPromoIcon id={def.id} className="h-full w-full" />
-                  </span>
-                </div>
-                <p
-                  className={[
-                    'fetch-explore-embed-category-card__label line-clamp-2 min-h-[1.55rem] w-full px-0 text-center text-[8px] font-extrabold uppercase leading-[1.1] tracking-[0.03em] text-zinc-600 sm:min-h-[1.65rem] sm:text-[9px]',
-                    selected ? 'text-zinc-900' : '',
-                  ].join(' ')}
-                >
-                  {def.title}
-                </p>
-              </button>
-            )
-          })}
-          <div className="w-3 shrink-0 snap-none select-none" aria-hidden />
-        </div>
-      </div>
-    </section>
   )
 }
 
@@ -715,12 +650,7 @@ function HomeShellForYouFeedInner({
     return allListings
   }, [browseCategory, allListings])
 
-  const [embedCategoryId, setEmbedCategoryId] = useState<string>('explore-all')
-
-  const embedCategoryHandoff = useMemo((): MarketplacePeerBrowseFilter => {
-    const def = EXPLORE_CATEGORY_ROW_PROMOS.find((p) => p.id === embedCategoryId)
-    return def?.handoff ?? {}
-  }, [embedCategoryId])
+  const embedCategoryHandoff = useMemo((): MarketplacePeerBrowseFilter => ({}), [])
 
   const listingById = useMemo(() => new Map(allListings.map((l) => [l.id, l] as const)), [allListings])
 
@@ -887,10 +817,6 @@ function HomeShellForYouFeedInner({
             <FetchWeeklyGoalCard compact />
           </div>
         </div>
-        <ExploreEmbedCategoryTallCarousel
-          selectedId={embedCategoryId}
-          onSelect={(def) => setEmbedCategoryId(def.id)}
-        />
         {embedFeedSections
           ? EMBED_FEED_SECTION_ORDER.map((key, idx) => (
               <Fragment key={key}>
