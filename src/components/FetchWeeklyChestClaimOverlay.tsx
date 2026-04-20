@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useState, type MouseEvent } from 'react'
+import { useCallback, useEffect, useState, type MouseEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { playChestOpenSound } from '../lib/playStreakCelebrationSound'
 
@@ -15,127 +15,10 @@ const PRIZES = [
   { label: 'Rare Badge', sub: 'Gold Hustler', icon: '🏅', accent: 'from-violet-400 to-fuchsia-500' },
 ] as const
 
-function ChestOpeningSvg({ gid, phase }: { gid: string; phase: Phase }) {
-  const isOpen = phase !== 'idle' && phase !== 'opening'
-  return (
-    <svg
-      viewBox="0 0 200 200"
-      className="h-auto w-[min(68vw,260px)]"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
-      <defs>
-        <linearGradient id={`${gid}-body`} x1="40" y1="180" x2="160" y2="80" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#451a03" />
-          <stop offset="0.3" stopColor="#78350f" />
-          <stop offset="0.6" stopColor="#b45309" />
-          <stop offset="1" stopColor="#d97706" />
-        </linearGradient>
-        <linearGradient id={`${gid}-lid`} x1="100" y1="60" x2="100" y2="110" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#fef3c7" />
-          <stop offset="0.4" stopColor="#fbbf24" />
-          <stop offset="0.75" stopColor="#d97706" />
-          <stop offset="1" stopColor="#92400e" />
-        </linearGradient>
-        <linearGradient id={`${gid}-trim`} x1="60" y1="105" x2="140" y2="105" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#fef08a" />
-          <stop offset="0.5" stopColor="#fbbf24" />
-          <stop offset="1" stopColor="#fef08a" />
-        </linearGradient>
-        <linearGradient id={`${gid}-glow-r`} x1="100" y1="100" x2="100" y2="30" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#fde047" />
-          <stop offset="1" stopColor="#fde047" stopOpacity="0" />
-        </linearGradient>
-        <filter id={`${gid}-blur`}>
-          <feGaussianBlur stdDeviation="6" />
-        </filter>
-        <filter id={`${gid}-soft`}>
-          <feGaussianBlur stdDeviation="1.5" />
-        </filter>
-      </defs>
-
-      {/* Ground shadow */}
-      <ellipse cx="100" cy="178" rx="60" ry="10" fill="#1c1917" opacity="0.5" filter={`url(#${gid}-blur)`} />
-
-      {/* Burst rays */}
-      <g
-        className="fetch-chest-overlay__rays"
-        style={{ opacity: isOpen ? 1 : 0, transition: 'opacity 0.6s ease' }}
-      >
-        {[...Array(12)].map((_, i) => (
-          <line
-            key={i}
-            x1="100" y1="100" x2="100" y2="20"
-            stroke={`url(#${gid}-glow-r)`}
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            opacity="0.4"
-            transform={`rotate(${i * 30} 100 100)`}
-          />
-        ))}
-        <circle cx="100" cy="95" r="30" fill="#fde047" opacity="0.15" filter={`url(#${gid}-blur)`} />
-      </g>
-
-      {/* Chest body */}
-      <g>
-        {/* Main body */}
-        <rect x="42" y="108" width="116" height="65" rx="6" fill={`url(#${gid}-body)`} stroke="#78350f" strokeWidth="1" />
-        {/* Body bevel line */}
-        <line x1="50" y1="118" x2="150" y2="118" stroke="#fef3c7" strokeWidth="0.6" strokeOpacity="0.3" />
-        {/* Left face shadow for depth */}
-        <rect x="42" y="108" width="58" height="65" rx="6" fill="#451a03" opacity="0.25" />
-        {/* Horizontal gold trim band */}
-        <rect x="42" y="106" width="116" height="5" rx="1.5" fill={`url(#${gid}-trim)`} />
-        {/* Lock */}
-        <rect x="88" y="126" width="24" height="30" rx="3" fill="#0c0a09" stroke="#fbbf24" strokeWidth="1" />
-        <circle cx="100" cy="141" r="5" fill="none" stroke="#fde68a" strokeWidth="1.4" />
-        <circle cx="100" cy="141" r="1.8" fill="#fde68a" />
-        {/* Corner studs */}
-        <circle cx="52" cy="116" r="3" fill="#d97706" stroke="#92400e" strokeWidth="0.5" />
-        <circle cx="148" cy="116" r="3" fill="#d97706" stroke="#92400e" strokeWidth="0.5" />
-        <circle cx="52" cy="165" r="3" fill="#d97706" stroke="#92400e" strokeWidth="0.5" />
-        <circle cx="148" cy="165" r="3" fill="#d97706" stroke="#92400e" strokeWidth="0.5" />
-      </g>
-
-      {/* Lid — animated via CSS */}
-      <g className="fetch-chest-overlay__lid-group" style={{ transformOrigin: '100px 108px' }}>
-        <path
-          fill={`url(#${gid}-lid)`}
-          stroke="#92400e"
-          strokeWidth="1"
-          d="M38 108 c0-28 28-50 62-50 s62 22 62 50 Z"
-        />
-        <path
-          fill="#fffbeb"
-          fillOpacity="0.15"
-          d="M100 58 c34 0 62 22 62 50 L100 98Z"
-        />
-        <line x1="55" y1="100" x2="145" y2="100" stroke="#fef08a" strokeWidth="0.7" strokeOpacity="0.45" />
-        {/* Lid trim */}
-        <rect x="42" y="104" width="116" height="4" rx="1" fill={`url(#${gid}-trim)`} opacity="0.65" />
-        {/* Lid keyhole ornament */}
-        <circle cx="100" cy="85" r="6" fill="none" stroke="#fde68a" strokeWidth="0.9" strokeOpacity="0.4" />
-      </g>
-
-      {/* Inner glow from inside chest (visible when open) */}
-      <ellipse
-        cx="100" cy="108" rx="38" ry="12"
-        fill="#fde047"
-        opacity={isOpen ? 0.35 : 0}
-        filter={`url(#${gid}-soft)`}
-        style={{ transition: 'opacity 0.4s ease 0.3s' }}
-      />
-    </svg>
-  )
-}
-
 /**
  * Fullscreen premium chest-opening reward reveal.
  */
 export function FetchWeeklyChestClaimOverlay({ open, onClose }: FetchWeeklyChestClaimOverlayProps) {
-  const uid = useId()
-  const gid = useMemo(() => `wk-ovl-${uid.replace(/:/g, '')}`, [uid])
   const [phase, setPhase] = useState<Phase>('idle')
 
   useEffect(() => {
@@ -213,7 +96,7 @@ export function FetchWeeklyChestClaimOverlay({ open, onClose }: FetchWeeklyChest
               style={{
                 width: 3 + (i % 3) * 2,
                 height: 3 + (i % 3) * 2,
-                left: `${20 + (i * 8.5)}%`,
+                left: `${20 + i * 8.5}%`,
                 animationDelay: `${i * 0.12}s`,
               }}
             />
@@ -230,7 +113,7 @@ export function FetchWeeklyChestClaimOverlay({ open, onClose }: FetchWeeklyChest
           Weekly vault
         </p>
 
-        {/* Chest */}
+        {/* Chest image */}
         <div
           className={[
             'fetch-chest-overlay__stage relative flex flex-col items-center',
@@ -238,7 +121,25 @@ export function FetchWeeklyChestClaimOverlay({ open, onClose }: FetchWeeklyChest
             lidOpen ? 'fetch-chest-overlay__stage--open' : '',
           ].join(' ')}
         >
-          <ChestOpeningSvg gid={gid} phase={phase} />
+          <img
+            src="/weekly-chest.png"
+            alt="Gold treasure chest"
+            className="h-auto w-[min(64vw,240px)] drop-shadow-[0_16px_40px_rgba(120,53,15,0.7)]"
+            draggable={false}
+          />
+
+          {/* Burst glow behind chest */}
+          <div
+            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{
+              width: '120%',
+              height: '120%',
+              background: 'radial-gradient(circle, rgba(251,191,36,0.35) 0%, transparent 65%)',
+              opacity: lidOpen ? 1 : 0,
+              transform: `translate(-50%, -50%) scale(${lidOpen ? 1 : 0.5})`,
+              transition: 'opacity 0.6s ease, transform 0.6s ease',
+            }}
+          />
         </div>
 
         {/* Prizes */}
