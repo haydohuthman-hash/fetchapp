@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { loadSession } from '../lib/fetchUserSession'
-import { FETCH_REWARD_CARD_SHELL } from './fetchRewardCardShell'
+import { FETCH_REWARD_CARD_SHELL_LIGHT } from './fetchRewardCardShell'
 
 const DEMO_AVATAR_URLS = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&q=82',
@@ -16,7 +16,6 @@ function avatarIndexFromSession(): number {
   return h % DEMO_AVATAR_URLS.length
 }
 
-/** SVG boomerang */
 function BoomerangRewardIcon({ className = '' }: { className?: string }) {
   return (
     <svg
@@ -46,6 +45,9 @@ function BoomerangRewardIcon({ className = '' }: { className?: string }) {
   )
 }
 
+const RANK_BAR_FILL =
+  'rounded-full bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]'
+
 export type FetchRankProgressCardProps = {
   className?: string
 }
@@ -61,19 +63,14 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
 
   return (
     <article
-      className={[
-        FETCH_REWARD_CARD_SHELL,
-        'fetch-home-rank-profile-card',
-        'px-3.5 pb-4 pt-4',
-        className,
-      ].join(' ')}
+      className={[FETCH_REWARD_CARD_SHELL_LIGHT, 'px-3.5 pb-4 pt-4', className].join(' ')}
       aria-label="Your Fetch rank and progress"
     >
       <div className="relative flex gap-3">
         {/* Avatar + ring */}
         <div className="relative shrink-0">
-          <div className="relative size-[4.5rem] rounded-full ring-2 ring-white/15 ring-offset-2 ring-offset-[#25282f]">
-            <div className="relative size-full overflow-hidden rounded-full bg-[#1a1d22] ring-1 ring-black/40">
+          <div className="relative size-[4.5rem] rounded-full ring-2 ring-zinc-200 ring-offset-2 ring-offset-white">
+            <div className="relative size-full overflow-hidden rounded-full bg-zinc-100 ring-1 ring-zinc-200/80">
               <img
                 src={avatarSrc}
                 alt=""
@@ -82,13 +79,13 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
                 draggable={false}
               />
               <div
-                className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-t from-black/25 to-transparent"
+                className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-t from-black/10 to-transparent"
                 aria-hidden
               />
             </div>
           </div>
-          <div className="absolute -bottom-0.5 left-1/2 z-[2] -translate-x-1/2 whitespace-nowrap rounded-md border border-white/12 bg-[#1c1f26] px-2 py-0.5">
-            <span className="text-[9px] font-black uppercase tracking-[0.12em] text-white/90">
+          <div className="absolute -bottom-0.5 left-1/2 z-[2] -translate-x-1/2 whitespace-nowrap rounded-md border border-zinc-200 bg-white px-2 py-0.5 shadow-sm">
+            <span className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-900">
               Rank 1
             </span>
           </div>
@@ -96,28 +93,25 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
 
         {/* Main copy */}
         <div className="min-w-0 flex-1 pt-0.5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/38">Level 4</p>
-          <h3 className="mt-0.5 truncate text-[1.375rem] font-black leading-[1.1] tracking-[-0.03em] text-white">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">Level 4</p>
+          <h3 className="mt-0.5 truncate text-[1.375rem] font-black leading-[1.1] tracking-[-0.03em] text-zinc-900">
             Hustler
           </h3>
 
           <div className="mt-3 space-y-1.5">
             <div className="flex items-end justify-between gap-2">
-              <span className="text-[11px] font-semibold tabular-nums text-white/88">
+              <span className="text-[11px] font-semibold tabular-nums text-zinc-600">
                 {xpCurrent.toLocaleString()} / {xpMax.toLocaleString()} XP
               </span>
             </div>
             <div
-              className="h-2 overflow-hidden rounded-full bg-black/40 ring-1 ring-white/[0.06]"
+              className="h-2 overflow-hidden rounded-full bg-amber-100 ring-1 ring-amber-200/80"
               role="progressbar"
               aria-valuenow={xpCurrent}
               aria-valuemin={0}
               aria-valuemax={xpMax}
             >
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-violet-500"
-                style={{ width: `${pct}%` }}
-              />
+              <div className={`h-full ${RANK_BAR_FILL}`} style={{ width: `${pct}%` }} />
             </div>
           </div>
         </div>
@@ -125,15 +119,15 @@ export function FetchRankProgressCard({ className = '' }: FetchRankProgressCardP
         {/* Reward column */}
         <div className="flex w-[5.25rem] shrink-0 flex-col items-end gap-1.5 pt-0.5 text-right">
           <div
-            className="relative flex size-[3.25rem] items-center justify-center rounded-xl border border-white/[0.10] bg-[#1a1d22]"
+            className="relative flex size-[3.25rem] items-center justify-center rounded-xl border border-amber-200/90 bg-gradient-to-b from-amber-50 to-orange-50/90"
             aria-hidden
           >
             <BoomerangRewardIcon className="relative z-[1] h-9 w-9" />
           </div>
-          <p className="max-w-[5.5rem] text-[10px] font-semibold leading-snug text-white/55">
+          <p className="max-w-[5.5rem] text-[10px] font-semibold leading-snug text-zinc-500">
             2 more sales to unlock
           </p>
-          <p className="max-w-[6rem] text-[11px] font-bold leading-tight tracking-[-0.02em] text-white/88">
+          <p className="max-w-[6rem] text-[11px] font-bold leading-tight tracking-[-0.02em] text-zinc-800">
             Rank 2 Boomerang
           </p>
         </div>
