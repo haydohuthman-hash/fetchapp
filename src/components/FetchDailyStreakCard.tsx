@@ -1,17 +1,7 @@
 import { useEffect, useId, useMemo, useRef } from 'react'
-import { loadSession } from '../lib/fetchUserSession'
+import { getRewardProgress } from '../lib/rewardProgress'
 import { playStreakCelebrationSound } from '../lib/playStreakCelebrationSound'
 import { FETCH_REWARD_CARD_SHELL, FETCH_REWARD_CARD_SHELL_LIGHT } from './fetchRewardCardShell'
-
-function streakDemoFromSession(): { completedInWeek: number } {
-  const email = loadSession()?.email?.trim() ?? ''
-  let h = 0
-  for (let i = 0; i < email.length; i += 1) h = (h * 31 + email.charCodeAt(i)) >>> 0
-  if (!email) h = 0x5bd1e995
-  /** 5–7 completed markers for demo variety */
-  const completedInWeek = 5 + (h % 3)
-  return { completedInWeek }
-}
 
 function StreakFlameIcon({ gradientId, className = 'h-9 w-9' }: { gradientId: string; className?: string }) {
   return (
@@ -38,19 +28,13 @@ function StreakFlameIcon({ gradientId, className = 'h-9 w-9' }: { gradientId: st
 
 export type FetchDailyStreakCardProps = {
   className?: string
-  /** Narrow column layout for pairing with Weekly Goal (`grid-cols-2`). */
   compact?: boolean
-  /** One-time swoosh + pulse when the card mounts (home open). */
   celebrateOnMount?: boolean
 }
 
-/** Yellow progress styling shared between compact + full streak bars. */
 const STREAK_BAR_FILL_CLASS =
   'rounded-full bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]'
 
-/**
- * Daily streak reward surface — paired visually with `FetchRankProgressCard`.
- */
 export function FetchDailyStreakCard({
   className = '',
   compact = false,
@@ -59,7 +43,8 @@ export function FetchDailyStreakCard({
   const uid = useId()
   const rootRef = useRef<HTMLElement>(null)
   const flameGradId = `fetch-streak-flame-${uid.replace(/:/g, '')}`
-  const { completedInWeek } = useMemo(() => streakDemoFromSession(), [])
+  const { streakDays } = useMemo(() => getRewardProgress(), [])
+  const completedInWeek = streakDays
   const weekLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
   const shell = compact ? FETCH_REWARD_CARD_SHELL_LIGHT : FETCH_REWARD_CARD_SHELL
@@ -95,17 +80,18 @@ export function FetchDailyStreakCard({
     }
   }, [celebrateOnMount])
 
+  const streakLabel = completedInWeek === 0 ? 'New week' : `${completedInWeek} day${completedInWeek !== 1 ? 's' : ''}`
+  const subLabel = completedInWeek === 0 ? 'Start your streak' : 'Keep it going'
+
   return (
     <article
       ref={rootRef}
       className={[shell, pad, 'min-h-0 min-w-0', compact ? 'rounded-lg' : '', className].filter(Boolean).join(' ')}
       aria-label="Daily streak reward progress"
     >
-      {/* Swoosh highlight passes over card on celebration */}
       <div className="fetch-daily-streak-card__swoosh pointer-events-none absolute inset-0 z-[2] opacity-0" aria-hidden />
 
       <div className={`relative z-[1] flex ${rowGap}`}>
-        {/* Icon tile */}
         <div
           className={`relative flex ${iconBox} shrink-0 items-center justify-center ${compact ? 'rounded-md' : 'rounded-xl'} ${
             compact
@@ -120,24 +106,22 @@ export function FetchDailyStreakCard({
         <div className="min-w-0 flex-1">
           <p
             className={`${compact ? 'text-[8px]' : 'text-[10px]'} font-bold uppercase ${titleTrack} ${
-              compact ? 'text-zinc-500' : 'text-white/38'
+              compact ? 'text-zinc-700' : 'text-white/38'
             }`}
           >
             Daily Streak
           </p>
           <p
-            className={`mt-px ${headlineSize} font-black leading-none tracking-[-0.03em] ${compact ? 'text-zinc-900' : 'text-white'}`}
+            className={`mt-px ${headlineSize} font-black leading-none tracking-[-0.03em] ${compact ? 'text-neutral-950' : 'text-white'}`}
           >
-            7 days
+            {streakLabel}
           </p>
-          <p className={`mt-px ${microSub} font-medium ${compact ? 'text-zinc-600' : 'text-white/48'}`}>Keep it going</p>
+          <p className={`mt-px ${microSub} font-semibold ${compact ? 'text-zinc-700' : 'text-white/48'}`}>{subLabel}</p>
 
-          {/* Thin yellow progress bar (compact) */}
           <div className={`${compact ? 'mt-1.5' : 'mt-2'} h-1 overflow-hidden rounded-full ${compact ? 'bg-amber-100 ring-1 ring-amber-200/80' : 'bg-black/40 ring-1 ring-white/[0.08]'}`}>
             <div className={`h-full ${STREAK_BAR_FILL_CLASS}`} style={{ width: `${Math.min(100, (completedInWeek / 7) * 100)}%` }} />
           </div>
 
-          {/* Week path */}
           <div className={`relative ${weekMt}`}>
             <div
               className={`pointer-events-none absolute inset-x-0 ${trackTop} h-px rounded-full ${
@@ -189,14 +173,14 @@ export function FetchDailyStreakCard({
                           </span>
                         </>
                       ) : (
-                        <span className={`${dotFont} font-bold tabular-nums ${compact ? 'text-zinc-400' : 'text-white/28'}`}>
+                        <span className={`${dotFont} font-bold tabular-nums ${compact ? 'text-zinc-500' : 'text-white/28'}`}>
                           {i + 1}
                         </span>
                       )}
                     </div>
                     <span
                       className={`${labelFont} font-semibold uppercase tracking-[0.05em] ${
-                        compact ? 'text-zinc-400' : 'text-white/28'
+                        compact ? 'text-zinc-500' : 'text-white/28'
                       }`}
                     >
                       {label}
