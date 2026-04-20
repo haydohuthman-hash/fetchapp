@@ -8,15 +8,15 @@
   /* User accent (overridden by FetchAccentProvider + boot script in index.html). */
   --fetch-accent: #00ff6a;
   --fetch-accent-rgb: 0, 255, 106;
-  --fetch-bottom-nav-chrome: #ffffff;
+  --fetch-bottom-nav-chrome: #1a1d22;
   /* Warm secondary (listings / Drops) — use in CSS or Tailwind where needed. */
   --fetch-accent-warm: #00ff6a;
   --fetch-accent-warm-rgb: 0, 255, 106;
   /* Solid bar behind compact shell tabs. */
-  --fetch-bottom-nav-bar-surface: #ffffff;
-  --fetch-bottom-nav-bar-border: rgba(15, 23, 42, 0.08);
+  --fetch-bottom-nav-bar-surface: #1a1d22;
+  --fetch-bottom-nav-bar-border: rgba(255, 255, 255, 0.08);
   /* Fallback when --orb-glow is not set on a parent (e.g. shared input styles). */
-  --orb-glow: 244, 246, 250;
+  --orb-glow: 32, 36, 42;
   /* Centered phone column + bottom sheet geometry (shared with TS where noted). */
   --fetch-home-frame-max-w: 430px;
   --fetch-home-sheet-radius: 0.78rem;

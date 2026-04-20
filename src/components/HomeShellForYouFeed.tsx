@@ -41,10 +41,10 @@ const FOR_YOU_LISTING_IMAGE_SCRIM =
 
 /** Explore embed rails: titles share carousel gutter (`px-3` row === leading `w-3` spacer). */
 const EMBED_FEED_SECTION_TITLE_CLASS =
-  'shrink-0 text-[14px] font-extrabold leading-none uppercase tracking-[0.08em] text-zinc-900'
+  'shrink-0 text-[14px] font-extrabold leading-none uppercase tracking-[0.08em] text-zinc-100'
 
 /** Separator between Explore carousels (matches `px-3` inset). */
-const EMBED_CAROUSEL_SEPARATOR_CLASS = 'mx-3 my-2 h-px shrink-0 bg-zinc-200/90'
+const EMBED_CAROUSEL_SEPARATOR_CLASS = 'mx-3 my-2 h-px shrink-0 bg-white/[0.06]'
 
 /** Portrait photos for “top local sellers” cards (stable pick per seller key). */
 const LOCAL_SELLER_PORTRAIT_URLS = [
@@ -273,7 +273,7 @@ function ExplorePeerListingCard({
       : 'Quick buy — open checkout'
 
   return (
-    <div className="flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-lg bg-white text-left text-zinc-900 shadow-sm ring-1 ring-zinc-200/90">
+    <div className="flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-lg bg-[#22252b] text-left text-zinc-200 shadow-sm ring-1 ring-white/[0.06]">
       <div className="relative aspect-square w-full min-w-0 bg-zinc-100">
         {img ? (
           <img
@@ -696,7 +696,7 @@ function HomeShellForYouFeedInner({
             <button
               type="button"
               onClick={onOpenDrops}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-transparent text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 active:scale-[0.96]"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-transparent text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-zinc-200 active:scale-[0.96]"
               aria-label="Open live feed and drops"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
@@ -722,7 +722,7 @@ function HomeShellForYouFeedInner({
             <button
               type="button"
               onClick={openEmbedMarketplaceFiltered}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-transparent text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 active:scale-[0.96]"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-transparent text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-zinc-200 active:scale-[0.96]"
               aria-label="Open marketplace — top sellers"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
@@ -748,7 +748,7 @@ function HomeShellForYouFeedInner({
             <button
               type="button"
               onClick={openEmbedMarketplaceFiltered}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-transparent text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 active:scale-[0.96]"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-transparent text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-zinc-200 active:scale-[0.96]"
               aria-label="Open listings in marketplace"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
@@ -805,12 +805,12 @@ function HomeShellForYouFeedInner({
         role="region"
         aria-label="Explore feed"
       >
-        <div className="sticky top-0 z-10 shrink-0 bg-white pt-[max(0.5rem,env(safe-area-inset-top))]">
-          <header className="border-b border-zinc-200/90 px-3 pb-3 pt-2">
+        <div className="sticky top-0 z-10 shrink-0 bg-[#1a1d22] pt-[max(0.5rem,env(safe-area-inset-top))]">
+          <header className="border-b border-white/[0.06] px-3 pb-3 pt-2">
             <h2 className="sr-only">Explore</h2>
           </header>
         </div>
-        <div className="flex flex-col gap-2.5 bg-white px-3 pb-2 pt-5">
+        <div className="flex flex-col gap-2.5 bg-[#1a1d22] px-3 pb-2 pt-5">
           <FetchRankProgressCard />
           <div className="grid grid-cols-2 gap-2">
             <FetchDailyStreakCard compact celebrateOnMount />
@@ -848,12 +848,12 @@ function HomeShellForYouFeedInner({
       role="region"
       aria-label="For you — items and videos"
     >
-      <div className="shrink-0 bg-white pt-[max(0.25rem,env(safe-area-inset-top))]">
-        <header className="border-b border-zinc-200/90 px-0.5 pb-3 pt-2">
+      <div className="shrink-0 bg-[#1a1d22] pt-[max(0.25rem,env(safe-area-inset-top))]">
+        <header className="border-b border-white/[0.06] px-0.5 pb-3 pt-2">
           <h2 className="sr-only">For you</h2>
         </header>
       </div>
-      <div className="flex flex-col gap-2.5 border-b border-zinc-200/90 bg-white px-0.5 pb-4 pt-5">
+      <div className="flex flex-col gap-2.5 border-b border-white/[0.06] bg-[#1a1d22] px-0.5 pb-4 pt-5">
         <FetchRankProgressCard />
         <div className="grid grid-cols-2 gap-2">
           <FetchDailyStreakCard compact celebrateOnMount />

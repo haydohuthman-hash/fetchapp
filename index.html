@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#1a1d22" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Fetch" />
@@ -24,9 +24,9 @@
     <script>
       (function () {
         try {
-          localStorage.setItem('fetch.themePreference', 'light')
+          localStorage.setItem('fetch.themePreference', 'dark')
         } catch (e) {}
-        document.documentElement.setAttribute('data-fetch-theme', 'light')
+        document.documentElement.setAttribute('data-fetch-theme', 'dark')
         try {
           var ah = localStorage.getItem('fetch.accentHex')
           if (ah && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(ah.trim())) {
@@ -42,7 +42,7 @@
             document.documentElement.style.setProperty('--fetch-accent-rgb', rr + ', ' + gg + ', ' + bb)
             /* Light shell — browser chrome matches white app surface. */
             var tm = document.querySelector('meta[name="theme-color"]')
-            if (tm) tm.setAttribute('content', '#ffffff')
+            if (tm) tm.setAttribute('content', '#1a1d22')
           }
         } catch (e2) {}
       })()

@@ -3,14 +3,14 @@
  */
 
 html {
-  --fetch-chrome-bg: #ffffff;
-  --fetch-app-bg: #ffffff;
-  --fetch-shell-ring: rgba(15, 23, 42, 0.08);
-  --fetch-map-placeholder-bg: #f4f4f5;
-  --color-fetch-charcoal: #18181b;
-  --color-fetch-muted: #71717a;
-  --color-fetch-soft-gray: #f4f4f5;
-  --orb-glow: 244, 246, 250;
+  --fetch-chrome-bg: #1a1d22;
+  --fetch-app-bg: #1a1d22;
+  --fetch-shell-ring: rgba(70, 74, 83, 0.28);
+  --fetch-map-placeholder-bg: #1a1d22;
+  --color-fetch-charcoal: #f3f4f6;
+  --color-fetch-muted: #a1a1aa;
+  --color-fetch-soft-gray: #1a1d22;
+  --orb-glow: 32, 36, 42;
 }
 
 .fetch-theme-chrome {
@@ -1621,67 +1621,23 @@ html[data-fetch-theme='light'] .fetch-seq-waitlist-pulse {
 }
 
 /* ------------------------------------------------------------
- * Light app shell — white surfaces (Tailwind utilities stay literal; no global charcoal remap).
+ * Dark app shell — default surfaces.
  * ------------------------------------------------------------ */
-html[data-fetch-theme='light'] .fetch-app-shell-bg,
-html[data-fetch-theme='light'] .fetch-app-shell-inner {
-  background: #ffffff !important;
-  color: #18181b !important;
+.fetch-app-shell-bg,
+.fetch-app-shell-inner {
+  background: #1a1d22 !important;
+  color: #e4e4e7 !important;
 }
 
-/* Explore full-page: full-bleed hero */
-html[data-fetch-theme='light'] .fetch-app-shell-bg:has(.fetch-home-vision[data-services-explore-full-page='true']),
-html[data-fetch-theme='light']
-  .fetch-app-shell-inner:has(.fetch-home-vision[data-services-explore-full-page='true']) {
-  background: transparent !important;
+.fetch-app-shell-inner .fetch-theme-chrome {
+  background: #1a1d22 !important;
 }
 
-html[data-fetch-theme='light']
-  .fetch-app-shell-inner:has(.fetch-home-vision[data-services-explore-full-page='true']) {
-  max-width: none !important;
+.fetch-app-shell-inner .fetch-sheet-surface {
+  background: #1a1d22 !important;
+  color: #e4e4e7 !important;
 }
 
-html[data-fetch-theme='light'] .fetch-home-phone-stage:has(.fetch-home-vision[data-services-explore-full-page='true']) {
-  background-color: transparent !important;
-}
-
-html[data-fetch-theme='light']
-  .fetch-home-vision.fetch-home-phone-frame[data-services-explore-full-page='true'] {
-  max-width: none !important;
-  width: 100%;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-theme-chrome {
-  background: #ffffff !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-sheet-surface {
-  background: #ffffff !important;
-  color: #18181b !important;
-}
-
-/* Explore embed categories: dark rail behind chips — readable label colors */
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active {
-  background-color: transparent !important;
-}
-
-html[data-fetch-theme='light']
-  .fetch-app-shell-inner
-  .fetch-explore-embed-category-card.fetch-explore-embed-category-card--active
-  .fetch-explore-embed-category-card__label {
-  color: #18181b !important;
-}
-
-/* Profile rank card now uses light shell natively — no dark overrides needed. */
-
-/* Hyper-green pills: .text-black above is for “dark chrome”; keep real black on neon badges */
-html[data-fetch-theme='light'] .fetch-app-shell-inner [class*='bg-[#00ff6a]'] .text-black,
-html[data-fetch-theme='light'] .fetch-app-shell-inner [class*='bg-[#00ff6a]'].text-black,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-fetch-red .text-black,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-fetch-red.text-black {
-  color: #000000 !important;
-}
-
-html[data-fetch-theme='light'] .fetch-app-shell-inner {
-  color-scheme: light;
+.fetch-app-shell-inner {
+  color-scheme: dark;
 }
