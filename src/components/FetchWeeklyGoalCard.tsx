@@ -178,7 +178,7 @@ export function FetchWeeklyGoalCard({ className = '', compact = false }: FetchWe
             <button
               type="button"
               onClick={openChest}
-              className={`min-h-[26px] rounded-full bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-2.5 text-[9px] font-black uppercase tracking-wide text-amber-950 shadow-[0_4px_12px_-4px_rgba(217,119,6,0.55)] ring-1 ring-amber-300/80 transition-transform active:scale-[0.96] ${compact ? 'w-full max-[5.5rem]' : 'px-4 text-[10px]'}`}
+              className={`min-h-[26px] rounded-full bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-2.5 text-[9px] font-black uppercase tracking-wide text-amber-950 shadow-[0_4px_12px_-4px_rgba(217,119,6,0.55)] ring-1 ring-amber-300/80 transition-transform active:scale-[0.96] ${compact ? 'w-full max-w-[5.5rem]' : 'px-4 text-[10px]'}`}
             >
               Claim
             </button>
