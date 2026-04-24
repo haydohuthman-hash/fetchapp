@@ -231,7 +231,7 @@ export default function FetchProfilePage({
 
         {/* ── Earnings Card ──────────────────────────── */}
         <div className="px-4 pt-6">
-          <section className="overflow-hidden rounded-2xl bg-zinc-900 p-5 shadow-[0_4px_24px_rgba(0,0,0,0.1)]">
+          <section className="overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-violet-200/50">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Earnings</p>
@@ -245,7 +245,7 @@ export default function FetchProfilePage({
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1.5 pt-1">
-                <span className="rounded-full bg-zinc-800 px-3 py-1 text-[11px] font-semibold text-zinc-400">
+                <span className="rounded-full bg-violet-100 px-3 py-1 text-[11px] font-semibold text-violet-600">
                   Credits: <span className="text-white">{audFromCents(creditsCents)}</span>
                 </span>
               </div>
@@ -261,7 +261,7 @@ export default function FetchProfilePage({
               <button
                 type="button"
                 onClick={onAddCredits}
-                className="rounded-xl border border-zinc-700 bg-zinc-800 py-3 text-[13px] font-bold text-white transition-transform active:scale-[0.98]"
+                className="rounded-xl border border-violet-200/60 bg-[#4c1d95] py-3 text-[13px] font-bold text-white transition-transform active:scale-[0.98]"
               >
                 Add credits
               </button>
@@ -433,7 +433,7 @@ export default function FetchProfilePage({
         <div className="fixed inset-0 z-[60] flex flex-col justify-end" role="dialog" aria-modal="true">
           <button
             type="button"
-            className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-[#1c1528]/35 backdrop-blur-[2px]"
             aria-label="Close listing"
             onClick={() => setListingSheet(null)}
           />

@@ -3,14 +3,14 @@
  */
 
 html {
-  --fetch-chrome-bg: #000000;
-  --fetch-app-bg: #000000;
-  --fetch-shell-ring: rgba(70, 74, 83, 0.28);
-  --fetch-map-placeholder-bg: #15171b;
-  --color-fetch-charcoal: #f3f4f6;
-  --color-fetch-muted: #a1a1aa;
-  --color-fetch-soft-gray: #15171b;
-  --orb-glow: 32, 36, 42;
+  --fetch-chrome-bg: #ffffff;
+  --fetch-app-bg: #f8f6fd;
+  --fetch-shell-ring: rgba(76, 29, 149, 0.18);
+  --fetch-map-placeholder-bg: #ede9f6;
+  --color-fetch-charcoal: #1c1528;
+  --color-fetch-muted: #64748b;
+  --color-fetch-soft-gray: #f4f2fa;
+  --orb-glow: 76, 29, 149;
 }
 
 .fetch-theme-chrome {
@@ -18,15 +18,15 @@ html {
 }
 
 html[data-fetch-theme='light'] {
-  /* Global app shell: match Home dark theme across all pages. */
-  --fetch-chrome-bg: #000000;
-  --fetch-app-bg: #000000;
-  --fetch-shell-ring: rgba(70, 74, 83, 0.28);
-  --fetch-map-placeholder-bg: #15171b;
-  --color-fetch-charcoal: #f3f4f6;
-  --color-fetch-muted: #a1a1aa;
-  --color-fetch-soft-gray: #15171b;
-  --orb-glow: 32, 36, 42;
+  /* Global app shell: light theme with dark purple primary */
+  --fetch-chrome-bg: #ffffff;
+  --fetch-app-bg: #f8f6fd;
+  --fetch-shell-ring: rgba(76, 29, 149, 0.18);
+  --fetch-map-placeholder-bg: #ede9f6;
+  --color-fetch-charcoal: #1c1528;
+  --color-fetch-muted: #64748b;
+  --color-fetch-soft-gray: #f4f2fa;
+  --orb-glow: 76, 29, 149;
 }
 
 /* --- Account / auth chrome --- */
@@ -1611,19 +1611,18 @@ html[data-fetch-theme='light'] .fetch-seq-waitlist-pulse {
 }
 
 /* ------------------------------------------------------------
- * Global Home Theme Lock (all app pages/routes)
+ * Global Light Theme Lock (all app pages/routes)
  * ------------------------------------------------------------ */
 html[data-fetch-theme='light'] .fetch-app-shell-bg,
 html[data-fetch-theme='light'] .fetch-app-shell-inner {
-  background: #000000 !important;
-  color: #f3f4f6 !important;
+  background: #f8f6fd !important;
+  color: #1c1528 !important;
 }
 
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-theme-chrome,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-auth-screen,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-account-screen,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-account-screen--home-glow::before {
-  background: #000000 !important;
+  background: #f8f6fd !important;
 }
 
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-account-card,
@@ -1633,73 +1632,72 @@ html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-map-help-dialo
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-maps-explore-suggestions,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-maps-explore-category-card,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-maps-explore-carousel-card,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-service-segment,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-service-segment--selected,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-booking-sheet,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-sheet-surface {
-  background: #15171b !important;
-  border-color: #2d3138 !important;
-  color: #f3f4f6 !important;
-  box-shadow: none !important;
+  background: #ffffff !important;
+  border-color: #e5e0f0 !important;
+  color: #1c1528 !important;
 }
 
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-auth-input,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-account-input,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-address-input,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-maps-explore-input,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-stage-text-input,
-html[data-fetch-theme='light'] .fetch-app-shell-inner input,
-html[data-fetch-theme='light'] .fetch-app-shell-inner textarea,
-html[data-fetch-theme='light'] .fetch-app-shell-inner select {
-  background: #1a1d22 !important;
-  border-color: #2d3138 !important;
-  color: #f3f4f6 !important;
+html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-stage-text-input {
+  background: #ffffff !important;
+  border-color: #e5e0f0 !important;
+  color: #1c1528 !important;
 }
 
 html[data-fetch-theme='light'] .fetch-app-shell-inner input::placeholder,
 html[data-fetch-theme='light'] .fetch-app-shell-inner textarea::placeholder {
-  color: #a1a1aa !important;
+  color: #94a3b8 !important;
 }
 
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-secondary-btn,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-account-btn-ghost,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-sheet-chrome-btn,
-html[data-fetch-theme='light'] .fetch-app-shell-inner button {
-  border-color: #2d3138;
+html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-home-sheet-chrome-btn {
+  border-color: #e5e0f0;
 }
 
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-zinc-900,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-zinc-800,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-zinc-700 {
-  color: #f3f4f6 !important;
+  color: #1c1528 !important;
 }
 
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-zinc-600,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-zinc-500,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-zinc-400 {
-  color: #a1a1aa !important;
+  color: #64748b !important;
 }
 
-/* Catch remaining utility classes so every route stays dark. */
+/* Neutral surface utilities → white/violet tints */
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-white,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-black,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-gray-50,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-gray-100,
-html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-gray-200,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-slate-50,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-slate-100,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-neutral-50,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-neutral-100,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-stone-50,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-stone-100 {
-  background-color: #15171b !important;
+  background-color: #ffffff !important;
+}
+html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-gray-200,
+html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-slate-200,
+html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-neutral-200,
+html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-stone-200 {
+  background-color: #f4f2fa !important;
+}
+html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-black {
+  background-color: #f8f6fd !important;
 }
 
-/* Search → Categories: `.bg-black` remap above becomes charcoal; force route + main + scroll to #000. */
+/* Search → Categories: light violet canvas */
 html[data-fetch-theme='light'] .fetch-app-shell-inner div.fetch-home-search-route,
 html[data-fetch-theme='light'] .fetch-app-shell-inner main.fetch-home-search-categories,
 html[data-fetch-theme='light'] .fetch-app-shell-inner div.fetch-home-search-categories__scroll {
-  background-color: #000000 !important;
+  background-color: #f8f6fd !important;
 }
 
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-white\/95,
@@ -1708,9 +1706,10 @@ html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-white\/80,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-gray-50\/90,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-slate-50\/90,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-neutral-50\/90 {
-  background-color: #1a1d22 !important;
+  background-color: rgba(255, 255, 255, 0.92) !important;
 }
 
+/* Dark text utilities stay dark on light surfaces */
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-black,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-gray-900,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-gray-800,
@@ -1720,15 +1719,15 @@ html[data-fetch-theme='light'] .fetch-app-shell-inner .text-neutral-900,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-neutral-800,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-stone-900,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-stone-800 {
-  color: #f3f4f6 !important;
+  color: #1c1528 !important;
 }
 
-/* Hyper-green pills: .text-black above is for “dark chrome”; keep real black on neon badges */
+/* Green brand → purple */
 html[data-fetch-theme='light'] .fetch-app-shell-inner [class*='bg-'][class*='00ff6a'] .text-black,
 html[data-fetch-theme='light'] .fetch-app-shell-inner [class*='bg-'][class*='00ff6a'].text-black,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-fetch-red .text-black,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-fetch-red.text-black {
-  color: #000000 !important;
+  color: #ffffff !important;
 }
 
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-gray-600,
@@ -1739,7 +1738,7 @@ html[data-fetch-theme='light'] .fetch-app-shell-inner .text-neutral-600,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-neutral-500,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-stone-600,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .text-stone-500 {
-  color: #a1a1aa !important;
+  color: #64748b !important;
 }
 
 html[data-fetch-theme='light'] .fetch-app-shell-inner .border-white,
@@ -1751,9 +1750,17 @@ html[data-fetch-theme='light'] .fetch-app-shell-inner .border-neutral-100,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .border-neutral-200,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .border-stone-100,
 html[data-fetch-theme='light'] .fetch-app-shell-inner .border-stone-200 {
-  border-color: #2d3138 !important;
+  border-color: #e5e0f0 !important;
 }
 
 html[data-fetch-theme='light'] .fetch-app-shell-inner {
-  color-scheme: dark;
+  color-scheme: light;
+}
+
+/* Force header to always be white */
+html[data-fetch-theme='light'] .fetch-app-address-header,
+html[data-fetch-theme='light'] .fetch-app-shell-inner .fetch-app-address-header {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #1c1528 !important;
 }

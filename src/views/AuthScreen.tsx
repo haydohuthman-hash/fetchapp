@@ -6,6 +6,7 @@ import { getOAuthRedirectTo } from '../lib/supabase/oauthSession'
 import { OAuthBrandedButtons } from '../components/auth/OAuthBrandedButtons'
 import { FetchItWordmark } from '../components/FetchHomeAppAddressHeader'
 import { getFetchDevDemoPasswordPrefill } from '../lib/fetchDevDemo'
+import authWelcomeBidWarsUrl from '../assets/auth-welcome-bid-wars.png'
 
 function mapServerAuthError(code: string): string {
   switch (code) {
@@ -34,7 +35,8 @@ type AuthScreenProps = {
 
 export default function AuthScreen({ onSignedIn, onBack }: AuthScreenProps) {
   const serverDbAuth = true
-  const [tab, setTab] = useState<'signin' | 'signup'>('signin')
+  const [showWelcome, setShowWelcome] = useState(true)
+  const [tab, setTab] = useState<'signin' | 'signup'>('signup')
   const [showEmailForm, setShowEmailForm] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState(getFetchDevDemoPasswordPrefill)
@@ -193,20 +195,119 @@ export default function AuthScreen({ onSignedIn, onBack }: AuthScreenProps) {
   }
 
   const inputClass =
-    'rounded-xl border border-zinc-300/80 bg-white px-3 py-2.5 text-[14px] text-zinc-900 placeholder:text-zinc-400 outline-none ring-0 focus:border-[#00ff6a] focus:ring-0'
+    'rounded-xl border border-zinc-300/80 bg-white px-3 py-2.5 text-[14px] text-zinc-900 placeholder:text-zinc-400 outline-none ring-0 focus:border-[#4c1d95] focus:ring-0'
 
-  return (
-    <div className="mx-auto flex min-h-dvh min-h-[100dvh] w-full max-w-lg flex-col bg-fetch-soft-gray">
-      <header className="relative flex shrink-0 flex-col bg-[#000000] px-5 pt-[max(0.65rem,env(safe-area-inset-top))] pb-6 shadow-[0_1px_0_rgba(255,255,255,0.06)] dark:bg-[#000000] dark:shadow-none">
+  if (showWelcome) {
+    return (
+      <div
+        className="relative mx-auto flex min-h-dvh min-h-[100dvh] w-full max-w-lg flex-col overflow-hidden bg-[#1e0a4b]"
+        role="region"
+        aria-label="Welcome to fetchit Bid Wars"
+      >
+        <img
+          src={authWelcomeBidWarsUrl}
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover object-center"
+          draggable={false}
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+        />
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-b from-transparent via-[rgba(30,10,75,0.55)] to-[rgba(15,4,40,0.95)]"
+          aria-hidden
+        />
+
         <button
           type="button"
           onClick={onBack}
-          className="self-start rounded-lg px-2 py-1.5 text-[12px] font-semibold text-white/70 hover:text-white"
+          className="absolute left-3 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-[2] flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/25 backdrop-blur-sm transition-colors active:bg-white/20"
+          aria-label="Back"
         >
-          Back
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path
+              d="M15 6l-6 6 6 6"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+
+        <div className="relative z-[1] mt-auto flex w-full flex-col items-stretch gap-3 px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-10">
+          <button
+            type="button"
+            onClick={() => {
+              setError(null)
+              setMessage(null)
+              setTab('signup')
+              setShowEmailForm(false)
+              setShowWelcome(false)
+            }}
+            className="fetch-auth-welcome-cta relative w-full rounded-full bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] py-4 text-center text-[16px] font-extrabold uppercase tracking-[0.12em] text-white shadow-[0_18px_38px_-14px_rgba(76,29,149,0.75),inset_0_1px_0_rgba(255,255,255,0.25)] ring-1 ring-white/10 transition-transform active:scale-[0.985]"
+          >
+            Get started
+          </button>
+          <p className="text-center text-[13px] font-medium text-white/80">
+            Already have an account?{' '}
+            <button
+              type="button"
+              onClick={() => {
+                setError(null)
+                setMessage(null)
+                setTab('signin')
+                setShowEmailForm(false)
+                setShowWelcome(false)
+              }}
+              className="font-medium text-white/85 underline decoration-white/30 underline-offset-4 transition-colors active:text-white/60"
+            >
+              Log in
+            </button>
+          </p>
+
+          <div className="mt-2 flex items-center justify-center gap-5 text-[11px] font-medium text-white/55">
+            <a
+              href="/privacy"
+              className="underline decoration-white/30 underline-offset-2 transition-colors hover:text-white/80"
+            >
+              Privacy Policy
+            </a>
+            <span aria-hidden className="text-white/30">
+              ·
+            </span>
+            <a
+              href="/terms"
+              className="underline decoration-white/30 underline-offset-2 transition-colors hover:text-white/80"
+            >
+              Terms
+            </a>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto flex min-h-dvh min-h-[100dvh] w-full max-w-lg flex-col bg-fetch-soft-gray">
+      <header className="relative flex shrink-0 flex-col bg-white px-5 pt-[max(0.65rem,env(safe-area-inset-top))] pb-6 shadow-[0_1px_0_rgba(76,29,149,0.06)]">
+        <button
+          type="button"
+          onClick={() => {
+            setError(null)
+            setMessage(null)
+            setShowEmailForm(false)
+            setShowWelcome(true)
+          }}
+          className="self-start rounded-lg px-2 py-1.5 text-[12px] font-semibold text-zinc-500 hover:text-zinc-900"
+        >
+          ← Back
         </button>
         <div className="flex flex-col items-center justify-center px-2 pb-2 pt-4 text-center">
           <FetchItWordmark imageClassName="mx-auto h-9 w-auto max-w-[16rem] object-contain sm:h-10" />
+          <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#4c1d95]">
+            Bid Wars
+          </p>
         </div>
       </header>
 
@@ -230,7 +331,7 @@ export default function AuthScreen({ onSignedIn, onBack }: AuthScreenProps) {
                     setError(null)
                     setShowEmailForm(true)
                   }}
-                  className="mt-1 w-full py-2.5 text-[13px] font-semibold text-[#00ff6a] underline decoration-[#00ff6a]/35 underline-offset-4 hover:text-[#00cc55]"
+                  className="mt-1 w-full py-2.5 text-[13px] font-semibold text-[#4c1d95] underline decoration-[#4c1d95]/35 underline-offset-4 hover:text-[#3b0764]"
                 >
                   Continue with email instead
                 </button>
@@ -283,16 +384,16 @@ export default function AuthScreen({ onSignedIn, onBack }: AuthScreenProps) {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="mt-2 rounded-full bg-[#00ff6a] py-3 text-[14px] font-bold text-black shadow-none transition-colors hover:bg-[#00cc55] disabled:opacity-45"
+                  className="mt-2 rounded-full bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] py-3 text-[14px] font-bold text-white shadow-[0_12px_26px_-14px_rgba(76,29,149,0.7)] transition-transform active:scale-[0.98] disabled:opacity-45"
                 >
-                  {busy ? 'Please waitâ€¦' : 'Continue'}
+                  {busy ? 'Please wait…' : 'Log in'}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setTab('signup'); setError(null) }}
                   className="mt-1 w-full py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-700"
                 >
-                  Don&apos;t have an account? <span className="font-semibold text-[#00ff6a]">Sign up</span>
+                  Don&apos;t have an account? <span className="font-semibold text-[#4c1d95]">Sign up</span>
                 </button>
               </form>
             </>
@@ -364,16 +465,16 @@ export default function AuthScreen({ onSignedIn, onBack }: AuthScreenProps) {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="mt-2 rounded-full bg-[#00ff6a] py-3 text-[14px] font-bold text-black shadow-none transition-colors hover:bg-[#00cc55] disabled:opacity-45"
+                  className="mt-2 rounded-full bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] py-3 text-[14px] font-bold text-white shadow-[0_12px_26px_-14px_rgba(76,29,149,0.7)] transition-transform active:scale-[0.98] disabled:opacity-45"
                 >
-                  {busy ? 'Please waitâ€¦' : 'Create account'}
+                  {busy ? 'Please wait…' : 'Create account'}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setTab('signin'); setError(null) }}
                   className="mt-1 w-full py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-700"
                 >
-                  Already have an account? <span className="font-semibold text-[#00ff6a]">Log in</span>
+                  Already have an account? <span className="font-semibold text-[#4c1d95]">Log in</span>
                 </button>
               </form>
             </>

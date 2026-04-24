@@ -13,12 +13,12 @@ export default function FetchGemsView({ onBack }: FetchGemsViewProps) {
   }, [onBack])
 
   return (
-    <div className="min-h-dvh bg-black px-4 pb-10 pt-[max(1rem,env(safe-area-inset-top))] text-white">
+    <div className="min-h-dvh bg-[#f8f6fd] px-4 pb-10 pt-[max(1rem,env(safe-area-inset-top))] text-[#1c1528]">
       <header className="mb-6 flex items-center gap-3">
         <button
           type="button"
           onClick={handleBack}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/90 backdrop-blur-sm active:scale-[0.97]"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-violet-200/60 bg-violet-50 text-[#4c1d95] active:scale-[0.97]"
           aria-label="Back"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -53,11 +53,11 @@ export default function FetchGemsView({ onBack }: FetchGemsViewProps) {
             </svg>
           </span>
           <div className="min-w-0">
-            <p className="text-[15px] font-bold tracking-tight text-white">Your gems</p>
-            <p className="mt-0.5 text-[12px] text-white/55">Collect gems from drops, live sales, and challenges.</p>
+            <p className="text-[15px] font-bold tracking-tight text-[#1c1528]">Your gems</p>
+            <p className="mt-0.5 text-[12px] text-zinc-500">Collect gems from drops, live sales, and challenges.</p>
           </div>
         </div>
-        <p className="text-[13px] leading-relaxed text-white/70">
+        <p className="text-[13px] leading-relaxed text-zinc-500">
           Gem balance and redemptions will show here when the rewards program is connected. You can still use Fetch
           wallet credits for bookings and checkout.
         </p>

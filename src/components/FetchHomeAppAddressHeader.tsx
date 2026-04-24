@@ -72,7 +72,7 @@ export function FetchItWordmark({
 
 /** Round header controls (account, chat, gems, cart) — shared chrome. */
 const headerChromeIconBtn =
-  'fetch-apple-warp-btn flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-white/70 transition-colors hover:bg-white/[0.14] hover:text-white active:scale-[0.98]'
+  'fetch-apple-warp-btn flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100/60 text-[#4c1d95]/70 transition-colors hover:bg-violet-100 hover:text-[#4c1d95] active:scale-[0.98]'
 
 const headerEase =
   'duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:duration-150 motion-reduce:ease-out'
@@ -111,13 +111,13 @@ function HeaderWalletChip({ onOpen }: { onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="fetch-apple-warp-btn flex w-max max-w-[min(52vw,12rem)] shrink-0 items-center gap-2 rounded-full border border-white/[0.14] bg-white/[0.05] py-1.5 pl-2.5 pr-2.5 transition-[background-color,transform] hover:bg-white/[0.09] active:scale-[0.98] sm:gap-2.5 sm:py-2 sm:pl-3 sm:pr-3"
+      className="fetch-apple-warp-btn flex w-max max-w-[min(52vw,12rem)] shrink-0 items-center gap-2 rounded-full border border-violet-200/80 bg-violet-50/60 py-1.5 pl-2.5 pr-2.5 transition-[background-color,transform] hover:bg-violet-100/80 active:scale-[0.98] sm:gap-2.5 sm:py-2 sm:pl-3 sm:pr-3"
       aria-label={`Wallet, balance ${label}`}
     >
-      <span className="flex shrink-0 items-center justify-center text-white/88" aria-hidden>
-        <WalletGlyph className="text-white/90" size={18} />
+      <span className="flex shrink-0 items-center justify-center text-[#4c1d95]/80" aria-hidden>
+        <WalletGlyph className="text-[#4c1d95]/80" size={18} />
       </span>
-      <span className="min-w-0 truncate text-left text-[12px] font-semibold tabular-nums leading-none text-white sm:text-[13px]">
+      <span className="min-w-0 truncate text-left text-[12px] font-semibold tabular-nums leading-none text-[#1c1528] sm:text-[13px]">
         {label}
       </span>
     </button>
@@ -125,7 +125,7 @@ function HeaderWalletChip({ onOpen }: { onOpen: () => void }) {
 }
 
 /**
- * Home top bar: wordmark, account & chat shortcuts, cart.
+ * Home top bar: wallet, account & chat shortcuts, gems, cart.
  * Fixed under the safe area.
  */
 export function FetchHomeAppAddressHeader({
@@ -174,7 +174,7 @@ export function FetchHomeAppAddressHeader({
   return (
     <header
       className={[
-        'fetch-app-address-header pointer-events-auto fixed left-0 right-0 top-0 z-[56] bg-[#000000]',
+        'fetch-app-address-header pointer-events-auto fixed left-0 right-0 top-0 z-[56] bg-white shadow-[0_1px_0_rgba(76,29,149,0.06)]',
         chromeShellSlide,
         'translate-y-0',
       ].join(' ')}
@@ -190,7 +190,6 @@ export function FetchHomeAppAddressHeader({
       >
         <div className="flex w-full min-w-0 items-center gap-2">
           <div className="relative flex min-w-0 flex-1 items-center gap-2">
-            <FetchItWordmark />
             <HeaderWalletChip onOpen={openWallet} />
           </div>
           {controlsRight}

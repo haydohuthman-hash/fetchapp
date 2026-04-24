@@ -38,6 +38,7 @@ import { setAuthState } from './lib/authState'
 import { FetchVoiceProvider } from './voice/FetchVoiceContext'
 import { FetchAppShellSuspenseFallback } from './components/FetchAppShellSuspenseFallback'
 import { FetchBoomerangSplash } from './components/FetchBoomerangSplash'
+import { FetchDailyStreakSplash } from './components/FetchDailyStreakSplash'
 
 const homeChunk = () => import('./views/HomeView')
 const HomeView = lazy(homeChunk)
@@ -136,6 +137,15 @@ function App() {
   /** First `getSession` + `refreshSessionFromSupabase` pass completed (non-blocking; used for routing + logs). */
   const [shellHydrateDone, setShellHydrateDone] = useState(false)
   const [authSessionUserId, setAuthSessionUserId] = useState<string | null>(null)
+
+  const isHomeProfileSurface =
+    Boolean(authSessionUserId) &&
+    (pathname === FETCH_PROFILE_PATH ||
+      pathname === FETCH_PROFILE_EDIT_PATH ||
+      pathname === FETCH_MARKETPLACE_LIST_PATH ||
+      pathname === FETCH_WALLET_CASH_OUT_PATH ||
+      pathname === FETCH_WALLET_ADD_CREDITS_PATH ||
+      pathname === FETCH_GEMS_PATH)
   /**
    * When false, ignore post-auth phase jumps from onAuthStateChange so splash can finish and session cache can hydrate.
    * Seed from module splash flag so React Strict Mode remounts after handoff don’t stay “locked” on home.
@@ -569,13 +579,31 @@ function App() {
     )
   })()
 
+  const homeLightShell = phase === 'home' && !isHomeProfileSurface
+
   return (
     <FetchVoiceProvider>
       {!entrySplashDone ? (
         <FetchBoomerangSplash onDone={() => { fetchAppSplashHandoffDone = true; setEntrySplashDone(true) }} />
       ) : null}
-      <div className={`fetch-app-shell-bg relative flex min-h-dvh min-h-[100dvh] w-full justify-center ${!entrySplashDone ? 'invisible' : ''}`}>
-        <div className="fetch-app-shell-inner relative z-[1] mx-auto min-h-dvh min-h-[100dvh] w-full max-w-[1024px] overflow-x-clip overflow-y-visible">
+      {entrySplashDone && phase === 'home' ? <FetchDailyStreakSplash /> : null}
+      <div
+        className={[
+          'fetch-app-shell-bg relative flex min-h-dvh min-h-[100dvh] w-full justify-center',
+          !entrySplashDone ? 'invisible' : '',
+          homeLightShell ? 'fetch-app-shell--home-light' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        <div
+          className={[
+            'fetch-app-shell-inner relative z-[1] mx-auto min-h-dvh min-h-[100dvh] w-full max-w-[1024px] overflow-x-clip overflow-y-visible',
+            homeLightShell ? 'fetch-app-shell--home-light' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
           {phaseBody}
         </div>
       </div>

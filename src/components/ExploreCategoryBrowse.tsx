@@ -87,20 +87,20 @@ function HowItWorksSheet({
         className={`relative z-[1] mx-auto w-full max-w-[min(100%,430px)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${visible ? 'translate-y-0' : 'translate-y-full'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="fetch-sheet-surface rounded-t-[1.75rem] border-t border-white/10 bg-black px-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] pt-5 shadow-[0_-8px_40px_rgba(0,0,0,0.45)]">
+        <div className="fetch-sheet-surface rounded-t-[1.75rem] border-t border-violet-200/50 bg-white px-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] pt-5 shadow-[0_-8px_40px_rgba(76,29,149,0.08)]">
           {/* Handle */}
           <div className="mx-auto mb-5 h-[5px] w-10 rounded-full bg-zinc-600" />
 
           {/* Header */}
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#00ff6a]">
-              <BoltNavIcon className="h-5 w-5 text-black" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#4c1d95]">
+              <BoltNavIcon className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-[1.05rem] font-bold tracking-[-0.02em] text-white">
+              <h2 className="text-[1.05rem] font-bold tracking-[-0.02em] text-[#1c1528]">
                 How Fetch works
               </h2>
-              <p className="text-[12px] font-medium text-zinc-400">
+              <p className="text-[12px] font-medium text-zinc-500">
                 {categoryTitle}
               </p>
             </div>
@@ -110,12 +110,12 @@ function HowItWorksSheet({
           <div className="flex flex-col gap-4">
             {STEPS.map((s, i) => (
               <div key={i} className="flex items-start gap-3.5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-zinc-800/90 ring-1 ring-white/10">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-violet-100 ring-1 ring-violet-200/60 text-[#4c1d95]">
                   {s.icon}
                 </div>
                 <div className="min-w-0 pt-0.5">
-                  <p className="text-[13px] font-bold text-white">{s.title}</p>
-                  <p className="mt-0.5 text-[12px] leading-snug text-zinc-400">{s.desc}</p>
+                  <p className="text-[13px] font-bold text-[#1c1528]">{s.title}</p>
+                  <p className="mt-0.5 text-[12px] leading-snug text-zinc-500">{s.desc}</p>
                 </div>
               </div>
             ))}
@@ -123,14 +123,14 @@ function HowItWorksSheet({
 
           {/* Delivery badges */}
           <div className="mt-5 flex flex-wrap items-center gap-2">
-            <span className="flex items-center gap-1 rounded-full bg-amber-950/55 px-2.5 py-1 text-[11px] font-bold text-amber-200 ring-1 ring-amber-500/25">
-              <BoltNavIcon className="h-3 w-3 text-amber-400" />
+            <span className="flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-bold text-[#4c1d95] ring-1 ring-violet-200/60">
+              <BoltNavIcon className="h-3 w-3 text-[#4c1d95]" />
               Same-day delivery
             </span>
-            <span className="rounded-full bg-zinc-800/90 px-2.5 py-1 text-[11px] font-bold text-zinc-300 ring-1 ring-white/10">
+            <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-bold text-[#4c1d95]">
               Next-day available
             </span>
-            <span className="rounded-full bg-zinc-800/90 px-2.5 py-1 text-[11px] font-bold text-zinc-300 ring-1 ring-white/10">
+            <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-bold text-[#4c1d95]">
               Free pickup
             </span>
           </div>
@@ -139,7 +139,7 @@ function HowItWorksSheet({
           <button
             type="button"
             onClick={cont}
-            className="mt-6 flex w-full items-center justify-center rounded-2xl bg-[#00ff6a] py-3.5 text-[14px] font-bold text-black transition-transform active:scale-[0.98]"
+            className="mt-6 flex w-full items-center justify-center rounded-2xl bg-[#4c1d95] py-3.5 text-[14px] font-bold text-white transition-transform active:scale-[0.98]"
           >
             Browse {categoryTitle}
           </button>
@@ -221,7 +221,7 @@ function ListingInfoSheet({
         className={`relative z-[1] mx-auto flex h-[95dvh] max-h-[95dvh] min-h-0 w-full max-w-[min(100%,430px)] flex-col transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${visible ? 'translate-y-0' : 'translate-y-full'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="fetch-sheet-surface flex h-full min-h-0 flex-col rounded-t-[1.75rem] border-t border-white/10 bg-black text-white shadow-[0_-8px_40px_rgba(0,0,0,0.5)]">
+        <div className="fetch-sheet-surface flex h-full min-h-0 flex-col rounded-t-[1.75rem] border-t border-violet-200/50 bg-white text-[#1c1528] shadow-[0_-8px_40px_rgba(76,29,149,0.08)]">
           {/* Handle */}
           <div className="flex shrink-0 justify-center pt-3 pb-1">
             <div className="h-[5px] w-10 rounded-full bg-zinc-200" />
@@ -525,7 +525,7 @@ function ListingInfoSheet({
             </div>
 
             {/* Sticky CTAs */}
-            <div className="shrink-0 border-t border-white/10 bg-black px-5 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-3 shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.45)]">
+            <div className="shrink-0 border-t border-violet-200/50 bg-white px-5 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-3 shadow-[0_-4px_16px_-4px_rgba(76,29,149,0.06)]">
               <div className="flex gap-2.5">
                 <button
                   type="button"
@@ -663,14 +663,14 @@ export function ExploreCategoryBrowse({
 
       {/* Feed panel */}
       <div
-        className={`relative z-[1] mx-auto flex h-full w-full max-w-[min(100%,430px)] flex-col bg-black transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${visible ? 'translate-y-0' : 'translate-y-full'}`}
+        className={`relative z-[1] mx-auto flex h-full w-full max-w-[min(100%,430px)] flex-col bg-[#f8f6fd] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${visible ? 'translate-y-0' : 'translate-y-full'}`}
       >
         {/* Sticky header */}
-        <header className="relative z-10 flex shrink-0 items-center gap-3 border-b border-white/10 bg-black px-4 pb-3 pt-[max(0.85rem,env(safe-area-inset-top,0px))]">
+        <header className="relative z-10 flex shrink-0 items-center gap-3 border-b border-violet-200/40 bg-white px-4 pb-3 pt-[max(0.85rem,env(safe-area-inset-top,0px))]">
           <button
             type="button"
             onClick={dismiss}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.08] text-white/75 transition-colors hover:bg-white/[0.12] hover:text-white active:scale-[0.98]"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 text-[#4c1d95] transition-colors hover:bg-violet-200 active:scale-[0.98]"
             aria-label="Back"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -678,7 +678,7 @@ export function ExploreCategoryBrowse({
             </svg>
           </button>
           <div className="min-w-0 flex-1">
-            <h1 className="text-[1rem] font-bold tracking-[-0.02em] text-white">
+            <h1 className="text-[1rem] font-bold tracking-[-0.02em] text-[#1c1528]">
               {categoryTitle}
             </h1>
             <p className="text-[11px] font-medium text-zinc-500">
@@ -687,7 +687,7 @@ export function ExploreCategoryBrowse({
           </div>
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.08] text-white/75 transition-colors hover:bg-white/[0.12] hover:text-white active:scale-[0.98]"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 text-[#4c1d95] transition-colors hover:bg-violet-200 active:scale-[0.98]"
             aria-label="Filter"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -697,9 +697,9 @@ export function ExploreCategoryBrowse({
         </header>
 
         {/* Delivery strip */}
-        <div className="flex shrink-0 items-center gap-2 border-b border-white/10 bg-zinc-900/90 px-4 py-2">
-          <BoltNavIcon className="h-3.5 w-3.5 shrink-0 text-amber-400" />
-          <p className="text-[11px] font-semibold text-amber-200/90">
+        <div className="flex shrink-0 items-center gap-2 border-b border-violet-200/40 bg-violet-50 px-4 py-2">
+          <BoltNavIcon className="h-3.5 w-3.5 shrink-0 text-[#4c1d95]" />
+          <p className="text-[11px] font-semibold text-[#4c1d95]">
             Same-day &amp; next-day delivery available on most items
           </p>
         </div>
@@ -707,7 +707,7 @@ export function ExploreCategoryBrowse({
         {/* Grid */}
         <div
           ref={scrollRef}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-black [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#f8f6fd] [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <div className="grid grid-cols-2 gap-2 px-2 pb-[max(6rem,env(safe-area-inset-bottom,0px)+5rem)] pt-2.5">
             {listings.map((l) => (
@@ -722,7 +722,7 @@ export function ExploreCategoryBrowse({
 
           {listings.length === 0 ? (
             <div className="flex flex-col items-center justify-center px-6 pt-20 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-violet-100">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-zinc-400">
                   <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
                 </svg>

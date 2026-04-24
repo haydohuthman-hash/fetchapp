@@ -903,7 +903,7 @@ function HomeShellMarketplacePageInner({
                       <button
                         type="button"
                         disabled={cartLines.length === 0}
-                        className="w-full rounded-xl bg-zinc-900 py-3.5 text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40 active:opacity-90"
+                        className="w-full rounded-xl bg-[#4c1d95] py-3.5 text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40 active:opacity-90"
                         onClick={goCheckout}
                       >
                         Checkout
@@ -973,7 +973,7 @@ function HomeShellMarketplacePageInner({
                     </p>
                   </div>
                   {stripeStoreCheckout && import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY?.trim() ? (
-                    <div className="rounded-2xl border border-zinc-200 bg-zinc-950 px-4 py-4">
+                    <div className="rounded-2xl border border-violet-200/60 bg-white px-4 py-4">
                       <FetchStripePaymentElement
                         publishableKey={import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY.trim()}
                         clientSecret={stripeStoreCheckout.clientSecret}
@@ -1020,7 +1020,7 @@ function HomeShellMarketplacePageInner({
                     <button
                       type="button"
                       disabled={!checkoutValid || cartLines.length === 0 || checkoutBusy}
-                      className="w-full rounded-xl bg-zinc-900 py-3.5 text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40 active:opacity-90"
+                      className="w-full rounded-xl bg-[#4c1d95] py-3.5 text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40 active:opacity-90"
                       onClick={() => void placeStoreOrder()}
                     >
                       {checkoutBusy ? 'Processingâ€¦' : 'Place order'}
@@ -1050,7 +1050,7 @@ function HomeShellMarketplacePageInner({
                 </p>
                 <button
                   type="button"
-                  className="mt-8 w-full max-w-xs rounded-xl bg-zinc-900 py-3.5 text-[15px] font-semibold text-white active:opacity-90"
+                  className="mt-8 w-full max-w-xs rounded-xl bg-[#4c1d95] py-3.5 text-[15px] font-semibold text-white active:opacity-90"
                   onClick={goBrowse}
                 >
                   Back to auctions
@@ -1074,7 +1074,7 @@ function HomeShellMarketplacePageInner({
             <div className="fixed inset-0 z-[200] flex flex-col justify-end" role="presentation">
               <button
                 type="button"
-                className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+                className="absolute inset-0 bg-[#1c1528]/35 backdrop-blur-[2px]"
                 aria-label="Close product details"
                 onClick={() => setProductSheet(null)}
               />
@@ -1151,7 +1151,7 @@ function HomeShellMarketplacePageInner({
                       <>
                         <button
                           type="button"
-                          className="w-full rounded-xl bg-zinc-900 py-3.5 text-[15px] font-semibold text-white active:opacity-90"
+                          className="w-full rounded-xl bg-[#4c1d95] py-3.5 text-[15px] font-semibold text-white active:opacity-90"
                           onClick={() => {
                             addOne(productSheet)
                           }}
@@ -1227,7 +1227,7 @@ function HomeShellMarketplacePageInner({
                 <div className="fixed inset-0 z-[200] flex flex-col justify-end" role="presentation">
                   <button
                     type="button"
-                    className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+                    className="absolute inset-0 bg-[#1c1528]/35 backdrop-blur-[2px]"
                     aria-label="Close listing details"
                     onClick={closePeerListingSheet}
                   />
@@ -1316,7 +1316,7 @@ function HomeShellMarketplacePageInner({
                           </div>
                           <button
                             type="button"
-                            className="shrink-0 rounded-lg bg-zinc-900 px-3 py-2 text-[12px] font-bold text-white active:bg-zinc-800"
+                            className="shrink-0 rounded-lg bg-[#4c1d95] px-3 py-2 text-[12px] font-bold text-white active:bg-[#5b21b6]"
                             onClick={openSellerInDrops}
                           >
                             View in Drops
@@ -1353,7 +1353,7 @@ function HomeShellMarketplacePageInner({
                         <p className="mb-2 text-[12px] font-medium text-[#00ff6a]">{peerBuyErr}</p>
                       ) : null}
                       {peerStripeBuy && import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY?.trim() ? (
-                        <div className="rounded-xl border border-zinc-900 bg-zinc-950 p-3">
+                        <div className="rounded-xl border border-violet-200/60 bg-white p-3">
                           <FetchStripePaymentElement
                             publishableKey={import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY.trim()}
                             clientSecret={peerStripeBuy.clientSecret}
@@ -1384,7 +1384,7 @@ function HomeShellMarketplacePageInner({
                         <button
                           type="button"
                           disabled={peerCheckoutBusy || isViewerSeller || isDemoListing}
-                          className="w-full rounded-xl bg-zinc-900 py-3.5 text-[15px] font-semibold text-white disabled:opacity-50"
+                          className="w-full rounded-xl bg-[#4c1d95] py-3.5 text-[15px] font-semibold text-white disabled:opacity-50"
                           onClick={() => void startPeerBuy(selected)}
                         >
                           {peerCheckoutBusy ? 'â€¦' : isDemoListing ? 'Checkout unavailable' : 'Buy now'}
