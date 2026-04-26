@@ -1,6 +1,7 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { needsDropsCreatorOnboarding } from './drops/fetchDropsCreatorOnboarding'
 import { FETCH_APP_PATH, FETCH_PROFILE_PATH } from './fetchRoutes'
+import { hasEntryAddressSheetAfterSignupRequest } from './fetchEntryAddressOnboarding'
 import { refreshSessionFromSupabase, seedSessionCacheFromSupabaseUser } from './fetchUserSession'
 import { getSupabaseBrowserClient } from './supabase/client'
 import { ensureUserProfile } from './supabase/profiles'
@@ -46,12 +47,13 @@ export async function handlePostAuthUser(authUser: User, ctx: HandlePostAuthCont
   seedSessionCacheFromSupabaseUser(authUser)
 
   const drops = needsDropsCreatorOnboarding()
-  const path: string = drops ? FETCH_APP_PATH : FETCH_PROFILE_PATH
+  const addressPromptAfterSignup = hasEntryAddressSheetAfterSignupRequest()
+  const path: string = drops || addressPromptAfterSignup ? FETCH_APP_PATH : FETCH_PROFILE_PATH
 
   const routeKey = `${authUser.id}|${path}|${drops ? 'drops' : 'main'}`
   if (ctx.lastRouteKeyRef.current !== routeKey) {
     ctx.lastRouteKeyRef.current = routeKey
-    console.log('[ROUTE] handlePostAuthUser apply', { path, drops })
+    console.log('[ROUTE] handlePostAuthUser apply', { path, drops, addressPromptAfterSignup })
     if (drops) ctx.setAppPhase('dropsSetup')
     else ctx.setAppPhase('home')
     ctx.navigate(path, { replace: true })

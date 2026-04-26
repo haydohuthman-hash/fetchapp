@@ -6983,7 +6983,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-app-shell-inner [class*='bg-[linear-gradient'] .text-white,
 .fetch-app-shell-inner [class*='bg-[linear-gradient'] [class~='text-white'],
 .fetch-app-shell-inner .bg-fetch-red .text-white,
-.fetch-app-shell-inner .fetch-home-intent-bottom-nav__fab,
+.fetch-app-shell-inner .fetch-home-intent-bottom-nav__fab-orb,
 .fetch-app-shell-inner [class*='bg-[#00ff6a]'] .text-white,
 .fetch-app-shell-inner [class*='bg-[#00ff6a]'] [class~='text-white'],
 .fetch-app-shell-inner [class*='bg-[rgba(0,0,0'] .text-white,
@@ -7225,6 +7225,10 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-app-address-header * {
   color: inherit;
 }
+/* Brand accents (purple) — the header host forces dark ink; allow explicit violet for wordmark / subline / mark */
+.fetch-app-address-header .fetch-header-violet-ink {
+  color: #4c1d95 !important;
+}
 .fetch-app-address-header .text-white,
 .fetch-app-address-header [class*='text-white\\/'],
 .fetch-app-address-header .text-zinc-50,
@@ -7338,11 +7342,41 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0;
+  gap: 0.15rem;
 }
 
+/* Default: labels off (legacy docks). Phone compact bar shows captions — see rules below. */
 .fetch-home-intent-bottom-nav__label {
   display: none;
+}
+
+/* Caption row under each icon (+ Sell under center orb) */
+.fetch-home-phone-stage .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__label {
+  display: block;
+  max-width: 100%;
+  padding: 0 0.08rem;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-align: center;
+  text-wrap: balance;
+  color: rgba(17, 24, 39, 0.48);
+}
+
+.fetch-home-phone-stage
+  .fetch-home-intent-bottom-nav--compact
+  .fetch-home-intent-bottom-nav__icon--active
+  .fetch-home-intent-bottom-nav__label {
+  color: #4c1d95;
+}
+
+.fetch-home-phone-stage
+  .fetch-home-intent-bottom-nav--compact
+  .fetch-home-intent-bottom-nav__fab--active
+  .fetch-home-intent-bottom-nav__label {
+  color: #4c1d95;
+  font-weight: 800;
 }
 
 .fetch-home-intent-bottom-nav__icon svg {
@@ -7475,9 +7509,9 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav--compact,
 .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav--compact,
 .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav--compact {
-  min-height: calc(3.28rem + env(safe-area-inset-bottom, 0px)) !important;
-  padding-top: 0.12rem !important;
-  padding-bottom: max(0.12rem, env(safe-area-inset-bottom, 0px)) !important;
+  min-height: calc(3.95rem + env(safe-area-inset-bottom, 0px)) !important;
+  padding-top: 0.18rem !important;
+  padding-bottom: max(0.1rem, env(safe-area-inset-bottom, 0px)) !important;
   justify-content: center;
   column-gap: 0.625rem;
   padding-left: max(0.75rem, env(safe-area-inset-left, 0px)) !important;
@@ -7500,16 +7534,26 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon svg,
 .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon svg,
-.fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon svg {
-  width: 2.14rem !important;
-  height: 2.14rem !important;
+.fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon svg,
+.fetch-home-phone-stage
+  .fetch-home-vision[data-home-shell-tab='search']
+  .fetch-home-intent-bottom-nav--compact
+  .fetch-home-intent-bottom-nav__icon
+  svg {
+  width: 1.82rem !important;
+  height: 1.82rem !important;
 }
 
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon--active svg,
 .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon--active svg,
-.fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon--active svg {
-  width: 2.38rem !important;
-  height: 2.38rem !important;
+.fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon--active svg,
+.fetch-home-phone-stage
+  .fetch-home-vision[data-home-shell-tab='search']
+  .fetch-home-intent-bottom-nav--compact
+  .fetch-home-intent-bottom-nav__icon--active
+  svg {
+  width: 2.02rem !important;
+  height: 2.02rem !important;
 }
 
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer
@@ -7547,55 +7591,89 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   height: 2.72rem !important;
 }
 
-/* Center create FAB: white circle + black plus, lifted above the dock */
+/* Center create FAB: orb lifted so its center lands on the bar's top edge,
+   with the side tabs vertically centered (icons read higher in the dock). */
 .fetch-home-phone-stage .fetch-home-intent-bottom-nav--compact.fetch-home-intent-bottom-nav--with-fab {
-  align-items: flex-end !important;
-  padding-top: 0.55rem !important;
+  align-items: center !important;
+  padding-top: 0.35rem !important;
+  padding-bottom: max(0.55rem, env(safe-area-inset-bottom, 0px)) !important;
 }
 
+/* Center FAB: purple orb (lifted) + “Sell” caption aligned with other tabs */
 .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab {
   position: relative;
   z-index: 4;
   display: flex;
   flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 2.75rem;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent !important;
+  color: inherit;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab-stack {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.15rem;
+}
+
+.fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab-orb {
+  display: flex;
+  width: 3.1rem;
+  height: 3.1rem;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 3.6rem;
-  height: 3.6rem;
-  margin-bottom: 0.08rem;
-  transform: translateY(-0.78rem);
-  border: none;
+  /* Lift orb so its center sits on the bar's top edge (half above, half inside). */
+  transform: translateY(-1.55rem);
   border-radius: 9999px;
   background-color: #4c1d95 !important;
   color: #ffffff !important;
   box-shadow:
-    0 12px 32px -10px rgba(76, 29, 149, 0.55),
+    0 14px 30px -10px rgba(76, 29, 149, 0.6),
     0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-  cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab:hover {
-  box-shadow:
-    0 14px 36px -10px rgba(0, 0, 0, 0.72),
-    0 0 0 1px rgba(0, 0, 0, 0.06) inset;
-}
-
-.fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab:active {
-  transform: translateY(-0.78rem) scale(0.94);
 }
 
 @media (min-width: 640px) {
-  .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab {
-    width: 3.85rem;
-    height: 3.85rem;
-    transform: translateY(-0.86rem);
+  .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab-orb {
+    width: 3.3rem;
+    height: 3.3rem;
+    transform: translateY(-1.65rem);
   }
+}
 
-  .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab:active {
-    transform: translateY(-0.86rem) scale(0.94);
+.fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab:hover .fetch-home-intent-bottom-nav__fab-orb {
+  box-shadow:
+    0 16px 34px -10px rgba(76, 29, 149, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+
+.fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab:active .fetch-home-intent-bottom-nav__fab-orb {
+  transform: translateY(-1.55rem) scale(0.95);
+}
+
+@media (min-width: 640px) {
+  .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab:active .fetch-home-intent-bottom-nav__fab-orb {
+    transform: translateY(-1.65rem) scale(0.95);
   }
+}
+
+/* Show “Sell” label via shared __label rules; no inline text in orb */
+.fetch-home-phone-stage .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__fab .fetch-home-intent-bottom-nav__label {
+  display: none !important;
 }
 
 /* Apple-like "warp" press behavior: elastic squish + recover. */
@@ -7754,11 +7832,154 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-app-shell-inner .fetch-home-search-categories__tile {
   background-color: #ffffff !important;
   box-shadow: 0 1px 2px rgba(76, 29, 149, 0.05), inset 0 0 0 1px rgba(76, 29, 149, 0.08);
-  color: #1c1528 !important;
+  color: #1c1528;
+}
+.fetch-app-shell-inner .fetch-home-search-categories__tile:hover {
+  box-shadow: 0 6px 18px rgba(76, 29, 149, 0.12), inset 0 0 0 1px rgba(76, 29, 149, 0.16);
 }
 .fetch-app-shell-inner .fetch-home-search-categories__icon-well {
-  background-color: #ede9f6 !important;
+  background-image: linear-gradient(140deg, #ede9f6 0%, #d8cdf2 100%) !important;
   color: #4c1d95 !important;
+}
+
+/* Search hero: sticky search bar + quick chip rail (light surface) */
+.fetch-app-shell-inner .fetch-home-search-hero {
+  background-color: rgba(248, 246, 253, 0.92) !important;
+  backdrop-filter: saturate(140%) blur(8px);
+  -webkit-backdrop-filter: saturate(140%) blur(8px);
+}
+.fetch-app-shell-inner .fetch-home-search-hero__field {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(76, 29, 149, 0.14) !important;
+  box-shadow: 0 2px 12px rgba(76, 29, 149, 0.07);
+}
+.fetch-app-shell-inner .fetch-home-search-hero__field:focus-within {
+  border-color: rgba(76, 29, 149, 0.45) !important;
+  box-shadow: 0 0 0 4px rgba(76, 29, 149, 0.12), 0 6px 20px rgba(76, 29, 149, 0.12);
+}
+.fetch-app-shell-inner .fetch-home-search-chip {
+  background-color: #ffffff !important;
+  color: #4c1d95 !important;
+  border: 1px solid rgba(76, 29, 149, 0.16) !important;
+  box-shadow: 0 1px 0 rgba(76, 29, 149, 0.04);
+}
+.fetch-app-shell-inner .fetch-home-search-chip:active {
+  background-color: #ede9f6 !important;
+}
+.fetch-app-shell-inner .fetch-home-search-trending__card {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(76, 29, 149, 0.05), inset 0 0 0 1px rgba(76, 29, 149, 0.08);
+}
+
+/* Bidding-war banner CTA — Duolingo-style 3D button */
+.fetch-bidwar-duo-cta {
+  display: block;
+  border-radius: 9999px;
+}
+.fetch-bidwar-duo-cta__face {
+  transform: translateY(0);
+  transition: transform 110ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 160ms ease-out;
+  will-change: transform;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.fetch-bidwar-duo-cta__shadow {
+  border-radius: 9999px;
+  transition: opacity 110ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 110ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.fetch-bidwar-duo-cta:hover .fetch-bidwar-duo-cta__face {
+  filter: brightness(1.04);
+}
+.fetch-bidwar-duo-cta:active .fetch-bidwar-duo-cta__face {
+  transform: translateY(4%);
+}
+.fetch-bidwar-duo-cta:active .fetch-bidwar-duo-cta__shadow {
+  transform: translateY(-4%);
+  opacity: 0.6;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fetch-bidwar-duo-cta__face,
+  .fetch-bidwar-duo-cta__shadow {
+    transition: none;
+  }
+}
+
+/* Up Next hero — animated shimmer + imminent pulse ring */
+.fetch-battle-hero {
+  isolation: isolate;
+}
+.fetch-battle-hero--upnext::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 70%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  animation: fetch-battle-hero-sheen 3.6s ease-in-out infinite;
+  mix-blend-mode: screen;
+  z-index: 0;
+}
+.fetch-battle-hero--upnext::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(160% 70% at 100% 0%, rgba(255, 255, 255, 0.18) 0%, transparent 55%),
+    radial-gradient(120% 80% at 0% 100%, rgba(124, 58, 237, 0.35) 0%, transparent 60%);
+  z-index: 0;
+}
+
+@keyframes fetch-battle-hero-sheen {
+  0% {
+    background-position: 220% 0;
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  60% {
+    background-position: -120% 0;
+    opacity: 0;
+  }
+  100% {
+    background-position: -120% 0;
+    opacity: 0;
+  }
+}
+
+@keyframes fetch-battle-hero-imminent {
+  0%,
+  100% {
+    box-shadow:
+      0 22px 50px -20px rgba(76, 29, 149, 0.7),
+      0 0 0 0 rgba(252, 211, 77, 0);
+  }
+  50% {
+    box-shadow:
+      0 22px 50px -20px rgba(76, 29, 149, 0.7),
+      0 0 0 8px rgba(252, 211, 77, 0.22);
+  }
+}
+
+.fetch-battle-hero--upnext.fetch-battle-hero--imminent {
+  animation: fetch-battle-hero-imminent 1.1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fetch-battle-hero--upnext::before,
+  .fetch-battle-hero--upnext.fetch-battle-hero--imminent {
+    animation: none;
+  }
 }
 
 /* Search tab: bottom nav light bar with purple active */
@@ -7779,9 +8000,9 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-phone-stage
   .fetch-home-vision[data-home-shell-tab='search']
   .fetch-home-intent-bottom-nav.fetch-home-intent-bottom-nav--compact {
-  min-height: calc(3.28rem + env(safe-area-inset-bottom, 0px)) !important;
-  padding-top: 0.12rem !important;
-  padding-bottom: max(0.12rem, env(safe-area-inset-bottom, 0px)) !important;
+  min-height: calc(3.95rem + env(safe-area-inset-bottom, 0px)) !important;
+  padding-top: 0.18rem !important;
+  padding-bottom: max(0.1rem, env(safe-area-inset-bottom, 0px)) !important;
   justify-content: center;
   column-gap: 0.625rem;
   padding-left: max(0.75rem, env(safe-area-inset-left, 0px)) !important;
@@ -12690,12 +12911,32 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
 .fetch-app-shell--home-light .fetch-home-intent-bottom-nav__icon--active:hover {
   color: var(--fetch-home-primary-mid) !important;
 }
-.fetch-app-shell--home-light .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab {
+.fetch-app-shell--home-light .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab-orb {
   background-color: var(--fetch-home-primary) !important;
   color: #ffffff !important;
   box-shadow:
     0 10px 28px -8px rgba(76, 29, 149, 0.55),
     0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+}
+
+.fetch-app-shell--home-light
+  .fetch-home-phone-stage
+  .fetch-home-intent-bottom-nav--compact
+  .fetch-home-intent-bottom-nav__label {
+  color: rgba(76, 29, 149, 0.44) !important;
+}
+
+.fetch-app-shell--home-light
+  .fetch-home-phone-stage
+  .fetch-home-intent-bottom-nav--compact
+  .fetch-home-intent-bottom-nav__icon--active
+  .fetch-home-intent-bottom-nav__label,
+.fetch-app-shell--home-light
+  .fetch-home-phone-stage
+  .fetch-home-intent-bottom-nav--compact
+  .fetch-home-intent-bottom-nav__fab--active
+  .fetch-home-intent-bottom-nav__label {
+  color: var(--fetch-home-primary) !important;
 }
 .fetch-app-shell--home-light
   .fetch-home-phone-stage
@@ -12741,6 +12982,22 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
 /* No overflow clipping — the logo scales to several × viewport; hidden would blank the frame */
 .fetch-boomerang-splash-root {
   overflow: visible;
+}
+
+.fetch-entry-brand-splash {
+  animation: fetch-entry-brand-splash-in 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fetch-entry-brand-splash-in {
+  0% {
+    opacity: 0;
+    transform: translateY(0.35rem) scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Origin at viewport center; translate is the boomerang anchor point */
@@ -13213,6 +13470,61 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   50% { opacity: 1; transform: scale(1.15) rotate(15deg); }
 }
 
+/* Listing preview sheet — slide up from bottom on mount */
+.fetch-sheet-slide-up {
+  animation: fetch-sheet-slide-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+@keyframes fetch-sheet-slide-up {
+  0% { transform: translateY(110%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Live battle hero image — subtle crossfade on photo swap */
+.fetch-battle-hero-img {
+  animation: fetch-battle-hero-fade 0.25s ease-out both;
+}
+
+@keyframes fetch-battle-hero-fade {
+  0% { opacity: 0.55; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* BATTLE LIVE NOW hero heading — slow breathing glow */
+.fetch-battle-live-now {
+  animation: fetch-battle-live-now-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes fetch-battle-live-now-pulse {
+  0%, 100% {
+    text-shadow: 0 2px 14px rgba(239, 68, 68, 0.35);
+    transform: translateZ(0) scale(1);
+  }
+  50% {
+    text-shadow: 0 4px 22px rgba(239, 68, 68, 0.7);
+    transform: translateZ(0) scale(1.02);
+  }
+}
+
+/* Red "Join live now" CTA — attention pulse */
+.fetch-battle-join-pulse {
+  animation: fetch-battle-join-pulse 1.3s ease-in-out infinite;
+}
+
+@keyframes fetch-battle-join-pulse {
+  0%, 100% {
+    box-shadow:
+      0 14px 28px -10px rgba(239, 68, 68, 0.75),
+      0 0 0 0 rgba(239, 68, 68, 0.55);
+  }
+  50% {
+    box-shadow:
+      0 18px 34px -10px rgba(239, 68, 68, 0.9),
+      0 0 0 10px rgba(239, 68, 68, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fetch-battle-now,
   .fetch-battle-ring,
@@ -13227,8 +13539,61 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   .fetch-battle-mini-timer-dot,
   .fetch-battle-mystery-chip,
   .fetch-battle-confetti,
-  .fetch-battle-star {
+  .fetch-battle-star,
+  .fetch-battle-live-now,
+  .fetch-battle-join-pulse,
+  .fetch-sheet-slide-up,
+  .fetch-battle-hero-img {
     animation: none !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * Auth flow (welcome / create account / verify email)
+ * Bright purple-on-soft-lavender; matches mockup Sign Up Flow.
+ * ───────────────────────────────────────────────────────────────── */
+
+.fetch-auth-flow {
+  background-image:
+    radial-gradient(60% 38% at 50% 0%, rgba(124, 58, 237, 0.08), transparent 70%),
+    radial-gradient(50% 30% at 100% 100%, rgba(245, 158, 11, 0.06), transparent 70%);
+}
+
+.fetch-auth-input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent !important;
+  color: #18181b !important;
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 0.85rem 0.25rem 0.85rem 0;
+  letter-spacing: 0.005em;
+}
+
+.fetch-auth-input::placeholder {
+  color: #a1a1aa !important;
+  font-weight: 500;
+}
+
+.fetch-auth-field-shell {
+  min-height: 3rem;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.fetch-auth-cta {
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 0 rgba(15, 7, 40, 0.18);
+}
+
+.fetch-auth-otp {
+  caret-color: #4c1d95;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fetch-auth-cta {
+    transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 220ms ease;
   }
 }
 

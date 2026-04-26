@@ -16,8 +16,9 @@ import { ListingQuickAddPlusCircleIcon } from './icons/HomeShellNavIcons'
 import { ExploreCategoryBrowse } from './ExploreCategoryBrowse'
 import { HomeBiddingWarTopBanner } from './HomeBiddingWarTopBanner'
 import { LiveNowGrid, UpcomingLivesList, FollowingLivesList } from './FeedTabViews'
+import becomeSellerBannerUrl from '../assets/become-a-seller-banner.png'
 
-const FEED_TABS = ['For you', 'Live now', 'Starting soon', 'Following'] as const
+const FEED_TABS = ['For you', 'Live now', 'Bid War', 'Following'] as const
 type FeedTab = (typeof FEED_TABS)[number]
 
 function FeedTabBar({ value, onChange }: { value: FeedTab; onChange: (t: FeedTab) => void }) {
@@ -58,6 +59,27 @@ function FeedTabBar({ value, onChange }: { value: FeedTab; onChange: (t: FeedTab
         )
       })}
     </nav>
+  )
+}
+
+function BecomeSellerBanner({ onOpenMarketplace }: { onOpenMarketplace: () => void }) {
+  return (
+    <section className="min-w-0 px-2" aria-label="Become a seller">
+      <button
+        type="button"
+        onClick={onOpenMarketplace}
+        className="block w-full overflow-hidden rounded-2xl bg-emerald-950 text-left shadow-[0_14px_32px_-18px_rgba(21,128,61,0.7)] ring-1 ring-emerald-500/20 transition-transform active:scale-[0.99]"
+      >
+        <img
+          src={becomeSellerBannerUrl}
+          alt="Become a seller"
+          className="block aspect-[1024/407] w-full object-cover"
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+        />
+      </button>
+    </section>
   )
 }
 
@@ -211,11 +233,12 @@ function ExploreEmbedLiveFeedTile({ reel, onOpenDrops }: { reel: DropReel; onOpe
   const viewersLabel = liveViewersLabel(reel.id)
   const viewersCount = liveViewersCountShort(reel.id)
   const sellerLine = reelProfileDisplayLine(reel)
+  const titleLine = reel.title?.trim() || 'Live'
   return (
     <button
       type="button"
       onClick={onOpenDrops}
-      className="flex w-[calc((100%-1rem)/3.1)] shrink-0 snap-start flex-col bg-transparent p-0 text-left transition-transform active:scale-[0.98]"
+      className="flex w-[calc((100%-1rem)/2.1)] shrink-0 snap-start flex-col bg-transparent p-0 text-left transition-transform active:scale-[0.98]"
       aria-label={`Live from ${sellerLine}. ${reel.priceLabel}, ${viewersLabel}`}
     >
       <div className="relative aspect-[9/16] w-full overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
@@ -231,17 +254,34 @@ function ExploreEmbedLiveFeedTile({ reel, onOpenDrops }: { reel: DropReel; onOpe
           <div className="flex h-full items-center justify-center text-[10px] text-zinc-400">No photo</div>
         )}
         <div className={FOR_YOU_LISTING_IMAGE_SCRIM} aria-hidden />
-        <div className="pointer-events-none absolute left-1 top-1 z-[3] flex items-center gap-1.5 rounded-full bg-rose-600 px-2.5 py-1 shadow-[0_8px_22px_-12px_rgba(190,18,60,0.55)] ring-1 ring-rose-950/10">
-          <span
-            className="h-2 w-2 shrink-0 rounded-full bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.1)] [forced-color-adjust:none]"
-            aria-hidden
-          />
-          <span className="text-xs font-bold tabular-nums leading-none text-white">{viewersCount}</span>
+        <div className="pointer-events-none absolute left-1 top-1 z-[3] flex max-w-[calc(100%-0.5rem)] items-stretch overflow-hidden whitespace-nowrap rounded-md shadow-[0_6px_18px_-10px_rgba(76,29,149,0.6)] ring-1 ring-black/15">
+          <span className="flex items-center bg-rose-600 px-1.5 py-[3px] text-[10px] font-extrabold uppercase leading-none tracking-wide text-white">
+            Live
+          </span>
+          <span className="flex items-center gap-1 bg-[#4c1d95] px-1.5 py-[3px] text-[11px] font-extrabold tabular-nums leading-none text-white">
+            <svg
+              className="h-3 w-3 shrink-0 text-white/90"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            {viewersCount}
+          </span>
         </div>
         <p className="pointer-events-none absolute bottom-0 left-0 z-[4] max-w-full truncate px-2 pb-2 pt-8 text-left text-[13px] font-semibold leading-tight text-white [text-shadow:0_1px_12px_rgba(0,0,0,0.9)]">
           {sellerLine}
         </p>
       </div>
+      <p className="mt-1.5 line-clamp-2 min-h-[2.15em] text-[12px] font-extrabold leading-tight tracking-[-0.01em] text-zinc-900">
+        {titleLine}
+      </p>
     </button>
   )
 }
@@ -386,9 +426,9 @@ function filterListingsForCategory(
   })
 }
 
-type EmbedSectionKey = 'live' | 'grid'
+type EmbedSectionKey = 'live'
 
-const EMBED_FEED_SECTION_ORDER: EmbedSectionKey[] = ['live', 'grid']
+const EMBED_FEED_SECTION_ORDER: EmbedSectionKey[] = ['live']
 
 function HomeShellForYouFeedInner({
   onOpenDrops,
@@ -424,25 +464,7 @@ function HomeShellForYouFeedInner({
     if (!embedded) return null
     return {
       live: (
-        <section className="mb-1 min-w-0" aria-labelledby="fetch-embed-live-feed-heading">
-          <div className="mb-0 flex items-center justify-between gap-1.5 px-0.5">
-            <h3
-              id="fetch-embed-live-feed-heading"
-              className="text-[12px] font-bold leading-none uppercase tracking-[0.06em] text-zinc-600"
-            >
-              Lives {scopeLabel}
-            </h3>
-            <button
-              type="button"
-              onClick={onOpenDrops}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-transparent text-zinc-400 transition-colors hover:text-zinc-600 active:scale-[0.96]"
-              aria-label="Open live feed and drops"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
+        <section className="mb-1 min-w-0" aria-label={`Lives ${scopeLabel}`}>
           <div className="-mx-0.5 px-0.5">
             <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-2 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
               {liveVerticalReels.map((r) => (
@@ -452,36 +474,12 @@ function HomeShellForYouFeedInner({
           </div>
         </section>
       ),
-      grid: (
-        <section className="mb-1 min-w-0" aria-labelledby="fetch-explore-grid-heading">
-          <h3
-            id="fetch-explore-grid-heading"
-            className="mb-2 px-3 text-[12px] font-bold leading-none uppercase tracking-[0.06em] text-zinc-600"
-          >
-            Browse all
-          </h3>
-          <div className="grid grid-cols-2 gap-2.5 px-3">
-            {allListings.slice(0, 12).map((l) => (
-              <ExplorePeerListingCard
-                key={l.id}
-                l={l}
-                onOpenPeerListing={onOpenPeerListing}
-                onQuickBuyPeerListing={onQuickBuyPeerListing}
-              />
-            ))}
-          </div>
-        </section>
-      ),
     }
   }, [
     embedded,
     scopeLabel,
     liveVerticalReels,
-    allListings,
     onOpenDrops,
-    onOpenMarketplace,
-    onOpenPeerListing,
-    onQuickBuyPeerListing,
   ])
 
   const [feedTab, setFeedTab] = useState<FeedTab>('For you')
@@ -500,12 +498,13 @@ function HomeShellForYouFeedInner({
 
         {feedTab === 'For you' ? (
           <>
-            <HomeBiddingWarTopBanner onJoin={() => setFeedTab('Starting soon')} />
+            <HomeBiddingWarTopBanner onJoin={() => setFeedTab('Bid War')} />
             {embedFeedSections
               ? EMBED_FEED_SECTION_ORDER.map((key) => (
                   <Fragment key={key}>{embedFeedSections[key]}</Fragment>
                 ))
               : null}
+            <BecomeSellerBanner onOpenMarketplace={onOpenMarketplace} />
             {browseCategory ? (
               <ExploreCategoryBrowse
                 categoryTitle={browseCategory.title}
@@ -521,7 +520,7 @@ function HomeShellForYouFeedInner({
           <LiveNowGrid onOpenDrops={onOpenDrops} />
         ) : null}
 
-        {feedTab === 'Starting soon' ? (
+        {feedTab === 'Bid War' ? (
           <UpcomingLivesList />
         ) : null}
 

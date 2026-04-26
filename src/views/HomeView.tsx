@@ -45,6 +45,7 @@ import {
 import { FetchEntryAddressSheet } from '../components/FetchEntryAddressSheet'
 import entryAddressHeroUrl from '../assets/entry-address-hero.png'
 import {
+  consumeEntryAddressSheetAfterSignupRequest,
   isEntryAddressOnboardingComplete,
   isEntryAddressSheetSkippedForSession,
   markEntryAddressOnboardingComplete,
@@ -541,7 +542,6 @@ function ForYouShimmerSkeleton() {
 }
 
 const FOR_YOU_SKELETON_MS = 1200
-const CART_FAB_CIRCLE_DELAY_MS = 1400
 const CART_FAB_EXPAND_DELAY_MS = 2400
 const CART_FAB_TEXT_DELAY_MS = 3200
 
@@ -556,18 +556,16 @@ function HomeCartFab({
   ready: boolean
   hasCartItems: boolean
 }) {
-  const [phase, setPhase] = useState<'hidden' | 'circle' | 'expanding' | 'open'>('hidden')
+  const [phase, setPhase] = useState<'hidden' | 'expanding' | 'open'>('hidden')
 
   useEffect(() => {
     if (!ready || !hasCartItems) {
       setPhase('hidden')
       return
     }
-    const t1 = window.setTimeout(() => setPhase('circle'), CART_FAB_CIRCLE_DELAY_MS - FOR_YOU_SKELETON_MS)
     const t2 = window.setTimeout(() => setPhase('expanding'), CART_FAB_EXPAND_DELAY_MS - FOR_YOU_SKELETON_MS)
     const t3 = window.setTimeout(() => setPhase('open'), CART_FAB_TEXT_DELAY_MS - FOR_YOU_SKELETON_MS)
     return () => {
-      window.clearTimeout(t1)
       window.clearTimeout(t2)
       window.clearTimeout(t3)
     }
@@ -582,34 +580,24 @@ function HomeCartFab({
     >
       {phase !== 'hidden' ? (
         <div className="relative w-full px-4 pb-3">
-          {phase === 'circle' ? (
-            <div className="flex justify-center animate-[fetch-cart-circle-in_0.65s_cubic-bezier(0.34,1.56,0.64,1)_both]">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#00ff6a]">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <path d="M13 2L4.5 14H12l-1 8 8.5-12H12l1-8z" fill="#FACC15" />
-                </svg>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={onOpen}
-              className={[
-                'flex w-full items-center justify-between rounded-2xl bg-[#00ff6a] px-4 py-3.5 transition-transform active:scale-[0.98]',
-                phase === 'expanding' ? 'animate-[fetch-cart-fab-expand_0.75s_cubic-bezier(0.22,1,0.36,1)_both]' : '',
-              ].join(' ')}
-              aria-label="View cart"
-            >
-              <span className={`text-[14px] font-bold text-black transition-opacity duration-500 ${phase === 'open' ? 'opacity-100' : 'opacity-0'}`}>
-                View cart
-              </span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden className={`shrink-0 text-black transition-opacity duration-500 ${phase === 'open' ? 'opacity-100' : 'opacity-0'}`}>
-                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M16 10a4 4 0 01-8 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={onOpen}
+            className={[
+              'flex w-full items-center justify-between rounded-2xl bg-[#00ff6a] px-4 py-3.5 transition-transform active:scale-[0.98]',
+              phase === 'expanding' ? 'animate-[fetch-cart-fab-expand_0.75s_cubic-bezier(0.22,1,0.36,1)_both]' : '',
+            ].join(' ')}
+            aria-label="View cart"
+          >
+            <span className={`text-[14px] font-bold text-black transition-opacity duration-500 ${phase === 'open' ? 'opacity-100' : 'opacity-0'}`}>
+              View cart
+            </span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden className={`shrink-0 text-black transition-opacity duration-500 ${phase === 'open' ? 'opacity-100' : 'opacity-0'}`}>
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M16 10a4 4 0 01-8 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
       ) : null}
       <div className="fetch-home-marketplace-shell-footer w-full shrink-0">
@@ -750,6 +738,23 @@ function SearchCategoryGridIcon({ categoryId }: { categoryId: string }) {
       )
   }
 }
+
+/** Curated quick-filter chips for the redesigned Search hero (handoff routes to Marketplace browse). */
+const SEARCH_QUICK_CHIPS: Array<{
+  id: string
+  label: string
+  handoff: MarketplacePeerBrowseFilter
+}> = [
+  { id: 'free', label: 'Free near me', handoff: { category: 'free' } },
+  { id: 'under-50', label: 'Under $50', handoff: { maxPriceCents: 5_000 } },
+  { id: 'pickup-today', label: 'Pickup today', handoff: { q: 'pickup' } },
+  { id: 'streetwear', label: 'Streetwear', handoff: { category: 'fashion', q: 'streetwear' } },
+  { id: 'electronics', label: 'Electronics', handoff: { category: 'electronics' } },
+  { id: 'outdoor', label: 'Outdoor living', handoff: { category: 'furniture', q: 'outdoor' } },
+]
+
+/** Trending picks (subset of category promos shown as photo cards). */
+const SEARCH_TRENDING_IDS = ['fridge', 'sofa', 'tech', 'bedframe', 'fashion', 'sports'] as const
 
 /** Search category tiles — deterministic counts until wired to analytics. */
 function searchCategoryTileViewerCount(tileIndex: number, scope: 'local' | 'global'): number {
@@ -905,6 +910,7 @@ export default function HomeView({
   const [pendingSearchCategoryChoice, setPendingSearchCategoryChoice] =
     useState<ExploreCategoryRowPromoDef | null>(null)
   const [searchCategoriesScope, setSearchCategoriesScope] = useState<'global' | 'local'>('global')
+  const [searchQuery, setSearchQuery] = useState('')
   const [pendingChatThreadId, setPendingChatThreadId] = useState<string | null>(null)
   const [chatBrainHandoff, setChatBrainHandoff] = useState<{ listingId: string; title: string } | null>(
     null,
@@ -1151,6 +1157,10 @@ export default function HomeView({
 
   const isLoggedIn = Boolean(loadSession()?.email?.trim())
   useEffect(() => {
+    if (consumeEntryAddressSheetAfterSignupRequest()) {
+      setEntryAddressSheetOpen(true)
+      return
+    }
     if (!isLoggedIn) {
       setEntryAddressSheetOpen(true)
       return
@@ -3376,6 +3386,11 @@ export default function HomeView({
     navigate(FETCH_GEMS_PATH)
   }, [bumpInteraction, navigate])
 
+  const onAppTopOpenSearch = useCallback(() => {
+    bumpInteraction()
+    onHomeShellTabChange('search')
+  }, [bumpInteraction, onHomeShellTabChange])
+
   const onDropsCommerceAction = useCallback(
     (
       commerce: DropsCommerceTarget,
@@ -5110,7 +5125,7 @@ export default function HomeView({
     () => (
       <nav
         className="fetch-home-intent-bottom-nav fetch-home-intent-bottom-nav--compact fetch-home-intent-bottom-nav--with-fab"
-        aria-label="For you, search, create, marketplace, and drops"
+        aria-label="For you, search, sell, activity, and profile"
       >
         <button
           type="button"
@@ -5129,6 +5144,7 @@ export default function HomeView({
         >
           <span className="fetch-home-intent-bottom-nav__icon-inner">
             <FetchEyesHomeIcon className="block" active={homeShellTab === 'services'} />
+            <span className="fetch-home-intent-bottom-nav__label">For you</span>
           </span>
         </button>
         <button
@@ -5148,15 +5164,26 @@ export default function HomeView({
         >
           <span className="fetch-home-intent-bottom-nav__icon-inner">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden className="block">
-              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-              <path d="M20 20l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="10.75" cy="10.75" r="6.35" stroke="currentColor" strokeWidth="1.85" />
+              <path
+                d="M15.4 15.4 20.25 20.25"
+                stroke="currentColor"
+                strokeWidth="1.85"
+                strokeLinecap="round"
+              />
             </svg>
+            <span className="fetch-home-intent-bottom-nav__label">Search</span>
           </span>
         </button>
         <button
           type="button"
-          className="fetch-home-intent-bottom-nav__fab"
-          aria-label="Create — open drops"
+          className={[
+            'fetch-home-intent-bottom-nav__fab',
+            homeShellTab === 'reels' ? 'fetch-home-intent-bottom-nav__fab--active' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          aria-label="Sell — open drops"
           onClick={() => {
             bumpInteraction()
             if (homeShellTab === 'reels') {
@@ -5166,19 +5193,20 @@ export default function HomeView({
             }
           }}
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden
-            className="h-[1.68rem] w-[1.68rem] shrink-0 sm:h-[1.9rem] sm:w-[1.9rem]"
-          >
-            <path
-              d="M12 5v14M5 12h14"
-              stroke="currentColor"
-              strokeWidth="2.75"
-              strokeLinecap="round"
-            />
-          </svg>
+          <span className="fetch-home-intent-bottom-nav__fab-stack">
+            <span className="fetch-home-intent-bottom-nav__fab-orb" aria-hidden>
+              <svg viewBox="0 0 24 24" fill="none" className="h-[55%] w-[55%]">
+                <path
+                  d="M12 7v10M7 12h10"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span className="fetch-home-intent-bottom-nav__label">Sell</span>
+          </span>
         </button>
         <button
           type="button"
@@ -5199,9 +5227,20 @@ export default function HomeView({
         >
           <span className="fetch-home-intent-bottom-nav__icon-inner">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden className="block">
-              <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2" />
-              <path d="M3 14h5l2 3h4l2-3h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M5.5 6.5h10.2c.9 0 1.6.7 1.6 1.6v4.2c0 .9-.7 1.6-1.6 1.6h-2.1l-2.4 1.6v-1.6H5.5c-.9 0-1.6-.7-1.6-1.6V8.1c0-.9.7-1.6 1.6-1.6Z"
+                stroke="currentColor"
+                strokeWidth="1.85"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M7.2 9.1h5.1M7.2 11.2h3.4"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+              />
             </svg>
+            <span className="fetch-home-intent-bottom-nav__label">Activity</span>
           </span>
         </button>
         <button
@@ -5215,9 +5254,22 @@ export default function HomeView({
         >
           <span className="fetch-home-intent-bottom-nav__icon-inner">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden className="block">
-              <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
-              <path d="M5 20c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path
+                d="M12 11.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
+                stroke="currentColor"
+                strokeWidth="1.85"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M5.2 20.1v-.4c0-2.3 1.5-3.7 3.3-4.2 1.1-.3 2.2-.4 3.5-.4s2.4.1 3.5.4c1.8.5 3.3 1.8 3.3 4.1v.4"
+                stroke="currentColor"
+                strokeWidth="1.85"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
+            <span className="fetch-home-intent-bottom-nav__label">Profile</span>
           </span>
         </button>
       </nav>
@@ -5727,6 +5779,8 @@ export default function HomeView({
           onOpenGems={onAppTopOpenGems}
           onOpenCart={onAppTopOpenCart}
           coinBalance={headerCoinBalance}
+          variant={servicesExploreFullPage ? 'brand-minimal' : 'wallet'}
+          onOpenSearch={onAppTopOpenSearch}
         />
       ) : null}
 
@@ -7867,20 +7921,167 @@ export default function HomeView({
       homeShellTab === 'search' &&
       cardVisible &&
       homeBrainFlow == null ? (
-        <div className="fetch-home-search-route absolute inset-0 z-[52] flex min-h-dvh flex-col bg-[#f3f0fa]">
+        <div className="fetch-home-search-route absolute inset-0 z-[52] flex min-h-dvh flex-col bg-[#f8f6fd]">
           <main
-            className="fetch-home-search-categories mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f3f0fa] px-3 pb-2 pt-[calc(max(0.5rem,env(safe-area-inset-top,0px))+6.1rem)]"
+            className="fetch-home-search-categories mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f8f6fd] px-3 pb-2 pt-[calc(max(0.5rem,env(safe-area-inset-top,0px))+5.1rem)]"
             role="main"
             aria-label="Search"
           >
+            {/* Hero search: sticky input + quick filter chip rail */}
+            <form
+              role="search"
+              aria-label="Search fetchit"
+              className="fetch-home-search-hero sticky top-0 z-[2] -mx-3 mb-2 px-3 pb-2.5 pt-1"
+              onSubmit={(e) => {
+                e.preventDefault()
+                bumpInteraction()
+                onAppTopSearchSubmit(searchQuery.trim())
+              }}
+            >
+              <label className="fetch-home-search-hero__field flex h-12 w-full items-center gap-2 rounded-2xl px-3 transition-[border-color,box-shadow] duration-200">
+                <svg className="h-5 w-5 shrink-0 text-zinc-500" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15zM16.5 16.5L21 21"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <input
+                  type="search"
+                  inputMode="search"
+                  enterKeyHint="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => bumpInteraction()}
+                  placeholder="Search marketplace, drops & live"
+                  className="min-w-0 flex-1 bg-transparent text-[15px] font-medium leading-tight tracking-tight text-zinc-900 outline-none placeholder:font-normal placeholder:text-zinc-400"
+                  aria-label="Search across fetchit"
+                />
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      bumpInteraction()
+                      setSearchQuery('')
+                    }}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-100/60 text-[#4c1d95] transition-colors active:bg-violet-100"
+                    aria-label="Clear search"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                      <path
+                        d="M6 6l12 12M18 6L6 18"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                ) : (
+                  <span className="select-none rounded-full bg-violet-100/70 px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#4c1d95]">
+                    ⌘K
+                  </span>
+                )}
+              </label>
+
+              <div
+                className="-mx-3 mt-2.5 flex gap-2 overflow-x-auto px-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                role="list"
+                aria-label="Quick searches"
+              >
+                {SEARCH_QUICK_CHIPS.map((chip) => (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    role="listitem"
+                    onClick={() => {
+                      bumpInteraction()
+                      openExploreMarketplaceBrowse({
+                        ...chip.handoff,
+                        scope: searchCategoriesScope,
+                      })
+                    }}
+                    className="fetch-home-search-chip shrink-0 rounded-full px-3 py-1.5 text-[12px] font-bold leading-none tracking-tight transition-transform active:scale-[0.98]"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            </form>
+
             <div className="fetch-home-search-categories__scroll min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pr-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <section className="mt-6 min-w-0 py-2" aria-label="Search categories">
+              {/* Trending now: photo cards (real imagery) */}
+              <section className="mt-1 min-w-0" aria-label="Trending now">
+                <div className="mb-2 flex items-baseline justify-between px-0.5">
+                  <h2 className="text-[15px] font-extrabold tracking-tight text-zinc-900">Trending now</h2>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      bumpInteraction()
+                      onHomeShellTabChange('marketplace')
+                    }}
+                    className="text-[12px] font-bold text-[#4c1d95] active:opacity-70"
+                  >
+                    See all
+                  </button>
+                </div>
+                <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {SEARCH_TRENDING_IDS.map((trendId, trendIndex) => {
+                    const item = EXPLORE_CATEGORY_ROW_PROMOS.find((p) => p.id === trendId)
+                    if (!item) return null
+                    const viewers = searchCategoryTileViewerCount(trendIndex, searchCategoriesScope)
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          bumpInteraction()
+                          setPendingSearchCategoryChoice(item)
+                        }}
+                        aria-label={`${item.ariaLabel} · ${viewers} viewers`}
+                        className="fetch-home-search-trending__card relative flex w-[8.4rem] shrink-0 flex-col gap-1.5 overflow-hidden rounded-2xl p-1.5 text-left transition-transform active:scale-[0.98]"
+                      >
+                        <span className="relative block h-[6.4rem] w-full overflow-hidden rounded-xl bg-violet-100">
+                          <img
+                            src={item.imageSrc}
+                            alt=""
+                            loading="lazy"
+                            draggable={false}
+                            className="h-full w-full object-cover"
+                          />
+                          <span className="pointer-events-none absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 rounded-md bg-black/65 px-1.5 py-0.5 shadow-sm backdrop-blur-[2px]">
+                            <span className="relative flex h-1.5 w-1.5 shrink-0" aria-hidden>
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-70" />
+                              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]" />
+                            </span>
+                            <span className="text-[10px] font-extrabold leading-none tracking-tight text-white/95">
+                              {viewers}
+                            </span>
+                          </span>
+                        </span>
+                        <span className="line-clamp-1 px-0.5 text-[12.5px] font-extrabold leading-tight tracking-tight text-zinc-900">
+                          {item.title}
+                        </span>
+                        <span className="line-clamp-1 px-0.5 text-[10.5px] font-medium leading-tight text-zinc-500">
+                          {item.subline}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+
+              {/* Browse all: scope toggle + 3-col grid */}
+              <section className="mt-5 min-w-0 pb-2" aria-label="Search categories">
+                <div className="mb-2 flex items-baseline justify-between px-0.5">
+                  <h2 className="text-[15px] font-extrabold tracking-tight text-zinc-900">Browse all</h2>
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
+                    {searchCategoryTiles.length} categories
+                  </span>
+                </div>
                 <div
-                  className={[
-                    'mb-3 flex w-full gap-0.5 rounded-2xl border border-violet-200/60 bg-white p-[5px]',
-                    'shadow-sm',
-                    '',
-                  ].join(' ')}
+                  className="mb-3 flex w-full gap-0.5 rounded-2xl border border-violet-200/60 bg-white p-[5px] shadow-sm"
                   role="tablist"
                   aria-label="Show listings globally or near you"
                 >
@@ -7896,23 +8097,15 @@ export default function HomeView({
                           'min-w-0 flex-1 rounded-xl px-2 py-2 text-center text-[11px] font-semibold leading-tight tracking-[-0.02em]',
                           'transition-[color,background-color,box-shadow,transform] duration-200 ease-out sm:text-[12px]',
                           selected
-                            ? [
-                                'relative z-[1] text-white',
-                                'bg-[#4c1d95]',
-                                'shadow-sm',
-                              ].join(' ')
-                            : [
-                                'bg-transparent text-zinc-400',
-                                'hover:text-zinc-600',
-                                'active:scale-[0.98]',
-                              ].join(' '),
+                            ? 'relative z-[1] bg-[#4c1d95] text-white shadow-sm'
+                            : 'bg-transparent text-zinc-400 hover:text-zinc-600 active:scale-[0.98]',
                         ].join(' ')}
                         onClick={() => {
                           bumpInteraction()
                           setSearchCategoriesScope(s)
                         }}
                       >
-                        {s === 'global' ? 'Global' : 'Local'}
+                        {s === 'global' ? 'Global' : 'Near me'}
                       </button>
                     )
                   })}
@@ -7924,26 +8117,26 @@ export default function HomeView({
                       <button
                         key={item._k}
                         type="button"
-                        className="fetch-home-search-categories__tile relative flex min-h-[11.8rem] min-w-0 flex-col items-center gap-2.5 rounded-xl p-2.5 pt-3 text-center transition-transform active:scale-[0.98]"
+                        className="fetch-home-search-categories__tile relative flex min-h-[10.6rem] min-w-0 flex-col items-center gap-2 rounded-2xl p-2 pt-2.5 text-center transition-transform active:scale-[0.98]"
                         onClick={() => {
                           bumpInteraction()
                           setPendingSearchCategoryChoice(item)
                         }}
                         aria-label={`${item.ariaLabel} · ${viewers} people viewing now`}
                       >
-                        <span className="fetch-home-search-categories__icon-well flex h-24 w-24 shrink-0 items-center justify-center rounded-xl">
+                        <span className="fetch-home-search-categories__icon-well flex h-[5.4rem] w-full shrink-0 items-center justify-center rounded-xl">
                           <SearchCategoryGridIcon categoryId={item.id} />
                         </span>
-                        <span className="line-clamp-2 mt-1 min-h-[2.8rem] px-0.5 text-[12px] font-extrabold leading-snug tracking-tight text-white">
+                        <span className="line-clamp-2 mt-0.5 min-h-[2.4rem] px-0.5 text-[11.5px] font-extrabold leading-tight tracking-tight text-zinc-900">
                           {item.title}
                         </span>
-                        <span className="pointer-events-none absolute bottom-2 left-2 z-[1] flex items-center gap-1 rounded-md bg-black/65 px-1.5 py-0.5 shadow-sm backdrop-blur-[2px]">
-                          <span className="relative flex h-2 w-2 shrink-0" aria-hidden>
+                        <span className="pointer-events-none absolute bottom-1.5 left-1.5 z-[1] flex items-center gap-1 rounded-md bg-black/65 px-1.5 py-0.5 shadow-sm backdrop-blur-[2px]">
+                          <span className="relative flex h-1.5 w-1.5 shrink-0" aria-hidden>
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-70" />
-                            <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]" />
+                            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]" />
                           </span>
-                          <span className="max-w-[4.5rem] truncate text-left text-[10px] font-extrabold leading-none tracking-tight text-white/95">
-                            {viewers} viewers
+                          <span className="max-w-[4.5rem] truncate text-left text-[9.5px] font-extrabold leading-none tracking-tight text-white/95">
+                            {viewers} live
                           </span>
                         </span>
                       </button>
@@ -7970,17 +8163,17 @@ export default function HomeView({
                 aria-labelledby="fetch-search-category-choice-title"
                 className="relative z-[1] mx-auto w-full max-w-[min(100%,430px)] rounded-t-2xl border border-violet-200/50 bg-white px-0 pb-[max(1rem,env(safe-area-inset-bottom))] pt-1 shadow-[0_-14px_44px_rgba(76,29,149,0.1)]"
               >
-                <div className="mx-auto mt-1.5 h-1 w-10 shrink-0 rounded-full bg-zinc-600" aria-hidden />
+                <div className="mx-auto mt-1.5 h-1 w-10 shrink-0 rounded-full bg-zinc-300" aria-hidden />
                 <h2
                   id="fetch-search-category-choice-title"
-                  className="px-4 pb-1 pt-3 text-center text-[15px] font-bold tracking-tight text-white"
+                  className="px-4 pb-1 pt-3 text-center text-[15px] font-bold tracking-tight text-zinc-900"
                 >
                   {pendingSearchCategoryChoice.title}
                 </h2>
-                <p className="px-4 pb-3 text-center text-[12px] font-medium leading-snug text-zinc-400">
+                <p className="px-4 pb-3 text-center text-[12px] font-medium leading-snug text-zinc-500">
                   Open listings or jump to live videos?
                 </p>
-                <div className="border-t border-white/10">
+                <div className="border-t border-zinc-200/80">
                   <button
                     type="button"
                     onClick={() => {
@@ -7990,17 +8183,17 @@ export default function HomeView({
                       })
                       setPendingSearchCategoryChoice(null)
                     }}
-                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-[15px] font-semibold text-white transition-colors active:bg-white/[0.06]"
+                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-[15px] font-semibold text-zinc-900 transition-colors active:bg-violet-50"
                   >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-zinc-100">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden className="text-zinc-100">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-[#4c1d95]">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
                         <rect x="4" y="5" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.75" />
                         <path d="M8 9h8M8 12h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                       </svg>
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block">Listings</span>
-                      <span className="mt-0.5 block text-[11px] font-medium text-zinc-400">See matching marketplace items</span>
+                      <span className="mt-0.5 block text-[11px] font-medium text-zinc-500">See matching marketplace items</span>
                     </span>
                   </button>
                   <button
@@ -8009,22 +8202,22 @@ export default function HomeView({
                       onHomeShellTabChange('reels')
                       setPendingSearchCategoryChoice(null)
                     }}
-                    className="flex w-full items-center gap-3 border-t border-white/10 px-4 py-3.5 text-left text-[15px] font-semibold text-white transition-colors active:bg-white/[0.06]"
+                    className="flex w-full items-center gap-3 border-t border-zinc-200/80 px-4 py-3.5 text-left text-[15px] font-semibold text-zinc-900 transition-colors active:bg-violet-50"
                   >
-                    <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-950/80 ring-1 ring-red-500/35">
+                    <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 ring-1 ring-red-500/30">
                       <span className="absolute inline-flex h-2.5 w-2.5 animate-ping rounded-full bg-red-500 opacity-60" aria-hidden />
                       <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.85)]" aria-hidden />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block">Live</span>
-                      <span className="mt-0.5 block text-[11px] font-medium text-zinc-400">Watch related live videos</span>
+                      <span className="mt-0.5 block text-[11px] font-medium text-zinc-500">Watch related live videos</span>
                     </span>
                   </button>
                 </div>
                 <button
                   type="button"
                   onClick={() => setPendingSearchCategoryChoice(null)}
-                  className="mt-1 w-full px-4 py-3 text-center text-[13px] font-semibold text-zinc-500 transition-colors active:text-zinc-300"
+                  className="mt-1 w-full px-4 py-3 text-center text-[13px] font-semibold text-zinc-500 transition-colors active:text-zinc-700"
                 >
                   Cancel
                 </button>

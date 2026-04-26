@@ -16,8 +16,8 @@ import {
   formatCountLabel,
   formatMmSs,
   makeLobbyChatMessage,
+  nextBidMinCents,
   type LiveBidState,
-  type LiveBidder,
   type LobbyChatAuthor,
   type LobbyChatMessage,
   type StartingSoonBattle,
@@ -41,8 +41,28 @@ import {
   playWinFanfare,
 } from '../lib/fetchBattleSounds'
 
+/**
+ * Remaining-seconds thresholds used to derive the overlay's pre-live stage
+ * from the shared battle clock. Keeping the overlay phase *derived* (rather
+ * than locally ticked) is what lets us stop mutating shared state when the
+ * user opens / closes the overlay — the feed card and the overlay always
+ * read from the same `remaining` source of truth.
+ *
+ *  remaining > COUNTDOWN_THRESHOLD_SEC   → `lobby`
+ *  1 < remaining ≤ COUNTDOWN_THRESHOLD_SEC → `countdown` (3 → 2 → 1)
+ *  remaining ≤ GO_THRESHOLD_SEC          → `go` (1s "BATTLE BEGINS" flourish)
+ *  sharedPhase === 'live'                 → `live`
+ *  sharedPhase === 'done'                 → `done`
+ */
+const COUNTDOWN_THRESHOLD_SEC = 4
+const GO_THRESHOLD_SEC = 1
+
+/**
+ * Seconds added to the live deadline when a bid lands with ≤ 10s remaining.
+ * Must match the value driving `endsAtEpoch` extensions in `useBattleSync`
+ * over in `FeedTabViews.tsx` — it's only used here for the "+5s" label.
+ */
 const TIME_BONUS_SEC = 5
-const LOBBY_DURATION_SEC = 20
 
 type Phase = 'lobby' | 'countdown' | 'go' | 'live' | 'done'
 
@@ -58,6 +78,25 @@ type Props = {
   battle: StartingSoonBattle
   /** Seconds to count down before going live (default 3). */
   countdownFromSec?: number
+  /**
+   * Shared battle phase from the feed clock. The overlay still runs its own
+   * lobby → countdown → go intro on top of this, but the `live` and `done`
+   * stages are driven entirely by this prop so the overlay and the feed
+   * cards stay in lockstep.
+   */
+  phase: 'upcoming' | 'live' | 'done'
+  /** Remaining seconds for the shared battle (live countdown or pre-live wait). */
+  remaining: number
+  /** Shared live bid state; present when `phase === 'live'`. */
+  live?: LiveBidState
+  /** Increments in the shared state when a +5s anti-snipe bonus is applied. */
+  bonusPulseSeq?: number
+  /**
+   * Called when the viewer taps BID. The parent hook mutates the shared live
+   * state (which then flows back in via `live`) so the card, the sheet, and
+   * the overlay all show the same current bid.
+   */
+  onViewerBid: (amountCents: number) => void
   /** Optional next battle shown in the "up next" preview after a win. */
   nextBattle?: StartingSoonBattle
   /** Called when user taps "Keep going" on the win screen. */
@@ -71,23 +110,79 @@ const VIEWER_AVATAR = 'https://images.unsplash.com/photo-1502685104226-ee32379fe
 function FetchBidWarsBattleOverlayInner({
   battle,
   countdownFromSec = 3,
+  phase: sharedPhase,
+  remaining,
+  live: liveFromProps,
+  bonusPulseSeq,
+  onViewerBid,
   nextBattle,
   onAdvanceToNextBattle,
   onClose,
 }: Props) {
-  const [phase, setPhase] = useState<Phase>('lobby')
-  const [countdown, setCountdown] = useState(countdownFromSec)
-  const [lobbySec, setLobbySec] = useState(LOBBY_DURATION_SEC)
+  /* ---------- Phase + display values derived from shared clock ─────────
+   * The overlay no longer ticks its own intro timer. Instead every stage
+   * is a pure function of `sharedPhase` + `remaining`. This means:
+   *   • Opening / closing the overlay never mutates shared state.
+   *   • The feed card's countdown and the overlay countdown are always
+   *     the same number (they both read from `remaining`).
+   *   • `go` → `live` happens the instant the shared clock flips — no
+   *     drift window where the overlay is live but `liveFromProps` is
+   *     still undefined.
+   * -------------------------------------------------------------------- */
+  const timeLeftSec = Math.max(0, Math.floor(remaining))
+  /**
+   * Once the shared clock hits `done`, the feed's rotation effect immediately
+   * resets that battle back to `upcoming` so the queue keeps flowing for other
+   * viewers. In the overlay we need the WonStage to stay visible until the
+   * user dismisses it, so we latch `hasFinished` the moment we see `done` and
+   * never un-latch. All subsequent `upcoming` snaps from rotation are ignored.
+   */
+  const [hasFinished, setHasFinished] = useState(sharedPhase === 'done')
+  useEffect(() => {
+    if (sharedPhase === 'done') setHasFinished(true)
+  }, [sharedPhase])
+  const phase: Phase = hasFinished
+    ? 'done'
+    : sharedPhase === 'live'
+      ? 'live'
+      : timeLeftSec <= GO_THRESHOLD_SEC
+        ? 'go'
+        : timeLeftSec <= COUNTDOWN_THRESHOLD_SEC
+          ? 'countdown'
+          : 'lobby'
+  /** Whole seconds left of lobby before the 3-2-1 countdown takes over. */
+  const lobbySec = Math.max(0, timeLeftSec - COUNTDOWN_THRESHOLD_SEC)
+  /**
+   * Countdown display value while `phase === 'countdown'` — we clamp to the
+   * caller-specified `countdownFromSec` (default 3) so opening the overlay
+   * exactly at remaining=4 still reads "3".
+   */
+  const countdown = Math.max(
+    1,
+    Math.min(countdownFromSec, timeLeftSec - GO_THRESHOLD_SEC),
+  )
   const [chat, setChat] = useState<LobbyChatMessage[]>(() => buildSeedLobbyChat())
   const chatSeqRef = useRef(100)
-  const [live, setLive] = useState<LiveBidState>(() => buildInitialLiveBidState(battle))
-  const [viewerBidCents, setViewerBidCents] = useState<number | null>(null)
-  const [timeLeftSec, setTimeLeftSec] = useState(() => live.itemEndsInSec)
+
+  /**
+   * `live` is shared — fall back to a local seed during the lobby/countdown
+   * stages so the LiveStage has something to render the instant shared state
+   * kicks in (bidder list, starting bid, etc). Once shared state arrives, we
+   * always prefer it so the card and overlay agree to the cent.
+   */
+  const fallbackLiveRef = useRef<LiveBidState | null>(null)
+  if (!fallbackLiveRef.current) fallbackLiveRef.current = buildInitialLiveBidState(battle)
+  const live: LiveBidState = liveFromProps ?? fallbackLiveRef.current
+
   const [justBid, setJustBid] = useState(false)
 
-  /* ---------- Bid log (recent bids feed) ---------- */
+  /* ---------- Bid log (recent bids feed) ----------
+   * Seed from shared live state when the user joins mid-battle, so the log's
+   * top entry matches the hero card's current bid instead of the static
+   * starting bid. Falls back to the local seed during lobby/countdown.
+   */
   const [bidLog, setBidLog] = useState<BidEntry[]>(() => {
-    const init = buildInitialLiveBidState(battle)
+    const init = liveFromProps ?? fallbackLiveRef.current!
     return [...init.bidders]
       .sort((a, b) => b.bidCents - a.bidCents)
       .slice(0, 4)
@@ -100,7 +195,7 @@ function FetchBidWarsBattleOverlayInner({
       }))
   })
 
-  /* Sync bid log whenever topBidderId changes */
+  /* Sync bid log whenever topBidderId changes in shared live state */
   const prevTopRef = useRef(live.topBidderId)
   useEffect(() => {
     if (live.topBidderId === prevTopRef.current) return
@@ -121,44 +216,29 @@ function FetchBidWarsBattleOverlayInner({
     )
   }, [live.topBidderId, live.bidders, live.currentBidCents])
 
-  /* ---------- +5s timer bonus (anti-snipe) — only fires in final 10s ---------- */
+  /* ---------- +5s bonus pulse (driven by shared hook) ---------- */
   const [bonusPulse, setBonusPulse] = useState(0)
-  const prevBidRef = useRef(live.currentBidCents)
-  const timeLeftRef = useRef(timeLeftSec)
+  const prevBonusSeqRef = useRef<number>(bonusPulseSeq ?? 0)
   useEffect(() => {
-    timeLeftRef.current = timeLeftSec
-  }, [timeLeftSec])
-  useEffect(() => {
-    if (phase !== 'live') return
-    if (live.currentBidCents === prevBidRef.current) return
-    prevBidRef.current = live.currentBidCents
-    if (timeLeftRef.current <= 0) return
-    if (timeLeftRef.current > 10) return
-    setTimeLeftSec((s) => s + TIME_BONUS_SEC)
+    const cur = bonusPulseSeq ?? 0
+    if (cur === prevBonusSeqRef.current) return
+    prevBonusSeqRef.current = cur
     setBonusPulse((n) => n + 1)
     playTimeBonus()
-  }, [phase, live.currentBidCents])
+  }, [bonusPulseSeq])
 
-  /* ---------- Custom bid amount (stepper) ---------- */
-  const [bidCustomCents, setBidCustomCents] = useState(
-    () => buildInitialLiveBidState(battle).currentBidCents + buildInitialLiveBidState(battle).bidIncrementCents,
+  /* ---------- Custom bid amount (stepper) ----------
+   * Seed at the next-min for whatever shared state we have on mount, so a
+   * mid-battle joiner doesn't see an absurdly low starting bid on the
+   * stepper (e.g. 8500 defaults when shared is already at 10500).
+   */
+  const [bidCustomCents, setBidCustomCents] = useState(() =>
+    nextBidMinCents(liveFromProps ?? fallbackLiveRef.current!),
   )
   useEffect(() => {
-    const nextMin = live.currentBidCents + live.bidIncrementCents
+    const nextMin = nextBidMinCents(live)
     setBidCustomCents((prev) => Math.max(prev, nextMin))
-  }, [live.currentBidCents, live.bidIncrementCents])
-
-  /* ---------- Lobby phase — countdown to battle ---------- */
-  useEffect(() => {
-    if (phase !== 'lobby') return
-    if (lobbySec <= 0) {
-      playLobbyLaunch()
-      setPhase('countdown')
-      return
-    }
-    const id = window.setTimeout(() => setLobbySec((s) => s - 1), 1000)
-    return () => window.clearTimeout(id)
-  }, [phase, lobbySec])
+  }, [live])
 
   /* ---------- Lobby phase — incoming chat messages ---------- */
   useEffect(() => {
@@ -178,73 +258,30 @@ function FetchBidWarsBattleOverlayInner({
     return () => window.clearTimeout(id)
   }, [phase])
 
-  /* ---------- Countdown phase ---------- */
+  /* ---------- Phase-transition sound effects ─────────────────────────
+   * Phase is now a pure derivation of shared state, so there's no single
+   * "setPhase" to hook into. We keep a `prevPhase` ref and fire one-shot
+   * SFX the moment the derived value changes between ticks.
+   * -------------------------------------------------------------------- */
+  const prevPhaseRef = useRef<Phase>(phase)
   useEffect(() => {
-    if (phase !== 'countdown') return
-    if (countdown <= 0) {
-      setPhase('go')
-      return
-    }
-    const id = window.setTimeout(() => setCountdown((c) => c - 1), 1000)
-    return () => window.clearTimeout(id)
-  }, [phase, countdown])
-
-  /* ---------- Transition 'go' → 'live' ---------- */
-  useEffect(() => {
-    if (phase !== 'go') return
-    const id = window.setTimeout(() => setPhase('live'), 1100)
-    return () => window.clearTimeout(id)
+    const prev = prevPhaseRef.current
+    prevPhaseRef.current = phase
+    if (prev === phase) return
+    if (prev === 'lobby' && phase === 'countdown') playLobbyLaunch()
   }, [phase])
 
-  /* ---------- Live phase — item timer ---------- */
-  useEffect(() => {
-    if (phase !== 'live') return
-    if (timeLeftSec <= 0) return
-    const id = window.setInterval(() => setTimeLeftSec((s) => Math.max(0, s - 1)), 1000)
-    return () => window.clearInterval(id)
-  }, [phase, timeLeftSec])
-
-  /* ---------- Live phase — simulated rival outbids ---------- */
-  const lastOutbidRef = useRef<number>(Date.now())
-  useEffect(() => {
-    if (phase !== 'live') return
-    if (timeLeftSec <= 0) return
-    const id = window.setInterval(() => {
-      if (Date.now() - lastOutbidRef.current < 2400) return
-      if (Math.random() < 0.45) return
-      lastOutbidRef.current = Date.now()
-      setLive((prev) => {
-        if (prev.topBidderId === VIEWER_ID && Math.random() < 0.55) {
-          const rivals = prev.bidders.filter((b) => b.id !== VIEWER_ID)
-          const rival = rivals[Math.floor(Math.random() * rivals.length)]
-          if (!rival) return prev
-          const nextAmt = prev.currentBidCents + prev.bidIncrementCents
-          return applyNewBid(prev, rival.id, nextAmt)
-        }
-        if (prev.topBidderId !== VIEWER_ID) {
-          const rivals = prev.bidders.filter(
-            (b) => b.id !== prev.topBidderId && b.id !== VIEWER_ID,
-          )
-          const rival = rivals[Math.floor(Math.random() * rivals.length)]
-          if (!rival) return prev
-          const nextAmt = prev.currentBidCents + prev.bidIncrementCents
-          return applyNewBid(prev, rival.id, nextAmt)
-        }
-        return prev
-      })
-    }, 900)
-    return () => window.clearInterval(id)
-  }, [phase, timeLeftSec])
-
   const handleBid = useCallback(() => {
-    if (phase !== 'live' || timeLeftSec <= 0) return
+    // Overlay `phase` is derived from `sharedPhase`, so a single check covers
+    // both. Still guard on timeLeft so we don't send a bid on the 0-second
+    // frame that precedes sharedPhase flipping to 'done'.
+    if (sharedPhase !== 'live' || timeLeftSec <= 0) return
     const amt = bidCustomCents
-    setLive((prev) => applyNewBid(prev, VIEWER_ID, amt))
-    setViewerBidCents(amt)
+    onViewerBid(amt)
     setJustBid(true)
     playBidPlaced()
     window.setTimeout(() => setJustBid(false), 750)
-  }, [phase, timeLeftSec, bidCustomCents])
+  }, [sharedPhase, timeLeftSec, bidCustomCents, onViewerBid])
 
   /* ---------- Sound effects ---------- */
 
@@ -301,15 +338,17 @@ function FetchBidWarsBattleOverlayInner({
     }
   }, [phase, live.topBidderId])
 
-  /* ---------- Transition 'live' → 'done' when timer ends ---------- */
+  /* ---------- Capture winning bid when battle ends ──────────────────
+   * Snapshot the current bid the moment the shared state hits 'done' so
+   * the WonStage shows the final number even if later state mutates.
+   * ---------------------------------------------------------------- */
   const winningBidRef = useRef(0)
   useEffect(() => {
-    if (phase !== 'live') return
-    if (timeLeftSec > 0) return
-    winningBidRef.current = live.currentBidCents
-    const id = window.setTimeout(() => setPhase('done'), 1000)
-    return () => window.clearTimeout(id)
-  }, [phase, timeLeftSec, live.currentBidCents])
+    if (sharedPhase !== 'done') return
+    if (winningBidRef.current === 0) {
+      winningBidRef.current = live.currentBidCents
+    }
+  }, [sharedPhase, live.currentBidCents])
 
   const portalTarget = typeof document !== 'undefined' ? document.body : null
   if (!portalTarget) return null
@@ -334,14 +373,7 @@ function FetchBidWarsBattleOverlayInner({
 
       <div className="relative z-[2] flex min-h-0 flex-1 flex-col overflow-hidden">
         {phase === 'lobby' ? (
-          <LobbyStage
-            battle={battle}
-            lobbySec={lobbySec}
-            chat={chat}
-            onJumpIn={() => {
-              setLobbySec(0)
-            }}
-          />
+          <LobbyStage battle={battle} lobbySec={lobbySec} chat={chat} />
         ) : null}
         {phase === 'countdown' ? (
           <CountdownStage count={countdown} from={countdownFromSec} imageUrl={battle.imageUrl} />
@@ -353,7 +385,6 @@ function FetchBidWarsBattleOverlayInner({
             live={live}
             timeLeftSec={timeLeftSec}
             justBid={justBid}
-            viewerBidCents={viewerBidCents}
             bidCustomCents={bidCustomCents}
             setBidCustomCents={setBidCustomCents}
             bidLog={bidLog}
@@ -382,30 +413,6 @@ function FetchBidWarsBattleOverlayInner({
   )
 }
 
-/* ---------- Bid-state reducer ---------- */
-
-function applyNewBid(prev: LiveBidState, bidderId: string, amountCents: number): LiveBidState {
-  const bidders = prev.bidders.some((b) => b.id === bidderId)
-    ? prev.bidders.map((b) => (b.id === bidderId ? { ...b, bidCents: amountCents } : b))
-    : [
-        ...prev.bidders,
-        {
-          id: bidderId,
-          name: 'You',
-          handle: '@you',
-          avatar:
-            'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=96&q=80',
-          bidCents: amountCents,
-        } satisfies LiveBidder,
-      ]
-  return {
-    ...prev,
-    bidders,
-    currentBidCents: amountCents,
-    topBidderId: bidderId,
-  }
-}
-
 /* ============================================================================
    Shared chrome
    ============================================================================ */
@@ -430,6 +437,7 @@ function BattleBackground({ phase }: { phase: Phase }) {
 
 function BattleHeader({
   battleNumber,
+  totalWatching,
   onClose,
   isLive,
 }: {
@@ -441,6 +449,7 @@ function BattleHeader({
 }) {
   const textColor = isLive ? 'text-white' : 'text-[#1c1528]'
   const chipBg = isLive ? 'bg-white/15 ring-white/25' : 'bg-white/70 ring-white/40'
+  const showWatchers = isLive && typeof totalWatching === 'number' && totalWatching > 0
   return (
     <header className="relative z-[3] flex shrink-0 items-center justify-between gap-3 px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
       {/* Close */}
@@ -462,6 +471,24 @@ function BattleHeader({
 
       {/* Right icons */}
       <div className="flex items-center gap-2">
+        {showWatchers ? (
+          <span
+            className={`flex h-9 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-bold tabular-nums backdrop-blur-sm ring-1 ${chipBg} ${textColor}`}
+            aria-label={`${totalWatching} watching`}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                stroke="currentColor"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.9" />
+            </svg>
+            {formatCountLabel(totalWatching)}
+          </span>
+        ) : null}
         <button
           type="button"
           aria-label="Notifications"
@@ -503,12 +530,10 @@ function LobbyStage({
   battle,
   lobbySec,
   chat,
-  onJumpIn,
 }: {
   battle: StartingSoonBattle
   lobbySec: number
   chat: LobbyChatMessage[]
-  onJumpIn: () => void
 }) {
   const chatEndRef = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
@@ -516,6 +541,10 @@ function LobbyStage({
   }, [chat.length])
 
   const urgent = lobbySec <= 5
+  // Long lobbies (user joined well ahead of live) show MM:SS so the label
+  // stays legible and matches the hero card countdown format.
+  const displayLong = lobbySec > 59
+  const displayValue = displayLong ? formatMmSs(lobbySec) : `${lobbySec}`
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-1">
@@ -559,15 +588,43 @@ function LobbyStage({
             <span
               key={`lobby-${lobbySec}`}
               className={[
-                'fetch-battle-lobby-sec text-[28px] font-black leading-none tabular-nums',
+                'fetch-battle-lobby-sec font-black leading-none tabular-nums',
+                displayLong ? 'text-[22px]' : 'text-[28px]',
                 urgent ? 'text-red-300' : 'text-white',
               ].join(' ')}
             >
-              {lobbySec}
+              {displayValue}
             </span>
-            <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-white/50">sec</span>
+            {displayLong ? null : (
+              <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-white/50">sec</span>
+            )}
           </div>
         </div>
+
+        {/* Condition + short description — shown when available to build anticipation */}
+        {(battle.condition || battle.description) ? (
+          <div className="mt-2.5 border-t border-white/10 pt-2.5">
+            {battle.condition ? (
+              <p className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-300">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M5 12l5 5L19 7"
+                    stroke="currentColor"
+                    strokeWidth="2.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                {battle.condition}
+              </p>
+            ) : null}
+            {battle.description ? (
+              <p className="line-clamp-2 text-[12px] leading-snug text-white/75">
+                {battle.description}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {/* Chat header */}
@@ -609,13 +666,6 @@ function LobbyStage({
             🔥
           </span>
         </div>
-        <button
-          type="button"
-          onClick={onJumpIn}
-          className="shrink-0 rounded-full bg-gradient-to-b from-[#fb923c] to-[#ef4444] px-4 py-2.5 text-[12px] font-extrabold uppercase tracking-[0.08em] text-white shadow-[0_12px_28px_-10px_rgba(239,68,68,0.6)] active:scale-[0.97]"
-        >
-          Jump in
-        </button>
       </div>
     </div>
   )
@@ -792,7 +842,6 @@ function LiveStage({
   live,
   timeLeftSec,
   justBid,
-  viewerBidCents: _viewerBidCents,
   bidCustomCents,
   setBidCustomCents,
   bidLog,
@@ -803,7 +852,6 @@ function LiveStage({
   live: LiveBidState
   timeLeftSec: number
   justBid: boolean
-  viewerBidCents: number | null
   bidCustomCents: number
   setBidCustomCents: (v: number) => void
   bidLog: BidEntry[]
@@ -819,13 +867,21 @@ function LiveStage({
     setBidCustomCents(Math.max(live.currentBidCents + live.bidIncrementCents, bidCustomCents - live.bidIncrementCents))
   const stepUp = () => setBidCustomCents(bidCustomCents + live.bidIncrementCents)
 
-  /* Thumbnail images — repeat the single imageUrl for the strip */
-  const thumbs = useMemo(() => Array.from({ length: 5 }, () => battle.imageUrl), [battle.imageUrl])
+  /* Real gallery thumbnails — uses battle.photos when available, else falls back to the single hero */
+  const photos = useMemo(
+    () =>
+      battle.photos && battle.photos.length > 0
+        ? battle.photos
+        : [battle.imageUrl],
+    [battle.photos, battle.imageUrl],
+  )
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0)
+  const heroPhoto = photos[Math.min(activePhotoIdx, photos.length - 1)] ?? battle.imageUrl
 
   return (
     <div className="relative z-[2] flex min-h-0 flex-1 flex-col overflow-hidden">
       {/* ── HERO ─────────────────────────────────────────── */}
-      <div className="relative shrink-0" style={{ height: '52%' }}>
+      <div className="relative z-20 shrink-0 overflow-visible" style={{ height: '52%' }}>
         {/* Subtle inner glow */}
         <div
           aria-hidden
@@ -836,12 +892,13 @@ function LiveStage({
           }}
         />
 
-        {/* Product image — full width */}
+        {/* Product image — full width, swaps when a thumbnail is tapped */}
         <img
-          src={battle.imageUrl}
+          key={heroPhoto}
+          src={heroPhoto}
           alt={battle.title}
           draggable={false}
-          className="absolute inset-x-0 top-0 h-[75%] w-full object-cover object-center"
+          className="fetch-battle-hero-img absolute inset-x-0 top-0 h-[75%] w-full object-cover object-center"
         />
 
         {/* Bottom scrim so the title stays readable over any image */}
@@ -867,14 +924,11 @@ function LiveStage({
             <span className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[12px] font-bold text-white backdrop-blur-sm ring-1 ring-white/20">
               🔥 {formatCountLabel(Math.floor(live.bidders.length * 83))} bidding
             </span>
-            <span className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[12px] font-bold text-white backdrop-blur-sm ring-1 ring-white/20">
-              👁 {formatCountLabel(live.totalWatching)}
-            </span>
           </div>
         </div>
 
-        {/* Title — above thumbnails */}
-        <div className="absolute bottom-[5.25rem] left-4 max-w-[60%]">
+        {/* Title — small thumb strip straddles the sheet; keep clear of the seam */}
+        <div className="absolute bottom-10 left-4 max-w-[60%]">
           <p
             className="text-[26px] font-black uppercase leading-[1.0] text-white"
             style={{ textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}
@@ -891,26 +945,39 @@ function LiveStage({
           ) : null}
         </div>
 
-        {/* Inline full-width thumbnail strip */}
-        <div className="absolute bottom-3 left-3 right-3 flex gap-2">
-          {thumbs.map((src, i) => (
-            <div
-              key={i}
-              className={[
-                'aspect-square flex-1 overflow-hidden rounded-xl',
-                i === 0
-                  ? 'ring-2 ring-white shadow-[0_4px_12px_rgba(0,0,0,0.4)]'
-                  : 'opacity-60 ring-1 ring-white/30',
-              ].join(' ')}
-            >
-              <img src={src} alt="" draggable={false} className="h-full w-full object-cover" />
-            </div>
-          ))}
+        {/*
+         * Compact gallery — centered on the hero / white-sheet seam so half
+         * sits on the dark hero and half on the sheet (broadcast-style “filmstrip”).
+         */}
+        <div className="pointer-events-none absolute left-0 right-0 top-full z-30 flex justify-center -translate-y-1/2">
+          <div className="pointer-events-auto flex max-w-full gap-1 px-2">
+            {photos.map((src, i) => {
+              const active = i === activePhotoIdx
+              return (
+                <button
+                  key={`${src}-${i}`}
+                  type="button"
+                  onClick={() => setActivePhotoIdx(i)}
+                  aria-label={`Show photo ${i + 1} of ${photos.length}`}
+                  aria-pressed={active}
+                  className={[
+                    'h-6 w-6 shrink-0 overflow-hidden rounded-md transition-[opacity,transform,box-shadow] sm:h-7 sm:w-7',
+                    'active:scale-95',
+                    active
+                      ? 'ring-2 ring-white shadow-[0_2px_8px_rgba(0,0,0,0.45)]'
+                      : 'opacity-55 ring-1 ring-white/35 hover:opacity-80',
+                  ].join(' ')}
+                >
+                  <img src={src} alt="" draggable={false} className="h-full w-full object-cover" />
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 
-      {/* ── WHITE BOTTOM SHEET ───────────────────────────── */}
-      <div className="flex min-h-0 flex-1 flex-col rounded-t-3xl bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] pt-4 shadow-[0_-20px_40px_-10px_rgba(76,29,149,0.3)]">
+      {/* ── WHITE BOTTOM SHEET (z-10 so seam-straddling thumbs from hero paint above) ─ */}
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col rounded-t-3xl bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] pt-7 shadow-[0_-20px_40px_-10px_rgba(76,29,149,0.3)]">
         {/* Current bid row */}
         <div className="mb-3 flex items-end gap-3">
           <div>

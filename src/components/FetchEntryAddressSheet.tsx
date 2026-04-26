@@ -6,11 +6,12 @@ import {
   type ResolvedPlace,
 } from './FetchHomeStepOne/PlacesAddressAutocomplete'
 import { playUiFeedback } from '../voice/fetchFeedback'
+import addressSheetFlagMascotUrl from '../assets/fetchit-address-sheet-flag-transparent.png'
 
 const GOOGLE_MAP_LIBRARIES: ('places' | 'geometry')[] = ['places', 'geometry']
 
-const darkInputClass =
-  'w-full rounded-xl border border-white/[0.12] bg-transparent px-3.5 py-3 text-[15px] font-medium leading-snug text-white shadow-none outline-none ring-0 placeholder:text-white/30 focus:border-white/25 focus:ring-0'
+const brandedInputClass =
+  'w-full rounded-2xl border border-[#4c1d95]/25 bg-white px-3.5 py-3.5 text-[15px] font-semibold leading-snug text-zinc-900 shadow-[0_10px_24px_-18px_rgba(76,29,149,0.45)] outline-none ring-0 placeholder:text-zinc-400 focus:border-[#4c1d95] focus:ring-2 focus:ring-[#c4b5fd]/80'
 
 const COIN_COUNT = 100
 const CONFETTI_COUNT = 60
@@ -361,7 +362,7 @@ function FetchEntryAddressSheetShell({
       className={`fixed inset-0 z-[70] flex flex-col transition-[background-color,backdrop-filter] duration-500 ${
         isFullScreen ? 'justify-center bg-black/90 backdrop-blur-0'
         : isCoinPhase ? 'justify-end bg-transparent backdrop-blur-0'
-        : 'justify-end bg-black/60 backdrop-blur-[4px]'
+        : 'justify-end bg-[#2e1065]/35 backdrop-blur-[4px]'
       }`}
       role="dialog"
       aria-modal="true"
@@ -369,17 +370,31 @@ function FetchEntryAddressSheetShell({
     >
       <div
         className={[
-          'fetch-entry-galactic pointer-events-auto mx-auto flex w-full flex-col overflow-hidden',
+          'pointer-events-auto relative mx-auto flex w-full flex-col',
           isFullScreen
-            ? 'max-w-lg flex-1 rounded-none'
-            : 'max-w-lg max-h-[min(92dvh,720px)] rounded-t-[1.35rem] shadow-[0_-12px_48px_-12px_rgba(0,0,0,0.7)] ring-1 ring-white/[0.06] animate-[fetch-galactic-sheet-up_0.5s_cubic-bezier(0.22,1,0.36,1)_both]',
+            ? 'fetch-entry-galactic max-w-lg flex-1 overflow-hidden rounded-none'
+            : 'max-w-lg max-h-[min(92dvh,720px)] overflow-visible rounded-t-[1.5rem] bg-[#faf8ff] shadow-[0_-18px_52px_-24px_rgba(76,29,149,0.45)] ring-1 ring-[#4c1d95]/12 animate-[fetch-galactic-sheet-up_0.5s_cubic-bezier(0.22,1,0.36,1)_both]',
         ].join(' ')}
         style={isFullScreen ? undefined : { paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        {/* Shooting stars — visible on all phases */}
-        <span className="fetch-entry-galactic__shooting-star" aria-hidden />
-        <span className="fetch-entry-galactic__shooting-star" aria-hidden />
-        <span className="fetch-entry-galactic__shooting-star" aria-hidden />
+        {phase === 'address' ? (
+          <img
+            src={addressSheetFlagMascotUrl}
+            alt=""
+            className="pointer-events-none absolute left-1/2 top-0 z-[6] w-[112%] max-w-none -translate-x-1/2 -translate-y-[63%] select-none object-contain drop-shadow-[0_18px_30px_rgba(46,16,101,0.24)]"
+            draggable={false}
+            aria-hidden
+          />
+        ) : null}
+
+        {/* Shooting stars stay only on the reward fullscreen phases. */}
+        {isFullScreen ? (
+          <>
+            <span className="fetch-entry-galactic__shooting-star" aria-hidden />
+            <span className="fetch-entry-galactic__shooting-star" aria-hidden />
+            <span className="fetch-entry-galactic__shooting-star" aria-hidden />
+          </>
+        ) : null}
 
         {/* Phase: coins */}
         {isCoinPhase ? <CoinCelebration onDone={onCoinsDone} onCoinTick={onCoinTick} /> : null}
@@ -391,15 +406,15 @@ function FetchEntryAddressSheetShell({
         {phase === 'address' || isCoinPhase ? (
           <>
             <div className="relative z-[5] flex shrink-0 justify-center pt-3 pb-2" aria-hidden>
-              <span className="h-1 w-10 rounded-full bg-white/20" />
+              <span className="h-1 w-10 rounded-full bg-[#4c1d95]/18" />
             </div>
             <div className={`relative z-[5] flex min-h-0 flex-1 flex-col gap-4 px-5 pb-5 pt-2 transition-[filter,opacity] duration-500 ${isCoinPhase ? 'pointer-events-none blur-[6px] opacity-60' : 'blur-0 opacity-100'}`}>
               <div className="space-y-2">
-                <h2 id="fetch-entry-address-heading" className="text-[1.45rem] font-bold leading-tight tracking-tight text-white">
+                <h2 id="fetch-entry-address-heading" className="text-[1.45rem] font-black leading-tight tracking-tight text-zinc-950">
                   Where should we deliver?
                 </h2>
-                <p className="text-[13px] leading-snug text-white/50">
-                  Enter your address to <span className="font-bold text-amber-400">collect 100 coins</span>.
+                <p className="text-[13px] font-medium leading-snug text-zinc-500">
+                  Enter your address to <span className="font-extrabold text-[#4c1d95]">collect 100 coins</span>.
                 </p>
               </div>
 
@@ -412,7 +427,7 @@ function FetchEntryAddressSheetShell({
                     autoFocus
                     onResolved={(p) => { setPendingPlace(p); setAddressText(p.formattedAddress) }}
                     suggestionsMountRef={suggestionsMountRef}
-                    className={darkInputClass}
+                    className={brandedInputClass}
                   />
                   <div ref={suggestionsMountRef} className="fetch-entry-address-suggestions min-h-0 shrink-0" />
                 </>
@@ -423,15 +438,15 @@ function FetchEntryAddressSheetShell({
                   onChange={(e) => { setAddressText(e.target.value); setPendingPlace(null) }}
                   placeholder="Enter your delivery address"
                   autoFocus
-                  className={darkInputClass}
+                  className={brandedInputClass}
                 />
               )}
 
-              {locError ? <p className="text-[12px] font-medium text-red-400/90" role="alert">{locError}</p> : null}
+              {locError ? <p className="text-[12px] font-semibold text-red-600" role="alert">{locError}</p> : null}
 
               <div className="mt-auto flex flex-col gap-2.5 pt-2">
                 {hasMapsKey ? (
-                  <button type="button" onClick={useCurrentLocation} disabled={!mapsReady || locBusy} className="self-start text-[12px] font-semibold text-white/60 underline decoration-white/20 underline-offset-[3px] transition-colors hover:text-white/80 disabled:cursor-not-allowed disabled:opacity-35">
+                  <button type="button" onClick={useCurrentLocation} disabled={!mapsReady || locBusy} className="self-start text-[12px] font-bold text-[#4c1d95]/75 underline decoration-[#4c1d95]/25 underline-offset-[3px] transition-colors hover:text-[#4c1d95] disabled:cursor-not-allowed disabled:opacity-35">
                     {locBusy ? 'Locating...' : 'Use current address'}
                   </button>
                 ) : null}
@@ -444,28 +459,20 @@ function FetchEntryAddressSheetShell({
                   }}
                   disabled={!hasAddress}
                   className={[
-                    'flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[15px] font-bold tracking-tight transition-[transform,background-color,box-shadow,color] duration-300 active:scale-[0.98]',
+                    'flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-extrabold tracking-tight transition-[transform,background-color,box-shadow,color] duration-300 active:scale-[0.98]',
                     hasAddress
-                      ? 'bg-white text-black shadow-[0_8px_28px_-8px_rgba(255,255,255,0.25)] hover:bg-zinc-100 hover:shadow-[0_10px_32px_-8px_rgba(255,255,255,0.3)]'
-                      : 'cursor-not-allowed bg-white/10 text-white/25 shadow-none',
+                      ? 'bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] text-white shadow-[0_18px_34px_-18px_rgba(76,29,149,0.65),inset_0_1px_0_rgba(255,255,255,0.22)] hover:brightness-105'
+                      : 'cursor-not-allowed bg-zinc-200 text-zinc-400 shadow-none',
                   ].join(' ')}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden className="shrink-0 drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]">
-                    <defs>
-                      <linearGradient id="cta-coin-grad" x1="5" y1="4" x2="19" y2="20" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#fde68a" />
-                        <stop offset="0.35" stopColor="#fbbf24" />
-                        <stop offset="0.72" stopColor="#d97706" />
-                        <stop offset="1" stopColor="#b45309" />
-                      </linearGradient>
-                    </defs>
-                    <circle cx="12" cy="12" r="10" fill="url(#cta-coin-grad)" stroke="#78350f" strokeWidth="0.85" />
-                    <circle cx="12" cy="12" r="7.75" fill="none" stroke="#92400e" strokeWidth="0.55" opacity="0.7" />
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0">
+                    <path d="M20 8h-3.6a3.4 3.4 0 1 0-4.4-4.4A3.4 3.4 0 1 0 7.6 8H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7h1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                    <path d="M12 8v13" stroke="currentColor" strokeWidth="1.8" />
                   </svg>
                   Collect coins
                 </button>
 
-                <button type="button" onClick={onDismiss} className="w-full py-1.5 text-center text-[12px] font-medium text-white/35 transition-colors hover:text-white/55">
+                <button type="button" onClick={onDismiss} className="w-full py-1.5 text-center text-[12px] font-bold text-zinc-400 transition-colors hover:text-[#4c1d95]/75">
                   Not now
                 </button>
               </div>

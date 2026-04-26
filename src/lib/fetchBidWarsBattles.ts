@@ -27,6 +27,12 @@ export type StartingSoonBattle = {
   imageUrl: string
   attendees: number
   attendeeAvatars: string[]
+  /** Optional multi-angle photo gallery. Falls back to [imageUrl] if omitted. */
+  photos?: string[]
+  /** 1–3 sentence pitch shown on the listing preview sheet and lobby card. */
+  description?: string
+  /** Human-readable condition summary (e.g. "Brand new · Factory sealed"). */
+  condition?: string
 }
 
 export const STARTING_SOON_BATTLES: StartingSoonBattle[] = [
@@ -39,6 +45,15 @@ export const STARTING_SOON_BATTLES: StartingSoonBattle[] = [
     estValueCents: 18000,
     imageUrl:
       'https://images.unsplash.com/photo-1600269452121-4f2416e55c28?w=720&q=82',
+    photos: [
+      'https://images.unsplash.com/photo-1600269452121-4f2416e55c28?w=720&q=82',
+      'https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=720&q=82',
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=720&q=82',
+      'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=720&q=82',
+    ],
+    description:
+      'Men\'s US 10, deadstock pair straight from the original release drop. Box included, tags attached. Iconic Chicago colourway with premium leather upper.',
+    condition: 'Brand new · Deadstock with box',
     attendees: 342,
     attendeeAvatars: ATTENDEE_AVATARS,
   },
@@ -50,6 +65,15 @@ export const STARTING_SOON_BATTLES: StartingSoonBattle[] = [
     estValueCents: 95000,
     imageUrl:
       'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=480&q=82',
+    photos: [
+      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=720&q=82',
+      'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=720&q=82',
+      'https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=720&q=82',
+      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=720&q=82',
+    ],
+    description:
+      'Small matelassé shoulder bag in dusty rose leather with the signature GG hardware. Comes with dust bag, authenticity card, and original receipt.',
+    condition: 'Excellent · Light use, no visible marks',
     attendees: 872,
     attendeeAvatars: [],
   },
@@ -62,6 +86,14 @@ export const STARTING_SOON_BATTLES: StartingSoonBattle[] = [
     estValueCents: 125000,
     imageUrl:
       'https://images.unsplash.com/photo-1606503153255-59d8b2e4a68b?w=480&q=82',
+    photos: [
+      'https://images.unsplash.com/photo-1606503153255-59d8b2e4a68b?w=720&q=82',
+      'https://images.unsplash.com/photo-1628968434441-d9c61d55b0d1?w=720&q=82',
+      'https://images.unsplash.com/photo-1613771404784-3a5686aa2be3?w=720&q=82',
+    ],
+    description:
+      'Holy grail of Pokémon. PSA-graded gem mint 10, 1999 1st Edition Base Set shadowless Charizard. Sealed in official PSA slab with cert.',
+    condition: 'PSA 10 Gem Mint · Sealed slab',
     attendees: 623,
     attendeeAvatars: [],
   },
@@ -74,6 +106,15 @@ export const STARTING_SOON_BATTLES: StartingSoonBattle[] = [
     estValueCents: 950000,
     imageUrl:
       'https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=480&q=82',
+    photos: [
+      'https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=720&q=82',
+      'https://images.unsplash.com/photo-1619134778706-7015533a6150?w=720&q=82',
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=720&q=82',
+      'https://images.unsplash.com/photo-1548171699-14e6f27e5eaa?w=720&q=82',
+    ],
+    description:
+      'Reference 126610LN, black dial and ceramic bezel. Full set — box, papers, all links. Serviced by Rolex in 2024 with a fresh 2-year warranty card.',
+    condition: 'Mint · Full set, recently serviced',
     attendees: 432,
     attendeeAvatars: [],
   },
@@ -86,6 +127,15 @@ export const STARTING_SOON_BATTLES: StartingSoonBattle[] = [
     estValueCents: 320000,
     imageUrl:
       'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=480&q=82',
+    photos: [
+      'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=720&q=82',
+      'https://images.unsplash.com/photo-1617469767053-8f35aaa39fce?w=720&q=82',
+      'https://images.unsplash.com/photo-1606986628253-49cb5a67f6b6?w=720&q=82',
+      'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=720&q=82',
+    ],
+    description:
+      '45MP full-frame mirrorless body with the RF 24-105 f/4 L IS kit lens. Low shutter count (under 4K), all original boxes, chargers, and straps included.',
+    condition: 'Like new · Under 4K shutter count',
     attendees: 321,
     attendeeAvatars: [],
   },
@@ -153,6 +203,45 @@ export function buildInitialLiveBidState(battle: StartingSoonBattle): LiveBidSta
     bidders,
     bidIncrementCents: 500,
   }
+}
+
+/**
+ * Pure reducer — produce the next `LiveBidState` after a bidder places an
+ * `amountCents` bid. Adds the bidder to the participants list if they aren't
+ * already in it (used for the viewer) and promotes them to `topBidderId`.
+ *
+ * Moved out of the overlay so the shared feed hook + the overlay can apply
+ * bids against the same source of truth.
+ */
+export function applyNewBid(
+  prev: LiveBidState,
+  bidderId: string,
+  amountCents: number,
+): LiveBidState {
+  const bidders = prev.bidders.some((b) => b.id === bidderId)
+    ? prev.bidders.map((b) => (b.id === bidderId ? { ...b, bidCents: amountCents } : b))
+    : [
+        ...prev.bidders,
+        {
+          id: bidderId,
+          name: 'You',
+          handle: '@you',
+          avatar:
+            'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=96&q=80',
+          bidCents: amountCents,
+        } satisfies LiveBidder,
+      ]
+  return {
+    ...prev,
+    bidders,
+    currentBidCents: amountCents,
+    topBidderId: bidderId,
+  }
+}
+
+/** Minimum next bid (current bid + increment) used by the overlay stepper. */
+export function nextBidMinCents(live: LiveBidState): number {
+  return live.currentBidCents + live.bidIncrementCents
 }
 
 export function formatAudCents(cents: number): string {

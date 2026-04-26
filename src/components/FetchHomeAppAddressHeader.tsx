@@ -10,6 +10,21 @@ function audFromCents(cents: number): string {
   return (safe / 100).toLocaleString('en-AU', { style: 'currency', currency: 'AUD' })
 }
 
+/** Black outline search (magnifying glass) — minimal top bar. */
+function SearchNavGlyph({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15zM16.5 16.5L21 21"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function CartGlyph({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -74,6 +89,9 @@ export function FetchItWordmark({
 const headerChromeIconBtn =
   'fetch-apple-warp-btn flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100/60 text-[#4c1d95]/70 transition-colors hover:bg-violet-100 hover:text-[#4c1d95] active:scale-[0.98]'
 
+const brandMinimalIconBtn =
+  'fetch-apple-warp-btn flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-zinc-900 transition-colors hover:bg-zinc-100/90 active:scale-[0.97]'
+
 const headerEase =
   'duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:duration-150 motion-reduce:ease-out'
 const chromeShellSlide =
@@ -136,6 +154,8 @@ export function FetchHomeAppAddressHeader({
   onOpenCart,
   onOpenWallet,
   coinBalance = 0,
+  variant = 'wallet',
+  onOpenSearch,
 }: {
   onSearchSubmit: (query: string) => void
   onOpenAccount: () => void
@@ -146,8 +166,82 @@ export function FetchHomeAppAddressHeader({
   onOpenWallet?: () => void
   /** Visible coin count next to the coin icon. */
   coinBalance?: number
+  /**
+   * `wallet` — wallet chip + account, chat, gems, cart (map / default home).
+   * `brand-minimal` — wordmark “fetch” + “it” and search + bell (Explore full page).
+   */
+  variant?: 'wallet' | 'brand-minimal'
+  /** Required when `variant` is `brand-minimal`; opens global search. */
+  onOpenSearch?: () => void
 }) {
   const openWallet = onOpenWallet ?? onOpenAccount
+
+  if (variant === 'brand-minimal') {
+    return (
+      <header
+        className={[
+          'fetch-app-address-header pointer-events-auto fixed left-0 right-0 top-0 z-[56] bg-white shadow-[0_1px_0_rgba(76,29,149,0.06)]',
+          chromeShellSlide,
+          'translate-y-0',
+        ].join(' ')}
+        style={{ paddingTop: 'max(0.55rem, env(safe-area-inset-top, 0px))' }}
+      >
+        <div
+          className={[
+            'mx-auto flex w-full max-w-[min(100%,430px)] flex-col px-3 transition-[padding,gap] will-change-[padding,gap]',
+            headerEase,
+            'gap-2 pb-2.5 pt-1',
+          ].join(' ')}
+          style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
+        >
+          <div className="flex w-full min-w-0 items-center justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-2" aria-label="fetchit, bid wars">
+              {/* Rounded purple play mark — no circle bg (Heroicons-style rounded play) */}
+              <svg
+                viewBox="0 0 20 20"
+                className="fetch-header-violet-ink mt-0.5 h-7 w-7 shrink-0"
+                fill="currentColor"
+                aria-hidden
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.25 5.653c0-.856.927-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.346a1.125 1.125 0 0 1-1.667-.985V5.653z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <div className="fetch-app-brand-wordmark flex min-w-0 items-baseline font-extrabold tracking-[-0.03em]">
+                  <span className="text-[1.35rem] leading-none text-zinc-900 sm:text-[1.45rem]">fetch</span>
+                  <span className="fetch-header-violet-ink text-[1.35rem] leading-none sm:text-[1.45rem]">it</span>
+                </div>
+                <p className="fetch-header-violet-ink text-[10px] font-black uppercase leading-none tracking-[0.2em] sm:text-[11px]">
+                  BID WARS
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-0.5 self-center">
+              <button
+                type="button"
+                onClick={onOpenSearch}
+                className={brandMinimalIconBtn}
+                aria-label="Search"
+              >
+                <SearchNavGlyph className="block" />
+              </button>
+              <button
+                type="button"
+                onClick={onOpenChat}
+                className={brandMinimalIconBtn}
+                aria-label="Notifications"
+              >
+                <NotificationsNavIconFilled className="block h-[22px] w-[22px]" active={false} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+    )
+  }
 
   const controlsRight = (
     <div className="flex shrink-0 items-center gap-2 self-center">

@@ -765,12 +765,12 @@ function WelcomeSliderDemo() {
         'fetch-slide-bid-outer relative w-full rounded-full p-[3px]',
         shocking ? 'fetch-slide-bid-shock' : '',
       ].join(' ')}
-      style={{ border: '1.5px solid rgba(22,163,74,0.65)' }}
+      style={{ border: '1.5px solid rgba(76,29,149,0.72)' }}
     >
       <div
         ref={trackRef}
         className="relative flex h-[50px] w-full touch-none items-center overflow-hidden rounded-full"
-        style={{ background: 'rgba(16,185,129,0.14)' }}
+        style={{ background: 'rgba(76,29,149,0.12)' }}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
@@ -783,14 +783,14 @@ function WelcomeSliderDemo() {
         tabIndex={0}
       >
         <div
-          className="absolute inset-y-0 left-0 rounded-full bg-white"
+          className="absolute inset-y-0 left-0 rounded-full bg-white shadow-[0_0_0_1px_rgba(76,29,149,0.08)]"
           style={{ width: `${fillPct}%`, transition: trans }}
         />
         <div
           className="pointer-events-none absolute inset-y-0 left-0 z-[1] flex items-center"
           style={{ width: `${fillPct}%`, transition: trans }}
         >
-          <span className="pl-4 text-[13px] font-bold tracking-wide text-black whitespace-nowrap">
+          <span className="pl-4 text-[13px] font-extrabold tracking-wide text-[#1f1235] whitespace-nowrap">
             Try it — Slide to bid $125
           </span>
           <span className="min-w-0 flex-1" />
@@ -798,17 +798,17 @@ function WelcomeSliderDemo() {
             className="flex shrink-0 items-center pr-1.5"
             style={{ opacity: confirmed ? 0 : 1, transition: 'opacity 0.2s ease' }}
           >
-            <BoltIcon size={22} color="#FACC15" />
+            <BoltIcon size={22} color="#4c1d95" />
             <svg width="28" height="42" viewBox="0 0 28 42" fill="none" aria-hidden className="ml-[-4px]">
               <path
                 d="M5 9l10 12L5 33"
-                stroke={isSliding || shocking ? 'rgba(250,204,21,0.8)' : 'rgba(255,255,255,0.4)'}
+                stroke={isSliding || shocking ? 'rgba(76,29,149,0.85)' : 'rgba(76,29,149,0.28)'}
                 strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
                 style={{ transition: 'stroke 0.15s ease' }}
               />
               <path
                 d="M15 12l7 9-7 9"
-                stroke={isSliding || shocking ? 'rgba(250,204,21,0.5)' : 'rgba(255,255,255,0.22)'}
+                stroke={isSliding || shocking ? 'rgba(76,29,149,0.55)' : 'rgba(76,29,149,0.18)'}
                 strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
                 style={{ transition: 'stroke 0.15s ease' }}
               />
@@ -855,24 +855,24 @@ function LiveWelcomeSheet({ onDismiss }: { onDismiss: () => void }) {
   const hasDetails = !!(session?.email)
 
   return createPortal(
-    <div className="fixed inset-0 z-[95] flex items-end justify-center bg-black/40" onClick={onDismiss}>
+    <div className="fixed inset-0 z-[95] flex items-end justify-center bg-[#2e1065]/35 backdrop-blur-[3px]" onClick={onDismiss}>
       <div
-        className="relative mx-auto w-full max-w-[430px] animate-[fetch-welcome-sheet-up_0.4s_ease-out_both] rounded-t-[1.5rem] bg-zinc-50 px-6 pb-[max(2rem,env(safe-area-inset-bottom,0px)+1.5rem)] pt-5 shadow-[0_-8px_40px_rgba(0,0,0,0.12)]"
+        className="relative mx-auto w-full max-w-[430px] animate-[fetch-welcome-sheet-up_0.4s_ease-out_both] rounded-t-[1.5rem] bg-[#faf8ff] px-6 pb-[max(2rem,env(safe-area-inset-bottom,0px)+1.5rem)] pt-5 shadow-[0_-18px_52px_-24px_rgba(76,29,149,0.45)] ring-1 ring-[#4c1d95]/12"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle */}
-        <div className="mx-auto mb-5 h-[4px] w-10 rounded-full bg-zinc-300" />
+        <div className="mx-auto mb-5 h-[4px] w-10 rounded-full bg-[#4c1d95]/18" />
 
         {/* Demo slider */}
         <div className="mb-5">
-          <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-wider text-white">Try it out</p>
+          <p className="mb-2 text-center text-[11px] font-black uppercase tracking-[0.18em] text-[#4c1d95]/60">Try it out</p>
           <WelcomeSliderDemo />
         </div>
 
         {/* Headline */}
-        <div className="mb-6 rounded-xl bg-zinc-50 px-4 py-3 text-center ring-1 ring-zinc-200/80">
-          <h2 className="text-[1.2rem] font-extrabold tracking-tight text-zinc-900">Buy, Sell, Live</h2>
-          <p className="mt-1 text-[12px] font-medium text-zinc-600">Everything happens in real-time, locally.</p>
+        <div className="mb-6 rounded-2xl bg-white px-4 py-3 text-center shadow-[0_10px_24px_-20px_rgba(76,29,149,0.5)] ring-1 ring-[#4c1d95]/12">
+          <h2 className="text-[1.2rem] font-black tracking-tight text-zinc-950">Buy, Sell, Live</h2>
+          <p className="mt-1 text-[12px] font-semibold text-zinc-500">Everything happens in real-time, locally.</p>
         </div>
 
         {/* Actions */}
@@ -880,7 +880,7 @@ function LiveWelcomeSheet({ onDismiss }: { onDismiss: () => void }) {
           {!hasDetails ? (
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-zinc-600 bg-white py-3.5 text-[14px] font-bold text-white shadow-sm transition-colors active:bg-zinc-700"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#4c1d95]/30 bg-white py-3.5 text-[14px] font-extrabold text-[#4c1d95] shadow-sm transition-colors active:bg-violet-50"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <rect x="2" y="5" width="20" height="14" rx="3" stroke="currentColor" strokeWidth="2" />
@@ -892,7 +892,7 @@ function LiveWelcomeSheet({ onDismiss }: { onDismiss: () => void }) {
           <button
             type="button"
             onClick={onDismiss}
-            className="flex w-full items-center justify-center rounded-2xl bg-white py-3.5 text-[14px] font-bold text-zinc-900 shadow-sm transition-colors active:bg-zinc-200"
+            className="flex w-full items-center justify-center rounded-2xl bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] py-3.5 text-[14px] font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(76,29,149,0.65),inset_0_1px_0_rgba(255,255,255,0.22)] transition-transform active:scale-[0.98]"
           >
             Start Browsing
           </button>
