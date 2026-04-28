@@ -16,7 +16,7 @@ import type {
   BookingServiceType,
   BookingState,
   BookingTimelineEntry,
-} from '../assistant/types'
+} from '../assistant/types.js'
 
 import { isActiveBookingPersistedStatus } from './bookingLifecycle.js'
 

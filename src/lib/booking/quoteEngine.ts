@@ -8,7 +8,7 @@ import {
   type BookingQuoteBreakdown,
   type BookingServiceType,
   type BookingState,
-} from '../assistant/types'
+} from '../assistant/types.js'
 import { estimateRouteKmDuration } from '../assistant/parseFromText.js'
 import type { FetchAiBookingDraft } from './types.js'
 import { computeSpecialtySurcharge } from './specialtyItemCatalog.js'
