@@ -2,7 +2,7 @@
  * Whitelist of specialty / bulky items for deterministic surcharges (AUD).
  * Slugs align with chat `bookingPatch.specialtyItems` and overlap scan `specialItemType` where possible.
  */
-import type { BookingServiceType } from '../assistant/types'
+import type { BookingServiceType } from '../assistant/types.js'
 
 /** Default: junk, moves, delivery/pickup, heavy (all use routed or item-based quoting except pure hourly). */
 const ROUTED_SERVICES: BookingServiceType[] = ['move', 'pickup', 'remove']

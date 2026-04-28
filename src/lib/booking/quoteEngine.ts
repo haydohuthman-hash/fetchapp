@@ -9,9 +9,9 @@ import {
   type BookingServiceType,
   type BookingState,
 } from '../assistant/types'
-import { estimateRouteKmDuration } from '../assistant/parseFromText'
-import type { FetchAiBookingDraft } from './types'
-import { computeSpecialtySurcharge } from './specialtyItemCatalog'
+import { estimateRouteKmDuration } from '../assistant/parseFromText.js'
+import type { FetchAiBookingDraft } from './types.js'
+import { computeSpecialtySurcharge } from './specialtyItemCatalog.js'
 
 export type ScannerEstimatedSize = 'small' | 'medium' | 'large' | 'whole_home'
 
@@ -450,7 +450,7 @@ export function computePrice(
   }
 
   const route = resolveRouteMetrics(input, options)
-  if (!route.ok) return route
+  if (route.ok === false) return route
 
   const breakdown = computeBreakdownCore(input, route.distanceMeters, route.durationSeconds)
   let pricing = buildPricing(

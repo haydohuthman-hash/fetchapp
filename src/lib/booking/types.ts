@@ -18,7 +18,7 @@ import type {
   BookingTimelineEntry,
 } from '../assistant/types'
 
-import { isActiveBookingPersistedStatus } from './bookingLifecycle'
+import { isActiveBookingPersistedStatus } from './bookingLifecycle.js'
 
 export type FetchAiBookingDraft = {
   jobType: BookingJobType | null

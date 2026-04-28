@@ -1,7 +1,7 @@
 /**
  * Lightweight intent extraction — no ML. Replace or augment with NLU later.
  */
-import type { JobLane } from './types'
+import type { JobLane } from './types.js'
 
 const JUNK_RE = /\b(junk|rubbish|trash|removal|strip[- ]?out|clear[- ]?out)\b/i
 const MOVE_RE = /\b(move|moving|deliver|delivery|transport|relocate|pickup|pick up)\b/i
