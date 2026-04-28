@@ -25,6 +25,18 @@ export function HomeBiddingWarTopBanner({ onJoin }: HomeBiddingWarTopBannerProps
           draggable={false}
           className="pointer-events-none block w-full select-none"
         />
+        <span className="pointer-events-none absolute inset-x-3 bottom-3 z-[2] overflow-hidden rounded-full bg-gradient-to-b from-[#a855f7] via-[#7c3aed] to-[#4c1d95] px-4 py-3 text-center text-[14px] font-black uppercase tracking-[0.1em] text-white shadow-[0_14px_28px_-12px_rgba(76,29,149,0.75),inset_0_1px_0_rgba(255,255,255,0.28)] ring-1 ring-white/25">
+          <span
+            aria-hidden
+            className="fetch-bidwar-premium-cta-shimmer absolute inset-y-0 -left-[45%] w-[42%] skew-x-[-18deg] bg-white/35 blur-[1px]"
+          />
+          <span className="relative z-[1] inline-flex items-center justify-center gap-2">
+            Join the war
+            <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M9 5l7 7-7 7-1.4-1.4L13.2 12 7.6 6.4 9 5z" />
+            </svg>
+          </span>
+        </span>
       </button>
     </section>
   )

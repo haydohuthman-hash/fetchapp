@@ -368,6 +368,7 @@ function FetchBidWarsBattleOverlayInner({
           totalWatching={live.totalWatching}
           onClose={onClose}
           isLive={phase === 'live' || phase === 'lobby'}
+          isLobby={phase === 'lobby'}
         />
       )}
 
@@ -418,10 +419,12 @@ function FetchBidWarsBattleOverlayInner({
    ============================================================================ */
 
 function BattleBackground({ phase }: { phase: Phase }) {
-  const isDark = phase === 'live' || phase === 'lobby'
+  const isDark = phase === 'live'
   const bg = isDark
     ? 'radial-gradient(ellipse at 50% -5%, #3b0764 0%, #1e0a3c 40%, #0f0520 100%)'
-    : 'radial-gradient(120% 80% at 50% 15%, #ede9fe 0%, #c4b5fd 40%, #7c3aed 100%)'
+    : phase === 'lobby'
+      ? 'linear-gradient(180deg,#f8f5ff 0%,#f1ecff 44%,#ffffff 100%)'
+      : 'radial-gradient(120% 80% at 50% 15%, #ede9fe 0%, #c4b5fd 40%, #7c3aed 100%)'
   return (
     <>
       <div
@@ -440,16 +443,32 @@ function BattleHeader({
   totalWatching,
   onClose,
   isLive,
+  isLobby,
 }: {
   battleNumber: string
   totalWatching?: number
   onClose: () => void
   tone?: 'light'
   isLive?: boolean
+  isLobby?: boolean
 }) {
   const textColor = isLive ? 'text-white' : 'text-[#1c1528]'
   const chipBg = isLive ? 'bg-white/15 ring-white/25' : 'bg-white/70 ring-white/40'
   const showWatchers = isLive && typeof totalWatching === 'number' && totalWatching > 0
+  if (isLobby) {
+    return (
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close battle"
+        className="absolute left-3 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-[4] flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#4c1d95] shadow-[0_10px_24px_-16px_rgba(76,29,149,0.75)] ring-1 ring-[#4c1d95]/12 backdrop-blur-sm active:scale-95"
+      >
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+        </svg>
+      </button>
+    )
+  }
   return (
     <header className="relative z-[3] flex shrink-0 items-center justify-between gap-3 px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
       {/* Close */}
@@ -547,11 +566,11 @@ function LobbyStage({
   const displayValue = displayLong ? formatMmSs(lobbySec) : `${lobbySec}`
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-1">
+    <div className="relative flex min-h-0 flex-1 flex-col px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-[max(3.75rem,env(safe-area-inset-top,0px)+3rem)]">
       {/* Upcoming listing preview card */}
-      <div className="relative mb-3 overflow-hidden rounded-2xl bg-gradient-to-br from-[#2a1055] via-[#3b0764] to-[#1e0a3c] p-3 ring-1 ring-white/10">
+      <div className="relative mb-3 overflow-hidden rounded-3xl bg-white p-3 shadow-[0_18px_40px_-26px_rgba(76,29,149,0.45)] ring-1 ring-[#4c1d95]/12">
         <div className="flex items-center gap-3">
-          <div className="relative h-[5.5rem] w-[5.5rem] shrink-0 overflow-hidden rounded-xl ring-2 ring-white/30">
+          <div className="relative h-[5.5rem] w-[5.5rem] shrink-0 overflow-hidden rounded-2xl bg-violet-50 ring-2 ring-[#4c1d95]/12">
             <img
               src={battle.imageUrl}
               alt=""
@@ -560,18 +579,18 @@ function LobbyStage({
             />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-300">
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#4c1d95]">
               Up next · Battle {battle.battleNumber}
             </p>
-            <p className="mt-0.5 truncate text-[18px] font-black uppercase leading-tight text-white">
+            <p className="mt-0.5 truncate text-[18px] font-black uppercase leading-tight text-zinc-950">
               {battle.title}
             </p>
             {battle.subtitle ? (
-              <p className="truncate text-[13px] font-semibold text-white/75">
+              <p className="truncate text-[13px] font-bold text-zinc-600">
                 {battle.subtitle}
               </p>
             ) : null}
-            <div className="mt-1 flex items-center gap-2 text-[11px] font-semibold text-white/80">
+            <div className="mt-1 flex items-center gap-2 text-[11px] font-bold text-zinc-500">
               <span>Est. {formatAudCents(battle.estValueCents)}</span>
               <span aria-hidden>·</span>
               <span>🔥 {formatCountLabel(battle.attendees)} in lobby</span>
@@ -580,32 +599,32 @@ function LobbyStage({
           <div
             className={[
               'flex shrink-0 flex-col items-center justify-center rounded-xl px-3 py-2 transition-colors',
-              urgent ? 'bg-red-600/30 ring-1 ring-red-400/60' : 'bg-white/10 ring-1 ring-white/20',
+              urgent ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-[#4c1d95] text-white ring-1 ring-[#4c1d95]/20',
             ].join(' ')}
             aria-label={`${lobbySec} seconds until battle`}
           >
-            <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/70">Starts in</span>
+            <span className={['text-[9px] font-black uppercase tracking-[0.12em]', urgent ? 'text-red-500/70' : 'text-white/70'].join(' ')}>Starts in</span>
             <span
               key={`lobby-${lobbySec}`}
               className={[
                 'fetch-battle-lobby-sec font-black leading-none tabular-nums',
                 displayLong ? 'text-[22px]' : 'text-[28px]',
-                urgent ? 'text-red-300' : 'text-white',
+                urgent ? 'text-red-600' : 'text-white',
               ].join(' ')}
             >
               {displayValue}
             </span>
             {displayLong ? null : (
-              <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-white/50">sec</span>
+              <span className={['text-[9px] font-bold uppercase tracking-[0.1em]', urgent ? 'text-red-500/55' : 'text-white/55'].join(' ')}>sec</span>
             )}
           </div>
         </div>
 
         {/* Condition + short description — shown when available to build anticipation */}
         {(battle.condition || battle.description) ? (
-          <div className="mt-2.5 border-t border-white/10 pt-2.5">
+          <div className="mt-2.5 border-t border-[#4c1d95]/10 pt-2.5">
             {battle.condition ? (
-              <p className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-300">
+              <p className="mb-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-emerald-600">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <path
                     d="M5 12l5 5L19 7"
@@ -619,7 +638,7 @@ function LobbyStage({
               </p>
             ) : null}
             {battle.description ? (
-              <p className="line-clamp-2 text-[12px] leading-snug text-white/75">
+              <p className="line-clamp-2 text-[12px] font-medium leading-snug text-zinc-600">
                 {battle.description}
               </p>
             ) : null}
@@ -634,15 +653,15 @@ function LobbyStage({
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
           </span>
-          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-white/80">Live chat</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-[#4c1d95]">Live chat</p>
         </div>
-        <p className="text-[11px] font-semibold text-white/60">
+        <p className="text-[11px] font-bold text-zinc-500">
           {formatCountLabel(battle.attendees)} in lobby
         </p>
       </div>
 
       {/* Chat feed */}
-      <div className="fetch-battle-lobby-chat relative flex min-h-0 flex-1 flex-col overflow-y-auto rounded-2xl bg-black/25 px-2.5 py-2 ring-1 ring-white/10 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="fetch-battle-lobby-chat relative flex min-h-0 flex-1 flex-col overflow-y-auto rounded-3xl bg-white px-2.5 py-2 shadow-[0_18px_40px_-30px_rgba(76,29,149,0.5)] ring-1 ring-[#4c1d95]/12 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {chat.map((msg) => (
           <LobbyChatBubble key={msg.id} msg={msg} />
         ))}
@@ -651,8 +670,8 @@ function LobbyStage({
 
       {/* Chat input (read-only — hype bar) */}
       <div className="mt-2 flex items-center gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full bg-white/10 px-3 py-2.5 ring-1 ring-white/15">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0 text-white/60">
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full bg-white px-3 py-2.5 shadow-sm ring-1 ring-[#4c1d95]/12">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0 text-[#4c1d95]/50">
             <path
               d="M4 12a8 8 0 0114 5l1 4-4-1a8 8 0 01-11-8z"
               stroke="currentColor"
@@ -661,7 +680,7 @@ function LobbyStage({
               strokeLinejoin="round"
             />
           </svg>
-          <span className="truncate text-[13px] text-white/70">Hype up the lobby…</span>
+          <span className="truncate text-[13px] font-semibold text-zinc-500">Hype up the lobby…</span>
           <span className="ml-auto text-[16px]" aria-hidden>
             🔥
           </span>
@@ -674,7 +693,7 @@ function LobbyStage({
 function LobbyChatBubble({ msg }: { msg: LobbyChatMessage }) {
   if (msg.system === 'join') {
     return (
-      <div className="fetch-battle-lobby-msg mb-1 flex items-center gap-2 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-200 ring-1 ring-emerald-400/20">
+      <div className="fetch-battle-lobby-msg mb-1 flex items-center gap-2 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-200">
         <img
           src={msg.author.avatar}
           alt=""
@@ -682,9 +701,9 @@ function LobbyChatBubble({ msg }: { msg: LobbyChatMessage }) {
           className="h-4 w-4 rounded-full object-cover"
         />
         <span className="truncate">
-          <span className="font-bold text-emerald-100">{msg.author.name}</span> {msg.text}
+          <span className="font-black text-emerald-800">{msg.author.name}</span> {msg.text}
         </span>
-        <span className="ml-auto shrink-0 text-emerald-300/70">+1</span>
+        <span className="ml-auto shrink-0 text-emerald-600/75">+1</span>
       </div>
     )
   }
@@ -694,14 +713,14 @@ function LobbyChatBubble({ msg }: { msg: LobbyChatMessage }) {
         src={msg.author.avatar}
         alt=""
         draggable={false}
-        className="mt-0.5 h-7 w-7 shrink-0 rounded-full object-cover ring-2 ring-white/20"
+        className="mt-0.5 h-7 w-7 shrink-0 rounded-full object-cover ring-2 ring-[#4c1d95]/10"
       />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="truncate text-[12px] font-bold text-white">{msg.author.name}</span>
+          <span className="truncate text-[12px] font-black text-zinc-900">{msg.author.name}</span>
           {msg.author.tagLabel ? <AuthorTag tag={msg.author.tagLabel} tone={msg.author.tagTone} /> : null}
         </div>
-        <p className="text-[13px] leading-snug text-white/90">{msg.text}</p>
+        <p className="text-[13px] font-medium leading-snug text-zinc-700">{msg.text}</p>
       </div>
     </div>
   )
@@ -709,10 +728,10 @@ function LobbyChatBubble({ msg }: { msg: LobbyChatMessage }) {
 
 function AuthorTag({ tag, tone = 'violet' }: { tag: string; tone?: LobbyChatAuthor['tagTone'] }) {
   const palette: Record<NonNullable<LobbyChatAuthor['tagTone']>, string> = {
-    violet: 'bg-violet-500/30 text-violet-100 ring-violet-300/30',
-    amber: 'bg-amber-500/30 text-amber-100 ring-amber-300/30',
-    emerald: 'bg-emerald-500/30 text-emerald-100 ring-emerald-300/30',
-    rose: 'bg-rose-500/30 text-rose-100 ring-rose-300/30',
+    violet: 'bg-violet-100 text-[#4c1d95] ring-violet-200',
+    amber: 'bg-amber-100 text-amber-800 ring-amber-200',
+    emerald: 'bg-emerald-100 text-emerald-800 ring-emerald-200',
+    rose: 'bg-rose-100 text-rose-800 ring-rose-200',
   }
   return (
     <span

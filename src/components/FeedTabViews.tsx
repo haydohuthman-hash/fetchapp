@@ -31,7 +31,7 @@ function viewerCount(id: string): string {
 
 /* ─── Live Now — 2-column grid ─────────────────────────────────── */
 
-function LiveNowCard({ reel, onOpen }: { reel: DropReel; onOpen: () => void }) {
+function LiveNowCard({ reel, onOpen }: { reel: DropReel; onOpen: (reel: DropReel) => void }) {
   const poster = reelPoster(reel)
   const seller = sellerLine(reel)
   const viewers = viewerCount(reel.id)
@@ -40,7 +40,7 @@ function LiveNowCard({ reel, onOpen }: { reel: DropReel; onOpen: () => void }) {
   return (
     <button
       type="button"
-      onClick={onOpen}
+      onClick={() => onOpen(reel)}
       className="flex flex-col bg-transparent p-0 text-left transition-transform active:scale-[0.98]"
       aria-label={`Live from ${seller}. ${reel.priceLabel}, ${viewers} viewers`}
     >
@@ -92,17 +92,24 @@ function LiveNowCard({ reel, onOpen }: { reel: DropReel; onOpen: () => void }) {
   )
 }
 
-export const LiveNowGrid = memo(function LiveNowGrid({ onOpenDrops }: { onOpenDrops: () => void }) {
+export const LiveNowGrid = memo(function LiveNowGrid({
+  onOpenDrops,
+  onOpenLive,
+}: {
+  onOpenDrops: () => void
+  onOpenLive?: (reel: DropReel) => void
+}) {
   const reels = useMemo(() => [...CURATED_DROP_REELS].slice(0, 6), [])
+  const openLive = onOpenLive ?? (() => onOpenDrops())
 
   if (reels.length === 0) {
     return <p className="px-3 py-8 text-center text-sm text-zinc-400">No one is live right now. Check back soon.</p>
   }
 
   return (
-    <div className="grid grid-cols-2 gap-2.5 px-3">
+    <div className="grid grid-cols-2 gap-2.5 px-0">
       {reels.map((r) => (
-        <LiveNowCard key={r.id} reel={r} onOpen={onOpenDrops} />
+        <LiveNowCard key={r.id} reel={r} onOpen={openLive} />
       ))}
     </div>
   )
@@ -428,7 +435,7 @@ function UpNextHeroCard({
   return (
     <article
       className={[
-        'fetch-battle-hero relative min-h-[12rem] overflow-hidden rounded-3xl p-4 pb-3.5 transition-colors',
+        'fetch-battle-hero relative overflow-hidden rounded-3xl p-3 transition-colors',
         isLive
           ? 'fetch-battle-hero--live bg-gradient-to-br from-[#2a1055] via-[#3b0764] to-[#1e0a3c] ring-2 ring-red-500/45 shadow-[0_22px_48px_-22px_rgba(239,68,68,0.55)]'
           : 'fetch-battle-hero--upnext bg-gradient-to-br from-[#7c3aed] via-[#5b21b6] to-[#3b0764] ring-1 ring-white/15 shadow-[0_22px_50px_-20px_rgba(76,29,149,0.7)]',
@@ -440,131 +447,129 @@ function UpNextHeroCard({
           : `Up next: ${battle.title}, starts in ${formatMmSs(remaining)}`
       }
     >
-      <div className="relative z-[1] min-w-0 pr-[10.5rem]">
-        {isLive ? (
-          <>
-            <div className="flex items-center gap-2">
-              <span className="fetch-battle-live-pill inline-flex items-center gap-1.5 rounded-md bg-red-600 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-sm">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
-                </span>
-                Live
+      <div className="relative z-[1] flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <span
+            className={[
+              'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] shadow-sm ring-1 backdrop-blur-sm',
+              isLive
+                ? 'fetch-battle-live-pill bg-red-600 text-white ring-white/15'
+                : 'bg-white/15 text-white ring-white/20',
+            ].join(' ')}
+          >
+            {isLive ? (
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
               </span>
-              <span
-                key={`tm-${remaining}`}
-                className={[
-                  'rounded-md bg-black/40 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.08em] tabular-nums',
-                  remaining <= 5 ? 'text-red-300' : 'text-amber-200',
-                ].join(' ')}
-              >
-                {formatMmSs(remaining)}
-              </span>
-            </div>
-            <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">
-              Current bid
-            </p>
-            <p
-              key={`bid-${live!.currentBidCents}`}
-              className="fetch-battle-current-bid font-black leading-none tabular-nums tracking-[-0.02em] text-white"
-              style={{ fontSize: '1.85rem', textShadow: '0 2px 14px rgba(239,68,68,0.35)' }}
-            >
-              {formatAudCents(live!.currentBidCents)}
-            </p>
-            {topBidder ? (
-              <p className="mt-1 text-[11px] font-semibold leading-tight text-white/75">
-                Leading <span className="font-bold text-white">{topBidder.handle}</span>
-              </p>
-            ) : null}
-            <p className="mt-1.5 text-[13px] font-extrabold leading-tight text-white">
-              {battle.title}
-              {battle.subtitle ? (
-                <span className="ml-1 font-semibold text-white/70">· {battle.subtitle}</span>
-              ) : null}
-            </p>
-          </>
-        ) : (
-          <>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white/95 ring-1 ring-white/20 backdrop-blur-sm">
+            ) : (
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                 <path d="M13 2L4.09 12.26a1 1 0 00.78 1.63L11 14l-2 8 9-10.26A1 1 0 0017.13 10.1L11 10l2-8z" />
               </svg>
-              Up next
-            </span>
-            <p
-              className={[
-                'fetch-battle-heading mt-1.5 font-black leading-none tabular-nums tracking-[-0.03em] transition-colors',
-                aboutToStart ? 'text-amber-200 [text-shadow:0_2px_18px_rgba(252,211,77,0.55)]' : 'text-white [text-shadow:0_2px_18px_rgba(76,29,149,0.55)]',
-              ].join(' ')}
-              style={{ fontSize: '2.6rem' }}
-            >
-              {formatMmSs(remaining)}
-            </p>
-            <p className="mt-2 text-[15px] font-extrabold leading-tight text-white">
-              {battle.title}
-            </p>
-            {battle.subtitle ? (
-              <p className="text-[13px] font-semibold leading-tight text-white/80">{battle.subtitle}</p>
-            ) : null}
-            <p className="mt-1 text-[11px] font-semibold text-white/70">
-              Est. value{' '}
-              <span className="font-extrabold tabular-nums text-white">
-                {formatAudCents(battle.estValueCents)}
-              </span>
-            </p>
-          </>
-        )}
-      </div>
-
-      {/* Item image — tap to open the listing details sheet */}
-      <button
-        type="button"
-        onClick={onOpenDetails}
-        aria-label={`View photos and details for ${battle.title}`}
-        className={[
-          'absolute bottom-3 right-3 z-[2] h-[7.5rem] w-[10rem] overflow-hidden rounded-2xl bg-zinc-100 ring-1 transition-transform active:scale-[0.98]',
-          isLive ? 'ring-red-500/30' : 'ring-white/40',
-        ].join(' ')}
-      >
-        <img
-          src={battle.imageUrl}
-          alt=""
-          className="h-full w-full object-cover"
-          loading="lazy"
-          draggable={false}
-        />
-        {isLive ? (
-          <span className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-red-500/70 [box-shadow:0_0_30px_rgba(239,68,68,0.45)]" />
-        ) : null}
-        {/* Small "photos" hint chip — only shown when we actually have extras */}
-        {(battle.photos?.length ?? 0) > 1 ? (
+            )}
+            {isLive ? 'Live auction' : 'Up next'}
+          </span>
           <span
+            key={`tm-${remaining}`}
             className={[
-              'pointer-events-none absolute right-1.5 top-1.5 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.04em] ring-1 ring-white/30 backdrop-blur-sm',
-              isLive ? 'bg-black/50 text-white' : 'bg-black/45 text-white',
+              'rounded-full bg-black/35 px-2.5 py-1 text-[12px] font-black uppercase tracking-[0.08em] tabular-nums ring-1 ring-white/10',
+              isLive
+                ? remaining <= 5 ? 'text-red-200' : 'text-white'
+                : aboutToStart ? 'text-amber-200' : 'text-white',
             ].join(' ')}
           >
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M4 7h3l2-2h6l2 2h3v12H4z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="2" />
-            </svg>
-            {battle.photos?.length ?? 1}
+            {formatMmSs(remaining)}
           </span>
-        ) : null}
-      </button>
+        </div>
 
-      <div className="relative z-[1] mt-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_8.75rem] gap-3">
+          <div className="min-w-0 self-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/55">
+              {isLive ? 'Current bid' : 'Featured battle'}
+            </p>
+            <p
+              key={isLive ? `bid-${live!.currentBidCents}` : `count-${remaining}`}
+              className={[
+                'mt-1 font-black leading-none tabular-nums tracking-[-0.035em] text-white',
+                isLive ? 'fetch-battle-current-bid text-[2.2rem]' : 'text-[1.65rem]',
+              ].join(' ')}
+              style={{
+                textShadow: isLive
+                  ? '0 2px 14px rgba(239,68,68,0.35)'
+                  : '0 2px 18px rgba(76,29,149,0.55)',
+              }}
+            >
+              {isLive ? formatAudCents(live!.currentBidCents) : battle.title}
+            </p>
+            {!isLive ? (
+              battle.subtitle ? (
+                <p className="mt-1 text-[13px] font-bold leading-tight text-white/82">{battle.subtitle}</p>
+              ) : null
+            ) : (
+              <>
+                {topBidder ? (
+                  <p className="mt-1 text-[11px] font-semibold leading-tight text-white/75">
+                    Leading <span className="font-bold text-white">{topBidder.handle}</span>
+                  </p>
+                ) : null}
+                <p className="mt-1.5 text-[13px] font-extrabold leading-tight text-white">
+                  {battle.title}
+                  {battle.subtitle ? (
+                    <span className="ml-1 font-semibold text-white/70">· {battle.subtitle}</span>
+                  ) : null}
+                </p>
+              </>
+            )}
+            <p className="mt-2 inline-flex rounded-full bg-white/10 px-2 py-1 text-[11px] font-bold text-white/78 ring-1 ring-white/10">
+              Est. value&nbsp;
+              <span className="font-black tabular-nums text-white">{formatAudCents(battle.estValueCents)}</span>
+            </p>
+          </div>
+
+          {/* Item image — tap to open the listing details sheet */}
+          <button
+            type="button"
+            onClick={onOpenDetails}
+            aria-label={`View photos and details for ${battle.title}`}
+            className={[
+              'relative aspect-square overflow-hidden rounded-2xl bg-zinc-100 ring-1 transition-transform active:scale-[0.98]',
+              isLive ? 'ring-red-500/40' : 'ring-white/40',
+            ].join(' ')}
+          >
+            <img
+              src={battle.imageUrl}
+              alt=""
+              className="h-full w-full object-cover"
+              loading="lazy"
+              draggable={false}
+            />
+            <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/5" />
+            {isLive ? (
+              <span className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-red-500/70 [box-shadow:0_0_30px_rgba(239,68,68,0.45)]" />
+            ) : null}
+            {(battle.photos?.length ?? 0) > 1 ? (
+              <span className="pointer-events-none absolute right-1.5 top-1.5 flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.04em] text-white ring-1 ring-white/30 backdrop-blur-sm">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M4 7h3l2-2h6l2 2h3v12H4z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="2" />
+                </svg>
+                {battle.photos?.length ?? 1}
+              </span>
+            ) : null}
+          </button>
+        </div>
+
         <button
           type="button"
           onClick={onGetReady}
           className={[
-            'flex items-center gap-1.5 rounded-full px-4 py-2.5 text-[12px] font-extrabold uppercase tracking-[0.1em] active:scale-[0.97]',
+            'flex w-full items-center justify-center gap-1.5 rounded-full px-4 py-3 text-[12px] font-black uppercase tracking-[0.1em] active:scale-[0.97]',
             isLive
               ? 'fetch-battle-join-pulse bg-gradient-to-b from-red-500 via-red-600 to-red-700 text-white shadow-[0_14px_28px_-10px_rgba(239,68,68,0.8)]'
               : 'bg-white text-[#4c1d95] shadow-[0_16px_30px_-10px_rgba(0,0,0,0.55)] hover:bg-violet-50',

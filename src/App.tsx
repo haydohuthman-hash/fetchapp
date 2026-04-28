@@ -38,7 +38,6 @@ import { setAuthState } from './lib/authState'
 import { FetchVoiceProvider } from './voice/FetchVoiceContext'
 import { FetchAppShellSuspenseFallback } from './components/FetchAppShellSuspenseFallback'
 import { FetchBoomerangSplash } from './components/FetchBoomerangSplash'
-import { FetchDailyStreakSplash } from './components/FetchDailyStreakSplash'
 
 const homeChunk = () => import('./views/HomeView')
 const HomeView = lazy(homeChunk)
@@ -586,7 +585,6 @@ function App() {
       {!entrySplashDone ? (
         <FetchBoomerangSplash onDone={() => { fetchAppSplashHandoffDone = true; setEntrySplashDone(true) }} />
       ) : null}
-      {entrySplashDone && phase === 'home' ? <FetchDailyStreakSplash /> : null}
       <div
         className={[
           'fetch-app-shell-bg relative flex min-h-dvh min-h-[100dvh] w-full justify-center',

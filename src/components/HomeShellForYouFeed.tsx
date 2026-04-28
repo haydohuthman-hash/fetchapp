@@ -17,6 +17,7 @@ import { ExploreCategoryBrowse } from './ExploreCategoryBrowse'
 import { HomeBiddingWarTopBanner } from './HomeBiddingWarTopBanner'
 import { LiveNowGrid, UpcomingLivesList, FollowingLivesList } from './FeedTabViews'
 import becomeSellerBannerUrl from '../assets/become-a-seller-banner.png'
+import { LiveAuctionScreen } from './bidwars/LiveAuctionScreen'
 
 const FEED_TABS = ['For you', 'Live now', 'Bid War', 'Following'] as const
 type FeedTab = (typeof FEED_TABS)[number]
@@ -228,7 +229,7 @@ function ReelLiveCountdownRing({
   )
 }
 
-function ExploreEmbedLiveFeedTile({ reel, onOpenDrops }: { reel: DropReel; onOpenDrops: () => void }) {
+function ExploreEmbedLiveFeedTile({ reel, onOpenLive }: { reel: DropReel; onOpenLive: (reel: DropReel) => void }) {
   const poster = reelPosterUrl(reel)
   const viewersLabel = liveViewersLabel(reel.id)
   const viewersCount = liveViewersCountShort(reel.id)
@@ -237,7 +238,7 @@ function ExploreEmbedLiveFeedTile({ reel, onOpenDrops }: { reel: DropReel; onOpe
   return (
     <button
       type="button"
-      onClick={onOpenDrops}
+      onClick={() => onOpenLive(reel)}
       className="flex w-[calc((100%-1rem)/2.1)] shrink-0 snap-start flex-col bg-transparent p-0 text-left transition-transform active:scale-[0.98]"
       aria-label={`Live from ${sellerLine}. ${reel.priceLabel}, ${viewersLabel}`}
     >
@@ -459,6 +460,7 @@ function HomeShellForYouFeedInner({
 
   const liveVerticalReels = useMemo(() => [...CURATED_DROP_REELS].slice(0, 8), [])
   const scopeLabel = 'near you'
+  const [activeLiveReel, setActiveLiveReel] = useState<DropReel | null>(null)
 
   const embedFeedSections = useMemo((): Record<EmbedSectionKey, ReactNode> | null => {
     if (!embedded) return null
@@ -468,7 +470,7 @@ function HomeShellForYouFeedInner({
           <div className="-mx-0.5 px-0.5">
             <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-2 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
               {liveVerticalReels.map((r) => (
-                <ExploreEmbedLiveFeedTile key={r.id} reel={r} onOpenDrops={onOpenDrops} />
+                <ExploreEmbedLiveFeedTile key={r.id} reel={r} onOpenLive={setActiveLiveReel} />
               ))}
             </div>
           </div>
@@ -479,7 +481,6 @@ function HomeShellForYouFeedInner({
     embedded,
     scopeLabel,
     liveVerticalReels,
-    onOpenDrops,
   ])
 
   const [feedTab, setFeedTab] = useState<FeedTab>('For you')
@@ -517,7 +518,7 @@ function HomeShellForYouFeedInner({
         ) : null}
 
         {feedTab === 'Live now' ? (
-          <LiveNowGrid onOpenDrops={onOpenDrops} />
+          <LiveNowGrid onOpenDrops={onOpenDrops} onOpenLive={setActiveLiveReel} />
         ) : null}
 
         {feedTab === 'Bid War' ? (
@@ -527,6 +528,21 @@ function HomeShellForYouFeedInner({
         {feedTab === 'Following' ? (
           <FollowingLivesList onOpenDrops={onOpenDrops} />
         ) : null}
+        <LiveAuctionScreen
+          open={activeLiveReel != null}
+          onClose={() => setActiveLiveReel(null)}
+          seller={
+            activeLiveReel
+              ? {
+                  handle: activeLiveReel.seller.replace(/^@/, ''),
+                  avatarUrl: reelPosterUrl(activeLiveReel) ?? '',
+                  rating: 5.0,
+                  badge: '<1d',
+                  backgroundUrl: reelPosterUrl(activeLiveReel),
+                }
+              : undefined
+          }
+        />
       </div>
     )
   }

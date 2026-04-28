@@ -1,0 +1,214 @@
+/**
+ * Bid Slip drawer — sports-bet style confirmation before a bid lands. Bottom
+ * sheet that slides up over the auction room, shows the bet preview (item,
+ * current bid, your bid, savings, payment method), and confirms with optimistic
+ * update.
+ */
+
+import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
+import {
+  formatAud,
+  placeBid,
+  useAuction,
+  useWalletBalanceCents,
+} from '../../lib/data'
+
+type Props = {
+  open: boolean
+  auctionId: string | null
+  bidAmountCents: number
+  onClose: () => void
+  onConfirmed?: (auctionId: string, amountCents: number) => void
+}
+
+export function BidSlipDrawer({ open, auctionId, bidAmountCents, onClose, onConfirmed }: Props) {
+  const auction = useAuction(auctionId ?? undefined)
+  const wallet = useWalletBalanceCents()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const savings = useMemo(() => {
+    if (!auction) return 0
+    return Math.max(0, auction.estValueCents - bidAmountCents)
+  }, [auction, bidAmountCents])
+
+  useEffect(() => {
+    if (!open) {
+      setBusy(false)
+      setError(null)
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [open])
+
+  if (!open || !auction) return null
+  if (typeof document === 'undefined') return null
+
+  const insufficient = wallet < bidAmountCents
+  const validBid = bidAmountCents > auction.currentBidCents
+
+  const onConfirm = async () => {
+    if (busy) return
+    setError(null)
+    if (!validBid) {
+      setError('Bid must be higher than the current bid.')
+      return
+    }
+    if (insufficient) {
+      setError('Add funds to your wallet to place this bid.')
+      return
+    }
+    setBusy(true)
+    try {
+      const ok = placeBid(auction.id, bidAmountCents)
+      if (!ok) {
+        setError('Could not place bid. Try again.')
+        return
+      }
+      onConfirmed?.(auction.id, bidAmountCents)
+      onClose()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9990] flex flex-col justify-end bg-[#1c1528]/40 backdrop-blur-[3px]"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="fetch-bidslip-title"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 z-0 cursor-default border-0 bg-transparent p-0"
+        aria-label="Cancel bid"
+        onClick={onClose}
+      />
+      <div
+        className="relative z-[1] mx-auto w-full max-w-[min(100%,430px)] rounded-t-[1.5rem] bg-white px-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] pt-2 shadow-[0_-22px_60px_-30px_rgba(15,7,40,0.5)] ring-1 ring-zinc-200 animate-[fetch-galactic-sheet-up_0.3s_cubic-bezier(0.22,1,0.36,1)_both]"
+      >
+        <span aria-hidden className="mx-auto mb-2 block h-1 w-10 rounded-full bg-zinc-200" />
+
+        <header className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#4c1d95]">
+              Bid slip
+            </p>
+            <h2 id="fetch-bidslip-title" className="text-[20px] font-black tracking-tight text-zinc-900">
+              Confirm your bid
+            </h2>
+          </div>
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-violet-100 text-[#4c1d95]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M13 2L4.5 14H12l-1 8 8.5-12H12l1-8z" />
+            </svg>
+          </span>
+        </header>
+
+        <div className="mt-3 flex items-center gap-3 rounded-2xl bg-zinc-50 p-2 ring-1 ring-zinc-200">
+          <span className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-200">
+            <img
+              src={auction.imageUrls[0]}
+              alt=""
+              className="h-full w-full object-cover"
+              draggable={false}
+            />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="line-clamp-1 text-[14px] font-black tracking-tight text-zinc-900">
+              {auction.title}
+            </p>
+            <p className="line-clamp-1 text-[11px] font-semibold text-zinc-500">
+              {auction.subtitle ?? 'Live auction'}
+            </p>
+          </div>
+        </div>
+
+        <dl className="mt-3 grid grid-cols-2 gap-2 text-[12px] font-semibold text-zinc-700">
+          <div className="rounded-2xl bg-zinc-50 p-3 ring-1 ring-zinc-200">
+            <dt className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-400">
+              Current bid
+            </dt>
+            <dd className="mt-1 text-[15px] font-black tabular-nums text-zinc-900">
+              {formatAud(auction.currentBidCents)}
+            </dd>
+          </div>
+          <div className="rounded-2xl bg-violet-50 p-3 ring-1 ring-violet-200">
+            <dt className="text-[10px] font-black uppercase tracking-[0.12em] text-[#4c1d95]/75">
+              Your bid
+            </dt>
+            <dd className="mt-1 text-[18px] font-black tabular-nums text-[#4c1d95]">
+              {formatAud(bidAmountCents)}
+            </dd>
+          </div>
+          <div className="rounded-2xl bg-emerald-50 p-3 ring-1 ring-emerald-200">
+            <dt className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700/85">
+              Potential save
+            </dt>
+            <dd className="mt-1 text-[15px] font-black tabular-nums text-emerald-700">
+              {formatAud(savings)}
+            </dd>
+          </div>
+          <div className="rounded-2xl bg-zinc-50 p-3 ring-1 ring-zinc-200">
+            <dt className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-400">
+              Wallet balance
+            </dt>
+            <dd className="mt-1 text-[15px] font-black tabular-nums text-zinc-900">
+              {formatAud(wallet)}
+            </dd>
+          </div>
+        </dl>
+
+        <div className="mt-3 flex items-center justify-between rounded-2xl bg-white p-3 ring-1 ring-zinc-200">
+          <div className="flex items-center gap-2">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-zinc-900 text-white">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <rect x="2" y="5" width="20" height="14" rx="3" stroke="currentColor" strokeWidth="2" />
+                <path d="M2 10h20" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </span>
+            <div>
+              <p className="text-[12px] font-black text-zinc-900">Visa ··4242</p>
+              <p className="text-[10.5px] font-semibold text-zinc-500">Default · charged on win</p>
+            </div>
+          </div>
+          <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#4c1d95]">
+            Change
+          </span>
+        </div>
+
+        {error ? (
+          <p className="mt-3 text-center text-[12px] font-semibold text-red-600">{error}</p>
+        ) : null}
+
+        <div className="mt-3 grid gap-2">
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={busy || !validBid}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] py-3.5 text-[15px] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(76,29,149,0.55),inset_0_1px_0_rgba(255,255,255,0.25)] ring-1 ring-white/10 transition-transform active:scale-[0.985] disabled:opacity-60"
+          >
+            {busy ? 'Placing bid…' : `Confirm ${formatAud(bidAmountCents)} bid`}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full rounded-full bg-white py-2 text-[12.5px] font-bold text-zinc-500 hover:text-zinc-900"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}

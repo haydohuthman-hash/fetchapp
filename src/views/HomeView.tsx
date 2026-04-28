@@ -51,7 +51,9 @@ import {
   markEntryAddressOnboardingComplete,
   skipEntryAddressSheetForSession,
 } from '../lib/fetchEntryAddressOnboarding'
-import { FETCH_GEMS_PATH } from '../lib/fetchRoutes'
+import { FETCH_GEMS_PATH, FETCH_MARKETPLACE_LIST_PATH } from '../lib/fetchRoutes'
+import { PokiesGame } from '../components/bidwars/PokiesGame'
+import { SellOptionsSheet } from '../components/bidwars/SellOptionsSheet'
 import { ServicesExploreHomePanel } from '../components/ServicesExploreHomePanel'
 import { HomeShellChatHubPage } from '../components/HomeShellChatHubPage'
 import { HomeShellMarketplacePage } from '../components/HomeShellMarketplacePage'
@@ -64,10 +66,20 @@ import type {
 import type { MarketplacePeerBrowseFilter } from '../components/ExploreBrowseBanner'
 import { HomeShellReelsPage } from '../components/HomeShellReelsPage'
 import type { DropsCommerceTarget } from '../lib/drops/types'
-import {
-  EXPLORE_CATEGORY_ROW_PROMOS,
-  type ExploreCategoryRowPromoDef,
-} from '../lib/exploreCategoryRowPromos'
+import type { ExploreCategoryRowPromoDef } from '../lib/exploreCategoryRowPromos'
+import searchRealBabyKidsUrl from '../assets/search-categories-real/baby-kids.png'
+import searchRealCoinsMoneyUrl from '../assets/search-categories-real/coins-money.png'
+import searchRealElectronicsUrl from '../assets/search-categories-real/electronics.png'
+import searchRealEventsUrl from '../assets/search-categories-real/events.png'
+import searchRealJewelleryWatchesUrl from '../assets/search-categories-real/jewellery-watches.png'
+import searchRealMensFashionUrl from '../assets/search-categories-real/mens-fashion.png'
+import searchRealRocksCrystalsUrl from '../assets/search-categories-real/rocks-crystals.png'
+import searchRealSneakersShoesUrl from '../assets/search-categories-real/sneakers-shoes.png'
+import searchRealSportsCardsUrl from '../assets/search-categories-real/sports-cards.png'
+import searchRealToysHobbiesUrl from '../assets/search-categories-real/toys-hobbies.png'
+import searchRealTradingCardGamesUrl from '../assets/search-categories-real/trading-card-games.png'
+import searchRealWomensFashionUrl from '../assets/search-categories-real/womens-fashion.png'
+import { BidwarsHub, type BidwarsHubView } from './bidwars'
 import { BookingCompletionSummary } from '../components/booking/BookingCompletionSummary'
 import { TripSheetCard } from '../components/booking/TripSheetCard'
 import { TripDriverStatusStrip } from '../components/booking/TripDriverStatusStrip'
@@ -607,161 +619,108 @@ function HomeCartFab({
   )
 }
 
-/** Line icons for Search → Categories grid (replaces product photos). */
-function SearchCategoryGridIcon({ categoryId }: { categoryId: string }) {
-  const cn = 'h-11 w-11 shrink-0 text-zinc-200'
-  switch (categoryId) {
-    case 'explore-all':
-      return (
-        <svg className={cn} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" strokeWidth="1.75" />
-          <path d="M16 16l4.5 4.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-        </svg>
-      )
-    case 'sofa':
-      return (
-        <svg className={cn} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-            d="M5 11h14v3H5v-3zM5 11V9a2 2 0 012-2h10a2 2 0 012 2v2M4 14v3M20 14v3"
-          />
-        </svg>
-      )
-    case 'fridge':
-      return (
-        <svg className={cn} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <rect x="7" y="3" width="10" height="18" rx="1.5" stroke="currentColor" strokeWidth="1.75" />
-          <path d="M7 9h10" stroke="currentColor" strokeWidth="1.75" />
-          <circle cx="15" cy="6" r="1" fill="currentColor" />
-        </svg>
-      )
-    case 'washer':
-      return (
-        <svg className={cn} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" strokeWidth="1.75" />
-          <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth="1.75" />
-          <circle cx="12" cy="12" r="1.25" fill="currentColor" />
-        </svg>
-      )
-    case 'bedframe':
-      return (
-        <svg className={cn} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-            d="M4 14h16v4H4zM4 14l3-4h10l3 4M7 18v3M17 18v3"
-          />
-        </svg>
-      )
-    case 'mattress':
-      return (
-        <svg className={cn} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" d="M3 13h18v5H3zM3 13l2-3h14l2 3" />
-        </svg>
-      )
-    case 'dining':
-      return (
-        <svg className={cn} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <ellipse cx="12" cy="8" rx="8" ry="2.5" stroke="currentColor" strokeWidth="1.75" />
-          <path
-            d="M4 8v8M20 8v8M8 10.5V20M16 10.5V20"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-          />
-        </svg>
-      )
-    case 'tech':
-      return (
-        <svg className={cn} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <rect x="4" y="5" width="16" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.75" />
-          <path d="M2 18h20" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-        </svg>
-      )
-    case 'sports':
-      return (
-        <svg className={cn} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <circle cx="6.5" cy="16.5" r="3.5" stroke="currentColor" strokeWidth="1.75" />
-          <circle cx="17.5" cy="16.5" r="3.5" stroke="currentColor" strokeWidth="1.75" />
-          <path
-            d="M9.5 16.5l2-6h4l2 6M11.5 10.5L10 6h4"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )
-    case 'outdoor':
-      return (
-        <svg className={cn} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path
-            d="M12 3v2M12 19v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M3 12h2M19 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-          />
-          <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.75" />
-        </svg>
-      )
-    case 'fashion':
-      return (
-        <svg className={cn} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-            d="M6 4l3 3h6l3-3 2 4-2 14H6L4 8l2-4z"
-          />
-        </svg>
-      )
-    case 'freebies':
-      return (
-        <svg className={cn} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-            d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16zM3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"
-          />
-        </svg>
-      )
-    default:
-      return (
-        <svg className={cn} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" strokeWidth="1.75" />
-          <path d="M4 9h16M9 4v16" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-        </svg>
-      )
-  }
-}
-
-/** Curated quick-filter chips for the redesigned Search hero (handoff routes to Marketplace browse). */
-const SEARCH_QUICK_CHIPS: Array<{
-  id: string
-  label: string
-  handoff: MarketplacePeerBrowseFilter
-}> = [
-  { id: 'free', label: 'Free near me', handoff: { category: 'free' } },
-  { id: 'under-50', label: 'Under $50', handoff: { maxPriceCents: 5_000 } },
-  { id: 'pickup-today', label: 'Pickup today', handoff: { q: 'pickup' } },
-  { id: 'streetwear', label: 'Streetwear', handoff: { category: 'fashion', q: 'streetwear' } },
-  { id: 'electronics', label: 'Electronics', handoff: { category: 'electronics' } },
-  { id: 'outdoor', label: 'Outdoor living', handoff: { category: 'furniture', q: 'outdoor' } },
+const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
+  {
+    id: 'events',
+    title: 'Events',
+    subline: 'Shows, drops & local live events',
+    imageSrc: searchRealEventsUrl,
+    handoff: { q: 'events' },
+    ariaLabel: 'Browse events',
+  },
+  {
+    id: 'mens-fashion',
+    title: "Men's Fashion",
+    subline: 'Jackets, streetwear & fits',
+    imageSrc: searchRealMensFashionUrl,
+    handoff: { category: 'fashion', q: "men's fashion" },
+    ariaLabel: "Browse men's fashion",
+  },
+  {
+    id: 'trading-card-games',
+    title: 'Trading Card Games',
+    subline: 'Packs, slabs & grails',
+    imageSrc: searchRealTradingCardGamesUrl,
+    handoff: { q: 'trading card games' },
+    ariaLabel: 'Browse trading card games',
+  },
+  {
+    id: 'jewellery-watches',
+    title: 'Jewellery & Watches',
+    subline: 'Rings, watches & gems',
+    imageSrc: searchRealJewelleryWatchesUrl,
+    handoff: { category: 'fashion', q: 'jewellery watches' },
+    ariaLabel: 'Browse jewellery and watches',
+  },
+  {
+    id: 'sneakers-shoes',
+    title: 'Sneakers & Shoes',
+    subline: 'Drops, retros & daily pairs',
+    imageSrc: searchRealSneakersShoesUrl,
+    handoff: { category: 'fashion', q: 'sneakers shoes' },
+    ariaLabel: 'Browse sneakers and shoes',
+  },
+  {
+    id: 'electronics',
+    title: 'Electronics',
+    subline: 'Audio, tech & gear',
+    imageSrc: searchRealElectronicsUrl,
+    handoff: { category: 'electronics' },
+    ariaLabel: 'Browse electronics',
+  },
+  {
+    id: 'womens-fashion',
+    title: "Women's Fashion",
+    subline: 'Bags, clothes & vintage',
+    imageSrc: searchRealWomensFashionUrl,
+    handoff: { category: 'fashion', q: "women's fashion" },
+    ariaLabel: "Browse women's fashion",
+  },
+  {
+    id: 'baby-kids',
+    title: 'Baby & Kids',
+    subline: 'Kidswear, toys & essentials',
+    imageSrc: searchRealBabyKidsUrl,
+    handoff: { q: 'baby kids' },
+    ariaLabel: 'Browse baby and kids',
+  },
+  {
+    id: 'rocks-crystals',
+    title: 'Rocks & Crystals',
+    subline: 'Specimens, gems & minerals',
+    imageSrc: searchRealRocksCrystalsUrl,
+    handoff: { q: 'crystals rocks' },
+    ariaLabel: 'Browse rocks and crystals',
+  },
+  {
+    id: 'toys-hobbies',
+    title: 'Toys & Hobbies',
+    subline: 'Figures, collectibles & fun',
+    imageSrc: searchRealToysHobbiesUrl,
+    handoff: { q: 'toys hobbies' },
+    ariaLabel: 'Browse toys and hobbies',
+  },
+  {
+    id: 'coins-money',
+    title: 'Coins & Money',
+    subline: 'Bullion, notes & rare finds',
+    imageSrc: searchRealCoinsMoneyUrl,
+    handoff: { q: 'coins money' },
+    ariaLabel: 'Browse coins and money',
+  },
+  {
+    id: 'sports-cards',
+    title: 'Sports Cards',
+    subline: 'Breaks, slabs & singles',
+    imageSrc: searchRealSportsCardsUrl,
+    handoff: { category: 'sports', q: 'sports cards' },
+    ariaLabel: 'Browse sports cards',
+  },
 ]
 
-/** Trending picks (subset of category promos shown as photo cards). */
-const SEARCH_TRENDING_IDS = ['fridge', 'sofa', 'tech', 'bedframe', 'fashion', 'sports'] as const
-
 /** Search category tiles — deterministic counts until wired to analytics. */
-function searchCategoryTileViewerCount(tileIndex: number, scope: 'local' | 'global'): number {
+function searchCategoryTileViewerCount(tileIndex: number): number {
   const base = 16 + ((tileIndex * 47 + 11) % 156)
-  if (scope === 'local') {
-    return Math.max(6, base - 18 - ((tileIndex * 13) % 12))
-  }
   return base + ((tileIndex * 7) % 8)
 }
 
@@ -850,6 +809,9 @@ export default function HomeView({
   const [homeShellTab, setHomeShellTab] = useState<HomeShellTab>('services')
   const [entryAddressSheetOpen, setEntryAddressSheetOpen] = useState(false)
   const [headerCoinBalance, setHeaderCoinBalance] = useState(0)
+  const [bidwarsHubView, setBidwarsHubView] = useState<BidwarsHubView | null>(null)
+  const [sellSheetOpen, setSellSheetOpen] = useState(false)
+  const [pokiesOpen, setPokiesOpen] = useState(false)
   useEffect(() => {
     try {
       const rawListing = sessionStorage.getItem('fetch.pendingPeerListingHandoff')
@@ -899,17 +861,12 @@ export default function HomeView({
     homeShellTab === 'chat' ||
     homeShellTab === 'search'
   const searchCategoryTiles = useMemo(
-    () =>
-      Array.from({ length: 15 }, (_, i) => {
-        const base = EXPLORE_CATEGORY_ROW_PROMOS[i % EXPLORE_CATEGORY_ROW_PROMOS.length]
-        return { ...base, _k: `${base.id}-${i}` }
-      }),
+    () => WHATNOT_SEARCH_CATEGORIES.map((item) => ({ ...item, _k: item.id })),
     [],
   )
   const [messagesUnread, setMessagesUnread] = useState({ listing: 0, support: 0, total: 0 })
   const [pendingSearchCategoryChoice, setPendingSearchCategoryChoice] =
     useState<ExploreCategoryRowPromoDef | null>(null)
-  const [searchCategoriesScope, setSearchCategoriesScope] = useState<'global' | 'local'>('global')
   const [searchQuery, setSearchQuery] = useState('')
   const [pendingChatThreadId, setPendingChatThreadId] = useState<string | null>(null)
   const [chatBrainHandoff, setChatBrainHandoff] = useState<{ listingId: string; title: string } | null>(
@@ -5183,14 +5140,10 @@ export default function HomeView({
           ]
             .filter(Boolean)
             .join(' ')}
-          aria-label="Sell — open drops"
+          aria-label="Sell — list an item or go live"
           onClick={() => {
             bumpInteraction()
-            if (homeShellTab === 'reels') {
-              setDropsNavRepeatTick((n) => n + 1)
-            } else {
-              onHomeShellTabChange('reels')
-            }
+            setSellSheetOpen(true)
           }}
         >
           <span className="fetch-home-intent-bottom-nav__fab-stack">
@@ -5218,11 +5171,10 @@ export default function HomeView({
           ]
             .filter(Boolean)
             .join(' ')}
-          aria-label="Inbox"
-          aria-current={homeShellTab === 'chat' ? 'page' : undefined}
+          aria-label="Activity"
           onClick={() => {
             bumpInteraction()
-            onHomeShellTabChange('chat')
+            setBidwarsHubView({ kind: 'activity' })
           }}
         >
           <span className="fetch-home-intent-bottom-nav__icon-inner">
@@ -5778,6 +5730,7 @@ export default function HomeView({
           onOpenChat={onAppTopChat}
           onOpenGems={onAppTopOpenGems}
           onOpenCart={onAppTopOpenCart}
+          onOpenPokies={() => setPokiesOpen(true)}
           coinBalance={headerCoinBalance}
           variant={servicesExploreFullPage ? 'brand-minimal' : 'wallet'}
           onOpenSearch={onAppTopOpenSearch}
@@ -5793,6 +5746,43 @@ export default function HomeView({
         onConfirm={onEntryAddressSheetConfirm}
         onDismiss={onEntryAddressSheetDismiss}
         onCoinTick={setHeaderCoinBalance}
+      />
+
+      <BidwarsHub
+        open={bidwarsHubView != null}
+        initial={bidwarsHubView ?? { kind: 'activity' }}
+        onClose={() => setBidwarsHubView(null)}
+        onOpenChat={() => {
+          setBidwarsHubView(null)
+          onHomeShellTabChange('chat')
+        }}
+      />
+
+      <SellOptionsSheet
+        open={sellSheetOpen}
+        onClose={() => setSellSheetOpen(false)}
+        onSellItem={() => navigate(FETCH_MARKETPLACE_LIST_PATH)}
+        onGoLive={() => {
+          if (homeShellTab === 'reels') {
+            setDropsNavRepeatTick((n) => n + 1)
+          } else {
+            onHomeShellTabChange('reels')
+          }
+        }}
+      />
+
+      <PokiesGame
+        open={pokiesOpen}
+        onClose={() => setPokiesOpen(false)}
+        onEarnTask={(goal) => {
+          setPokiesOpen(false)
+          if (goal === 'list') {
+            navigate(FETCH_MARKETPLACE_LIST_PATH)
+          } else if (goal === 'live') {
+            if (homeShellTab !== 'reels') onHomeShellTabChange('reels')
+          }
+          // 'streak' / 'invite' just dismiss for now — there's no dedicated route yet.
+        }}
       />
 
       {homeBrainFlow === 'tunnel' ? (
@@ -7927,11 +7917,11 @@ export default function HomeView({
             role="main"
             aria-label="Search"
           >
-            {/* Hero search: sticky input + quick filter chip rail */}
+            {/* Search header: just the search bar */}
             <form
               role="search"
               aria-label="Search fetchit"
-              className="fetch-home-search-hero sticky top-0 z-[2] -mx-3 mb-2 px-3 pb-2.5 pt-1"
+              className="fetch-home-search-hero sticky top-0 z-[2] -mx-3 mb-3 px-3 pb-3 pt-1"
               onSubmit={(e) => {
                 e.preventDefault()
                 bumpInteraction()
@@ -7978,165 +7968,51 @@ export default function HomeView({
                       />
                     </svg>
                   </button>
-                ) : (
-                  <span className="select-none rounded-full bg-violet-100/70 px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#4c1d95]">
-                    ⌘K
-                  </span>
-                )}
+                ) : null}
               </label>
-
-              <div
-                className="-mx-3 mt-2.5 flex gap-2 overflow-x-auto px-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                role="list"
-                aria-label="Quick searches"
-              >
-                {SEARCH_QUICK_CHIPS.map((chip) => (
-                  <button
-                    key={chip.id}
-                    type="button"
-                    role="listitem"
-                    onClick={() => {
-                      bumpInteraction()
-                      openExploreMarketplaceBrowse({
-                        ...chip.handoff,
-                        scope: searchCategoriesScope,
-                      })
-                    }}
-                    className="fetch-home-search-chip shrink-0 rounded-full px-3 py-1.5 text-[12px] font-bold leading-none tracking-tight transition-transform active:scale-[0.98]"
-                  >
-                    {chip.label}
-                  </button>
-                ))}
-              </div>
             </form>
 
             <div className="fetch-home-search-categories__scroll min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pr-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {/* Trending now: photo cards (real imagery) */}
-              <section className="mt-1 min-w-0" aria-label="Trending now">
+              <section className="mt-1 min-w-0 pb-2" aria-label="Search categories">
                 <div className="mb-2 flex items-baseline justify-between px-0.5">
-                  <h2 className="text-[15px] font-extrabold tracking-tight text-zinc-900">Trending now</h2>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      bumpInteraction()
-                      onHomeShellTabChange('marketplace')
-                    }}
-                    className="text-[12px] font-bold text-[#4c1d95] active:opacity-70"
-                  >
-                    See all
-                  </button>
-                </div>
-                <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {SEARCH_TRENDING_IDS.map((trendId, trendIndex) => {
-                    const item = EXPLORE_CATEGORY_ROW_PROMOS.find((p) => p.id === trendId)
-                    if (!item) return null
-                    const viewers = searchCategoryTileViewerCount(trendIndex, searchCategoriesScope)
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          bumpInteraction()
-                          setPendingSearchCategoryChoice(item)
-                        }}
-                        aria-label={`${item.ariaLabel} · ${viewers} viewers`}
-                        className="fetch-home-search-trending__card relative flex w-[8.4rem] shrink-0 flex-col gap-1.5 overflow-hidden rounded-2xl p-1.5 text-left transition-transform active:scale-[0.98]"
-                      >
-                        <span className="relative block h-[6.4rem] w-full overflow-hidden rounded-xl bg-violet-100">
-                          <img
-                            src={item.imageSrc}
-                            alt=""
-                            loading="lazy"
-                            draggable={false}
-                            className="h-full w-full object-cover"
-                          />
-                          <span className="pointer-events-none absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 rounded-md bg-black/65 px-1.5 py-0.5 shadow-sm backdrop-blur-[2px]">
-                            <span className="relative flex h-1.5 w-1.5 shrink-0" aria-hidden>
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-70" />
-                              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]" />
-                            </span>
-                            <span className="text-[10px] font-extrabold leading-none tracking-tight text-white/95">
-                              {viewers}
-                            </span>
-                          </span>
-                        </span>
-                        <span className="line-clamp-1 px-0.5 text-[12.5px] font-extrabold leading-tight tracking-tight text-zinc-900">
-                          {item.title}
-                        </span>
-                        <span className="line-clamp-1 px-0.5 text-[10.5px] font-medium leading-tight text-zinc-500">
-                          {item.subline}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </section>
-
-              {/* Browse all: scope toggle + 3-col grid */}
-              <section className="mt-5 min-w-0 pb-2" aria-label="Search categories">
-                <div className="mb-2 flex items-baseline justify-between px-0.5">
-                  <h2 className="text-[15px] font-extrabold tracking-tight text-zinc-900">Browse all</h2>
+                  <h2 className="text-[15px] font-extrabold tracking-tight text-zinc-900">Categories</h2>
                   <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
                     {searchCategoryTiles.length} categories
                   </span>
                 </div>
-                <div
-                  className="mb-3 flex w-full gap-0.5 rounded-2xl border border-violet-200/60 bg-white p-[5px] shadow-sm"
-                  role="tablist"
-                  aria-label="Show listings globally or near you"
-                >
-                  {(['global', 'local'] as const).map((s) => {
-                    const selected = searchCategoriesScope === s
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        role="tab"
-                        aria-selected={selected}
-                        className={[
-                          'min-w-0 flex-1 rounded-xl px-2 py-2 text-center text-[11px] font-semibold leading-tight tracking-[-0.02em]',
-                          'transition-[color,background-color,box-shadow,transform] duration-200 ease-out sm:text-[12px]',
-                          selected
-                            ? 'relative z-[1] bg-[#4c1d95] text-white shadow-sm'
-                            : 'bg-transparent text-zinc-400 hover:text-zinc-600 active:scale-[0.98]',
-                        ].join(' ')}
-                        onClick={() => {
-                          bumpInteraction()
-                          setSearchCategoriesScope(s)
-                        }}
-                      >
-                        {s === 'global' ? 'Global' : 'Near me'}
-                      </button>
-                    )
-                  })}
-                </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-x-3 gap-y-4">
                   {searchCategoryTiles.map((item, tileIndex) => {
-                    const viewers = searchCategoryTileViewerCount(tileIndex, searchCategoriesScope)
+                    const viewers = searchCategoryTileViewerCount(tileIndex)
                     return (
                       <button
                         key={item._k}
                         type="button"
-                        className="fetch-home-search-categories__tile relative flex min-h-[10.6rem] min-w-0 flex-col items-center gap-2 rounded-2xl p-2 pt-2.5 text-center transition-transform active:scale-[0.98]"
+                        className="group flex min-w-0 flex-col items-center rounded-2xl bg-transparent p-0 text-center transition-transform active:scale-[0.98]"
                         onClick={() => {
                           bumpInteraction()
                           setPendingSearchCategoryChoice(item)
                         }}
                         aria-label={`${item.ariaLabel} · ${viewers} people viewing now`}
                       >
-                        <span className="fetch-home-search-categories__icon-well flex h-[5.4rem] w-full shrink-0 items-center justify-center rounded-xl">
-                          <SearchCategoryGridIcon categoryId={item.id} />
-                        </span>
-                        <span className="line-clamp-2 mt-0.5 min-h-[2.4rem] px-0.5 text-[11.5px] font-extrabold leading-tight tracking-tight text-zinc-900">
-                          {item.title}
-                        </span>
-                        <span className="pointer-events-none absolute bottom-1.5 left-1.5 z-[1] flex items-center gap-1 rounded-md bg-black/65 px-1.5 py-0.5 shadow-sm backdrop-blur-[2px]">
-                          <span className="relative flex h-1.5 w-1.5 shrink-0" aria-hidden>
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-70" />
-                            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]" />
+                        <span className="relative flex aspect-square w-full flex-col items-center justify-end overflow-hidden rounded-[1.35rem] bg-zinc-100 px-1.5 pb-1.5 pt-2 shadow-sm ring-1 ring-zinc-200/80">
+                          <span className="line-clamp-2 min-h-[2.15em] w-full px-0.5 text-center text-[11px] font-black leading-tight tracking-tight text-zinc-900">
+                            {item.title}
                           </span>
-                          <span className="max-w-[4.5rem] truncate text-left text-[9.5px] font-extrabold leading-none tracking-tight text-white/95">
-                            {viewers} live
+                          <img
+                            src={item.imageSrc}
+                            alt=""
+                            loading="lazy"
+                            draggable={false}
+                            className="min-h-0 flex-1 w-[90%] object-contain transition-transform duration-200 group-active:scale-95"
+                          />
+                          <span className="pointer-events-none absolute bottom-1 left-1 flex items-center gap-1 rounded-full bg-black/65 px-1.5 py-0.5 shadow-sm backdrop-blur-[2px]">
+                            <span className="relative flex h-1.5 w-1.5 shrink-0" aria-hidden>
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-70" />
+                              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]" />
+                            </span>
+                            <span className="max-w-[3rem] truncate text-left text-[9px] font-black leading-none text-white/95">
+                              {viewers}
+                            </span>
                           </span>
                         </span>
                       </button>
@@ -8177,10 +8053,7 @@ export default function HomeView({
                   <button
                     type="button"
                     onClick={() => {
-                      openExploreMarketplaceBrowse({
-                        ...pendingSearchCategoryChoice.handoff,
-                        scope: searchCategoriesScope,
-                      })
+                      openExploreMarketplaceBrowse(pendingSearchCategoryChoice.handoff)
                       setPendingSearchCategoryChoice(null)
                     }}
                     className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-[15px] font-semibold text-zinc-900 transition-colors active:bg-violet-50"

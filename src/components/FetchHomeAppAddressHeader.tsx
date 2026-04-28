@@ -25,6 +25,30 @@ function SearchNavGlyph({ className = '' }: { className?: string }) {
   )
 }
 
+/**
+ * Pokies (slot machine) glyph — small playful icon used in the header to
+ * launch the Pokies overlay.
+ */
+function PokiesGlyph({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="3" y="5" width="18" height="14" rx="3" fill="#4c1d95" stroke="#4c1d95" strokeWidth="0.6" />
+      <rect x="5" y="8" width="14" height="6" rx="1.6" fill="#fff" />
+      <path d="M9 8v6M14 8v6" stroke="#4c1d95" strokeWidth="0.9" />
+      <circle cx="6.6" cy="11" r="0.9" fill="#f59e0b" />
+      <circle cx="11.5" cy="11" r="0.9" fill="#22c55e" />
+      <circle cx="16.4" cy="11" r="0.9" fill="#fb7185" />
+      <path d="M3 16h18" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" />
+      <path
+        d="M19.5 13.4c.7-.4 1.3.5.6 1.1l-1 .9.3 1.4c.2.7-.6 1-1 .5l-.9-.9-1.3.4c-.7.2-1-.7-.4-1l1-.7-.2-1.4c-.1-.7.7-1 1.1-.4z"
+        fill="#fde047"
+        stroke="#92400e"
+        strokeWidth="0.4"
+      />
+    </svg>
+  )
+}
+
 function CartGlyph({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -153,6 +177,7 @@ export function FetchHomeAppAddressHeader({
   onOpenGems,
   onOpenCart,
   onOpenWallet,
+  onOpenPokies,
   coinBalance = 0,
   variant = 'wallet',
   onOpenSearch,
@@ -164,6 +189,8 @@ export function FetchHomeAppAddressHeader({
   onOpenCart: () => void
   /** Opens wallet / credits (defaults to account). */
   onOpenWallet?: () => void
+  /** Opens the Pokies (slot machine) game overlay. */
+  onOpenPokies?: () => void
   /** Visible coin count next to the coin icon. */
   coinBalance?: number
   /**
@@ -220,6 +247,16 @@ export function FetchHomeAppAddressHeader({
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-0.5 self-center">
+              {onOpenPokies ? (
+                <button
+                  type="button"
+                  onClick={onOpenPokies}
+                  className={`${brandMinimalIconBtn} fetch-pokies-icon-btn`}
+                  aria-label="Open Pokies"
+                >
+                  <PokiesGlyph />
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={onOpenSearch}
@@ -245,6 +282,16 @@ export function FetchHomeAppAddressHeader({
 
   const controlsRight = (
     <div className="flex shrink-0 items-center gap-2 self-center">
+      {onOpenPokies ? (
+        <button
+          type="button"
+          onClick={onOpenPokies}
+          className={`${headerChromeIconBtn} fetch-pokies-icon-btn`}
+          aria-label="Open Pokies"
+        >
+          <PokiesGlyph />
+        </button>
+      ) : null}
       <button type="button" onClick={onOpenAccount} className={headerChromeIconBtn} aria-label="Account">
         <AccountNavIconFilled className="block h-[18px] w-[18px]" active={false} />
       </button>

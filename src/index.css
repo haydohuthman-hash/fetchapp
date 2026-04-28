@@ -13079,189 +13079,6 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
 }
 
 /* ============================================================================
-   Daily Streak splash — animated phase flow (see FetchDailyStreakSplash.tsx).
-   Card pop, flame pulse, number bounce, confetti, chest bounce, coin geyser,
-   radial rays, claim-button pulse, and ladder slide-in.
-   ============================================================================ */
-
-.fetch-streak-splash {
-  isolation: isolate;
-}
-
-.fetch-streak-splash__backdrop {
-  background: radial-gradient(
-      120% 80% at 50% 30%,
-      rgba(124, 58, 237, 0.28) 0%,
-      rgba(30, 10, 60, 0.72) 55%,
-      rgba(15, 5, 35, 0.88) 100%
-    ),
-    rgba(15, 5, 35, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  animation: fetch-streak-backdrop-in 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes fetch-streak-backdrop-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* ---------- Card pop-in ---------- */
-.fetch-streak-anim-pop {
-  animation: fetch-streak-card-pop 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  transform-origin: 50% 60%;
-}
-
-@keyframes fetch-streak-card-pop {
-  0% { opacity: 0; transform: scale(0.8) translateY(28px); }
-  55% { opacity: 1; transform: scale(1.035) translateY(-2px); }
-  80% { transform: scale(0.99) translateY(0); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-/* ---------- Ladder slide-in ---------- */
-.fetch-streak-anim-ladder-in {
-  animation: fetch-streak-ladder-in 520ms cubic-bezier(0.22, 1, 0.36, 1) 160ms both;
-}
-
-@keyframes fetch-streak-ladder-in {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ---------- Flame ---------- */
-.fetch-streak-flame__svg {
-  animation: fetch-streak-flame-pulse 1.5s ease-in-out infinite;
-  transform-origin: 50% 70%;
-  filter: drop-shadow(0 10px 22px rgba(249, 115, 22, 0.55));
-}
-
-.fetch-streak-flame__number {
-  animation: fetch-streak-number-pop 680ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-@keyframes fetch-streak-flame-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
-}
-
-@keyframes fetch-streak-number-pop {
-  0% { opacity: 0; transform: scale(0.35); }
-  55% { opacity: 1; transform: scale(1.28); }
-  78% { transform: scale(0.96); }
-  100% { transform: scale(1); }
-}
-
-/* ---------- Mascot orb ---------- */
-.fetch-streak-mascot-orb__ring {
-  animation: fetch-streak-ring-spin 14s linear infinite;
-}
-
-@keyframes fetch-streak-ring-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* ---------- Radial reward rays ---------- */
-.fetch-streak-rays {
-  background: repeating-conic-gradient(
-    from 0deg at 50% 55%,
-    rgba(255, 255, 255, 0.16) 0deg 9deg,
-    rgba(255, 255, 255, 0) 9deg 24deg
-  );
-  opacity: 0.55;
-  animation: fetch-streak-rays-spin 22s linear infinite;
-}
-
-@keyframes fetch-streak-rays-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* ---------- Treasure chest bounce ---------- */
-.fetch-streak-chest__svg {
-  animation: fetch-streak-chest-bounce 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
-  transform-origin: 50% 95%;
-  filter: drop-shadow(0 16px 24px rgba(0, 0, 0, 0.35));
-}
-
-@keyframes fetch-streak-chest-bounce {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-10px) scale(1.03); }
-}
-
-/* ---------- Claim button pulse ---------- */
-.fetch-streak-anim-claim-pulse {
-  animation: fetch-streak-claim-pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes fetch-streak-claim-pulse {
-  0%, 100% {
-    box-shadow:
-      0 0 0 0 rgba(255, 255, 255, 0.55),
-      0 12px 28px -12px rgba(76, 29, 149, 0.65);
-  }
-  50% {
-    box-shadow:
-      0 0 0 10px rgba(255, 255, 255, 0),
-      0 16px 34px -12px rgba(76, 29, 149, 0.9);
-  }
-}
-
-.fetch-streak-claim-btn {
-  text-shadow: none;
-}
-
-/* ---------- Confetti ---------- */
-.fetch-streak-confetti {
-  top: -16vh;
-  transform: rotate(var(--rot, 0deg));
-  animation-name: fetch-streak-confetti-fall;
-  animation-timing-function: cubic-bezier(0.25, 0.1, 0.35, 1);
-  animation-iteration-count: 1;
-  animation-fill-mode: both;
-  will-change: transform, opacity;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-}
-
-@keyframes fetch-streak-confetti-fall {
-  0% { opacity: 0; transform: translate3d(0, -20vh, 0) rotate(0deg); }
-  6% { opacity: 1; }
-  100% { opacity: 0; transform: translate3d(var(--dx, 0), 110vh, 0) rotate(780deg); }
-}
-
-/* ---------- Coin geyser (reward claimed) ---------- */
-.fetch-streak-coin-rise {
-  bottom: 10%;
-  animation-name: fetch-streak-coin-rise;
-  animation-timing-function: cubic-bezier(0.22, 0.58, 0.35, 1);
-  animation-fill-mode: both;
-  will-change: transform, opacity;
-}
-
-@keyframes fetch-streak-coin-rise {
-  0% { opacity: 0; transform: translate3d(0, 30px, 0) scale(0.5); }
-  18% { opacity: 1; }
-  100% { opacity: 0; transform: translate3d(var(--dx, 0), -70vh, 0) scale(1.15); }
-}
-
-/* Respect reduced motion preferences */
-@media (prefers-reduced-motion: reduce) {
-  .fetch-streak-anim-pop,
-  .fetch-streak-anim-ladder-in,
-  .fetch-streak-flame__svg,
-  .fetch-streak-flame__number,
-  .fetch-streak-mascot-orb__ring,
-  .fetch-streak-rays,
-  .fetch-streak-chest__svg,
-  .fetch-streak-anim-claim-pulse,
-  .fetch-streak-confetti,
-  .fetch-streak-coin-rise {
-    animation: none !important;
-  }
-}
-
-/* ============================================================================
    Bid Wars — starting-soon heading + battle overlay (countdown + live stage).
    ============================================================================ */
 
@@ -13594,6 +13411,861 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   .fetch-auth-cta {
     transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1),
       box-shadow 220ms ease;
+  }
+}
+
+/* Whatnot-style live overlay: floating gift hearts */
+@keyframes fetch-live-gift-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.7);
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-280px) scale(1.1);
+  }
+}
+
+.fetch-live-gift-rise {
+  animation: fetch-live-gift-rise 1.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
+}
+
+/* Pokies game: reel spin + chassis shake while spinning */
+@keyframes fetch-pokies-reel-spin {
+  0% {
+    transform: translateY(-12%) scale(0.95);
+    filter: blur(1.5px);
+  }
+  50% {
+    transform: translateY(0) scale(1);
+    filter: blur(0.5px);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.fetch-pokies-reel-spin {
+  animation: fetch-pokies-reel-spin 0.16s linear infinite;
+}
+
+@keyframes fetch-pokies-shake {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-1px) rotate(-0.25deg);
+  }
+  75% {
+    transform: translateX(1px) rotate(0.25deg);
+  }
+}
+
+.fetch-pokies-shake {
+  animation: fetch-pokies-shake 0.12s ease-in-out infinite;
+}
+
+@keyframes fetch-pokies-lever-pull {
+  0% {
+    transform: rotate(0deg) translateY(0);
+  }
+  35%,
+  70% {
+    transform: rotate(18deg) translateY(18px);
+  }
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+}
+
+.fetch-pokies-lever-pull {
+  animation: fetch-pokies-lever-pull 1.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fetch-pokies-spin-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 34px rgba(168, 85, 247, 0.75),
+      0 0 0 0 rgba(255, 214, 0, 0.36),
+      inset 0 2px 0 rgba(255, 255, 255, 0.28);
+  }
+  50% {
+    box-shadow:
+      0 0 46px rgba(168, 85, 247, 0.95),
+      0 0 0 8px rgba(255, 214, 0, 0),
+      inset 0 2px 0 rgba(255, 255, 255, 0.36);
+  }
+}
+
+.fetch-pokies-spin-btn {
+  animation: fetch-pokies-spin-glow 1.65s ease-in-out infinite;
+}
+
+@keyframes fetch-pokies-win-confetti {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0) rotate(0deg) scale(0.75);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--dx, 0), 180px, 0) rotate(620deg) scale(1.05);
+  }
+}
+
+.fetch-pokies-win-confetti {
+  animation: fetch-pokies-win-confetti 1.35s cubic-bezier(0.22, 0.85, 0.35, 1) forwards;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.6);
+}
+
+@keyframes fetch-pokies-prize-pop {
+  0% {
+    transform: scale(0.94) translateY(8px);
+    filter: brightness(1);
+  }
+  45% {
+    transform: scale(1.035) translateY(-2px);
+    filter: brightness(1.35);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    filter: brightness(1);
+  }
+}
+
+.fetch-pokies-prize-pop {
+  animation: fetch-pokies-prize-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Premium purple CTA shimmer on the Bid Wars home banner. */
+@keyframes fetch-bidwar-premium-cta-shimmer {
+  0% {
+    transform: translateX(0) skewX(-18deg);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.75;
+  }
+  56% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translateX(360%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+.fetch-bidwar-premium-cta-shimmer {
+  animation: fetch-bidwar-premium-cta-shimmer 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+/* Live auction screen — pulses, glow, chat slide-in, confetti fall */
+@keyframes fetch-live-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.5; }
+}
+.fetch-live-pulse {
+  animation: fetch-live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes fetch-live-chat-in {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.fetch-live-chat-in {
+  animation: fetch-live-chat-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fetch-bid-slider-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px rgba(255, 214, 0, 0.55),
+      0 0 24px rgba(255, 214, 0, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(255, 214, 0, 0.85),
+      0 0 36px rgba(255, 214, 0, 0.55);
+  }
+}
+.fetch-bid-slider-track {
+  border: 2px solid rgba(255, 214, 0, 0.85);
+  background: rgba(0, 0, 0, 0.45);
+  animation: fetch-bid-slider-glow 1.8s ease-in-out infinite;
+}
+
+.fetch-bid-slider-fill {
+  background: linear-gradient(90deg, #FFE658 0%, #FFD600 60%, #f59e0b 100%);
+}
+
+@keyframes fetch-live-confetti {
+  0% { opacity: 0; transform: translate3d(0, -12vh, 0) rotate(0deg); }
+  10% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(var(--dx, 0), 60vh, 0) rotate(540deg); }
+}
+.fetch-live-confetti {
+  animation: fetch-live-confetti 2.4s cubic-bezier(0.22, 0.85, 0.35, 1) forwards;
+}
+
+@keyframes fetch-pokies-icon-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(251, 191, 36, 0);
+  }
+}
+
+.fetch-pokies-icon-btn {
+  animation: fetch-pokies-icon-pulse 2.4s ease-in-out infinite;
+}
+
+/* ===========================================================
+   Fetchit Prize Spin — neon arcade tile machine
+   =========================================================== */
+
+/* Floating particles drifting upward in the background. */
+@keyframes fetch-pokies-particle-drift {
+  0% { transform: translateY(110vh) scale(1); opacity: 0; }
+  10% { opacity: 0.85; }
+  90% { opacity: 0.85; }
+  100% { transform: translateY(-12vh) scale(1.1); opacity: 0; }
+}
+.fetch-pokies-particle {
+  bottom: -10px;
+  filter: blur(0.5px);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.75);
+  animation-name: fetch-pokies-particle-drift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Jackpot confetti rain. */
+@keyframes fetch-pokies-jackpot-confetti {
+  0% { transform: translateY(-20vh) rotate(0deg); opacity: 0; }
+  12% { opacity: 1; }
+  100% { transform: translateY(120vh) rotate(720deg); opacity: 0; }
+}
+.fetch-pokies-jackpot-confetti {
+  animation: fetch-pokies-jackpot-confetti 2.6s cubic-bezier(0.25, 0.7, 0.35, 1) both;
+  box-shadow: 0 0 8px rgba(255, 214, 0, 0.6);
+}
+
+/* Idle subtle shine on every tile, looping but offset by tile index. */
+@keyframes fetch-pokies-tile-shine-sweep {
+  0% { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
+  10% { opacity: 0.55; }
+  60% { opacity: 0.55; }
+  100% { transform: translateX(220%) skewX(-18deg); opacity: 0; }
+}
+.fetch-pokies-tile-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.35) 45%, transparent 80%);
+  mix-blend-mode: screen;
+  animation: fetch-pokies-tile-shine-sweep 4.6s ease-in-out infinite;
+  animation-delay: inherit;
+}
+
+/* Tile in spinning state — flicker. */
+@keyframes fetch-pokies-tile-flicker {
+  0%, 100% { filter: brightness(0.7) saturate(0.85); }
+  50% { filter: brightness(1.4) saturate(1.2); }
+}
+.fetch-pokies-tile--spin {
+  animation: fetch-pokies-tile-flicker 0.18s steps(2, end) infinite;
+}
+
+/* Highlighted tile while reel is sweeping — glow + scale. */
+.fetch-pokies-tile--highlight {
+  transform: scale(1.06);
+  filter: brightness(1.4) saturate(1.2);
+  box-shadow:
+    0 0 24px rgba(168, 85, 247, 0.85),
+    inset 0 0 16px rgba(168, 85, 247, 0.45);
+  z-index: 2;
+}
+
+/* Winning tile zoom + pulse. */
+@keyframes fetch-pokies-tile-win {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.18); }
+  60% { transform: scale(1.04); }
+  100% { transform: scale(1.12); }
+}
+.fetch-pokies-tile--win {
+  animation: fetch-pokies-tile-win 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  z-index: 3;
+  box-shadow:
+    0 0 28px rgba(168, 85, 247, 0.9),
+    0 0 0 3px rgba(168, 85, 247, 0.55),
+    inset 0 0 18px rgba(168, 85, 247, 0.55);
+}
+
+/* Rare/jackpot tile glow. */
+.fetch-pokies-tile--rare {
+  box-shadow:
+    0 0 16px rgba(255, 214, 0, 0.4),
+    inset 0 0 14px rgba(255, 214, 0, 0.18);
+}
+.fetch-pokies-tile--jackpot {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 214, 0, 0.18) 0%, transparent 65%),
+    linear-gradient(180deg, #2a1a0d, #110611) !important;
+  box-shadow:
+    0 0 24px rgba(255, 214, 0, 0.55),
+    0 0 0 1px rgba(255, 214, 0, 0.45),
+    inset 0 0 16px rgba(255, 214, 0, 0.25);
+  animation: fetch-pokies-tile-jackpot-glow 2.4s ease-in-out infinite;
+}
+@keyframes fetch-pokies-tile-jackpot-glow {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  50% { filter: brightness(1.35) saturate(1.4); }
+}
+.fetch-pokies-tile--win.fetch-pokies-tile--jackpot {
+  animation:
+    fetch-pokies-tile-win 0.7s cubic-bezier(0.22, 1, 0.36, 1) both,
+    fetch-pokies-tile-jackpot-glow 1.6s ease-in-out infinite 0.7s;
+}
+
+/* Machine chassis: subtle sway while spinning, stronger on jackpot reveal. */
+@keyframes fetch-pokies-machine-sway {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px) rotate(-0.25deg); }
+  75% { transform: translateX(2px) rotate(0.25deg); }
+}
+.fetch-pokies-machine--spin {
+  animation: fetch-pokies-machine-sway 0.18s ease-in-out infinite;
+}
+
+@keyframes fetch-pokies-machine-win-pulse {
+  0%, 100% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.45), inset 0 0 22px rgba(168, 85, 247, 0.22); }
+  50% { box-shadow: 0 0 56px rgba(168, 85, 247, 0.95), inset 0 0 32px rgba(168, 85, 247, 0.45); }
+}
+.fetch-pokies-machine--win {
+  animation: fetch-pokies-machine-win-pulse 1.05s ease-in-out 2;
+}
+
+@keyframes fetch-pokies-machine-jackpot-fire {
+  0%, 100% {
+    box-shadow:
+      0 0 50px rgba(255, 214, 0, 0.85),
+      0 0 80px rgba(168, 85, 247, 0.65),
+      inset 0 0 32px rgba(255, 214, 0, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 90px rgba(255, 214, 0, 1),
+      0 0 130px rgba(168, 85, 247, 0.85),
+      inset 0 0 40px rgba(255, 214, 0, 0.65);
+  }
+}
+.fetch-pokies-machine--jackpot {
+  animation: fetch-pokies-machine-jackpot-fire 0.9s ease-in-out infinite;
+  border-color: rgba(255, 214, 0, 0.85) !important;
+}
+
+/* Charge ring around the inner reel area. */
+@keyframes fetch-pokies-charge-fill {
+  0% {
+    border-color: rgba(168, 85, 247, 0.0);
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.45);
+  }
+  60% {
+    border-color: rgba(168, 85, 247, 0.85);
+    box-shadow: 0 0 22px rgba(168, 85, 247, 0.65);
+  }
+  100% {
+    border-color: rgba(255, 214, 0, 0.95);
+    box-shadow: 0 0 28px rgba(255, 214, 0, 0.85);
+  }
+}
+.fetch-pokies-charge-ring {
+  border: 2px solid transparent;
+  pointer-events: none;
+  opacity: 0;
+}
+.fetch-pokies-charge-ring--active {
+  opacity: 1;
+  animation: fetch-pokies-charge-fill 0.6s cubic-bezier(0.4, 0.6, 0.4, 1) both;
+}
+
+/* Mascot moods. Translate is applied via Tailwind (-translate-x-1/2 + -translate-y-[68%]).
+   These animations layer a small additional Y bob via translate3d so they don't fight the base
+   translate-x/y utilities. */
+@keyframes fetch-pokies-mascot-idle {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -4px; }
+}
+@keyframes fetch-pokies-mascot-excited {
+  0%, 100% { translate: 0 0; rotate: -1deg; }
+  50% { translate: 0 -3px; rotate: 1deg; }
+}
+@keyframes fetch-pokies-mascot-cheer {
+  0% { translate: 0 0; scale: 1; rotate: 0; }
+  30% { translate: 0 -10px; scale: 1.08; rotate: -4deg; }
+  60% { translate: 0 -10px; scale: 1.08; rotate: 4deg; }
+  100% { translate: 0 0; scale: 1; rotate: 0; }
+}
+@keyframes fetch-pokies-mascot-shock {
+  0% { translate: 0 0; scale: 1; }
+  20% { translate: 0 -16px; scale: 1.18; }
+  60% { translate: 0 4px; scale: 0.96; }
+  100% { translate: 0 0; scale: 1.04; }
+}
+.fetch-pokies-mascot {
+  animation: fetch-pokies-mascot-idle 3.4s ease-in-out infinite;
+}
+.fetch-pokies-mascot--excited {
+  animation: fetch-pokies-mascot-excited 0.9s ease-in-out infinite;
+}
+.fetch-pokies-mascot--cheer {
+  animation: fetch-pokies-mascot-cheer 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.fetch-pokies-mascot--shock {
+  animation: fetch-pokies-mascot-shock 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  filter: drop-shadow(0 0 22px rgba(255, 214, 0, 0.85));
+}
+
+/* Speech bubble — gentle wobble. */
+@keyframes fetch-pokies-bubble-pulse {
+  0%, 100% { transform: translate(-68%, 0) scale(1); }
+  50% { transform: translate(-68%, -2px) scale(1.04); }
+}
+.fetch-pokies-bubble {
+  animation: fetch-pokies-bubble-pulse 2.4s ease-in-out infinite;
+}
+
+/* Spin button — charging state intensifies the breathing glow. */
+.fetch-pokies-spin-btn--charging {
+  animation: fetch-pokies-spin-glow 0.45s ease-in-out infinite;
+  filter: brightness(1.15) saturate(1.2);
+}
+
+/* Auto spin rotating refresh icon. */
+@keyframes fetch-pokies-auto-spin {
+  0% { transform: rotate(0); }
+  100% { transform: rotate(360deg); }
+}
+.fetch-pokies-auto-icon {
+  display: inline-block;
+  animation: fetch-pokies-auto-spin 2s linear infinite;
+}
+
+/* +N gems / +N free spins floater above the machine. */
+@keyframes fetch-pokies-floater-rise {
+  0% { opacity: 0; transform: translateY(8px) scale(0.9); }
+  20% { opacity: 1; transform: translateY(-4px) scale(1.05); }
+  80% { opacity: 1; transform: translateY(-32px) scale(1); }
+  100% { opacity: 0; transform: translateY(-44px) scale(0.95); }
+}
+.fetch-pokies-floater {
+  animation: fetch-pokies-floater-rise 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Popular tag pulse on gem packs. */
+@keyframes fetch-pokies-tag-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+.fetch-pokies-tag-pulse {
+  animation: fetch-pokies-tag-pulse 1.4s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(255, 214, 0, 0.45);
+}
+
+/* Win modal jackpot shake. */
+@keyframes fetch-pokies-win-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px) rotate(-0.5deg); }
+  75% { transform: translateX(4px) rotate(0.5deg); }
+}
+.fetch-pokies-win-shake {
+  animation: fetch-pokies-win-shake 0.18s ease-in-out 6;
+}
+
+/* Win modal icon zoom-in. */
+@keyframes fetch-pokies-win-icon-pop {
+  0% { transform: scale(0.4) rotate(-12deg); opacity: 0; }
+  60% { transform: scale(1.18) rotate(6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.fetch-pokies-win-icon {
+  animation: fetch-pokies-win-icon-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ---------- Pokie reel rolling ---------- */
+
+/* Continuous rolling shake while spinning — the strip's own translate handles
+   the long deceleration, and this overlay adds a faint arcade rumble. */
+@keyframes fetch-pokies-reel-rumble {
+  0%, 100% { filter: blur(0.3px) brightness(1); }
+  50% { filter: blur(0.6px) brightness(1.15); }
+}
+.fetch-pokies-reel-strip--spin {
+  animation: fetch-pokies-reel-rumble 0.18s linear infinite;
+}
+
+/* Cell variants — gold halo for rare/jackpot, payline-win bump. */
+.fetch-pokies-cell--rare img {
+  filter: drop-shadow(0 0 14px rgba(255, 214, 0, 0.6));
+}
+.fetch-pokies-cell--jackpot img {
+  filter: drop-shadow(0 0 22px rgba(255, 214, 0, 0.95));
+  animation: fetch-pokies-cell-jackpot-pulse 1.4s ease-in-out infinite;
+}
+.fetch-pokies-cell--jackpot-win img {
+  animation: fetch-pokies-cell-jackpot-pulse 0.55s ease-in-out infinite;
+  filter: drop-shadow(0 0 28px rgba(255, 214, 0, 1)) drop-shadow(0 0 12px rgba(168, 85, 247, 0.85));
+}
+
+/* Claim pulse — green glow nudging the user to tap when a task is ready. */
+@keyframes fetch-pokies-claim-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5), 0 0 12px rgba(16, 185, 129, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0), 0 0 18px rgba(16, 185, 129, 0.65);
+  }
+}
+.fetch-pokies-claim-pulse {
+  animation: fetch-pokies-claim-pulse 1.6s ease-in-out infinite;
+}
+@keyframes fetch-pokies-cell-jackpot-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+@keyframes fetch-pokies-cell-win-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.18); }
+  100% { transform: scale(1.08); }
+}
+.fetch-pokies-cell--win {
+  animation: fetch-pokies-cell-win-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Payline highlight across the middle row */
+.fetch-pokies-payline {
+  border-top: 2px solid rgba(255, 214, 0, 0.0);
+  border-bottom: 2px solid rgba(255, 214, 0, 0.0);
+  background: linear-gradient(180deg, rgba(255, 214, 0, 0) 0%, rgba(255, 214, 0, 0.06) 50%, rgba(255, 214, 0, 0) 100%);
+  transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+.fetch-pokies-payline--win {
+  border-color: rgba(255, 214, 0, 0.85);
+  background: linear-gradient(180deg, rgba(255, 214, 0, 0) 0%, rgba(255, 214, 0, 0.18) 50%, rgba(255, 214, 0, 0) 100%);
+  box-shadow:
+    0 0 18px rgba(255, 214, 0, 0.55),
+    inset 0 0 22px rgba(255, 214, 0, 0.25);
+  animation: fetch-pokies-payline-flash 1.2s ease-in-out infinite;
+}
+@keyframes fetch-pokies-payline-flash {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+.fetch-pokies-payline--jackpot {
+  border-color: rgba(255, 214, 0, 1);
+  background: linear-gradient(180deg, rgba(255, 214, 0, 0) 0%, rgba(255, 214, 0, 0.34) 50%, rgba(255, 214, 0, 0) 100%);
+  box-shadow:
+    0 0 30px rgba(255, 214, 0, 0.85),
+    inset 0 0 30px rgba(255, 214, 0, 0.45);
+}
+
+/* Side arrow lights when winning */
+@keyframes fetch-pokies-arrow-flash {
+  0%, 100% { background: #8b5cf6; box-shadow: 0 0 18px rgba(168, 85, 247, 0.9); }
+  50% { background: #FFD600; box-shadow: 0 0 22px rgba(255, 214, 0, 0.95); color: #1c0e2c; }
+}
+.fetch-pokies-arrow--win {
+  animation: fetch-pokies-arrow-flash 0.5s steps(2, end) infinite;
+}
+
+/* Cabinet bulbs running around the machine */
+.fetch-pokies-bulbs {
+  background:
+    radial-gradient(circle at 8% 6%, rgba(255, 214, 0, 0.85) 0 3px, transparent 4px),
+    radial-gradient(circle at 28% 6%, rgba(255, 214, 0, 0.85) 0 3px, transparent 4px),
+    radial-gradient(circle at 50% 6%, rgba(255, 214, 0, 0.85) 0 3px, transparent 4px),
+    radial-gradient(circle at 72% 6%, rgba(255, 214, 0, 0.85) 0 3px, transparent 4px),
+    radial-gradient(circle at 92% 6%, rgba(255, 214, 0, 0.85) 0 3px, transparent 4px),
+    radial-gradient(circle at 8% 94%, rgba(168, 85, 247, 0.85) 0 3px, transparent 4px),
+    radial-gradient(circle at 28% 94%, rgba(168, 85, 247, 0.85) 0 3px, transparent 4px),
+    radial-gradient(circle at 50% 94%, rgba(168, 85, 247, 0.85) 0 3px, transparent 4px),
+    radial-gradient(circle at 72% 94%, rgba(168, 85, 247, 0.85) 0 3px, transparent 4px),
+    radial-gradient(circle at 92% 94%, rgba(168, 85, 247, 0.85) 0 3px, transparent 4px);
+  filter: blur(0.5px);
+  animation: fetch-pokies-bulbs-blink 0.95s ease-in-out infinite alternate;
+  opacity: 0.85;
+}
+@keyframes fetch-pokies-bulbs-blink {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* ---------- Pokies upgrades: streak / meter / ticker / banner / flash ---------- */
+
+@keyframes fetch-pokies-streak-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 214, 0, 0.45), 0 0 14px rgba(255, 214, 0, 0.45); }
+  50% { box-shadow: 0 0 0 5px rgba(255, 214, 0, 0), 0 0 22px rgba(255, 214, 0, 0.65); }
+}
+.fetch-pokies-streak-chip {
+  animation: fetch-pokies-streak-glow 1.4s ease-in-out infinite;
+}
+
+.fetch-pokies-meter-fill {
+  background: linear-gradient(90deg, #a855f7 0%, #c084fc 45%, #fbbf24 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.35);
+}
+@keyframes fetch-pokies-meter-ready-pulse {
+  0%, 100% {
+    background: linear-gradient(90deg, #fde047 0%, #fbbf24 50%, #fde047 100%);
+    box-shadow: 0 0 14px rgba(255, 214, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    background: linear-gradient(90deg, #fef08a 0%, #fde047 50%, #fef08a 100%);
+    box-shadow: 0 0 24px rgba(255, 214, 0, 1), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+}
+.fetch-pokies-meter-fill--ready {
+  animation: fetch-pokies-meter-ready-pulse 0.9s ease-in-out infinite;
+}
+
+/* Recent winners marquee scroll */
+@keyframes fetch-pokies-ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.fetch-pokies-ticker {
+  animation: fetch-pokies-ticker-scroll 28s linear infinite;
+  width: max-content;
+  min-width: 200%;
+}
+
+/* Cinematic reveal banner — slides down + fades, with gentle bounce. */
+@keyframes fetch-pokies-reveal-banner {
+  0% { opacity: 0; transform: translate(-50%, -120%) scale(0.6); }
+  18% { opacity: 1; transform: translate(-50%, 0) scale(1.1); }
+  35% { transform: translate(-50%, 0) scale(0.97); }
+  55% { transform: translate(-50%, 0) scale(1.04); }
+  80% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -10%) scale(1); }
+}
+.fetch-pokies-reveal-banner {
+  animation: fetch-pokies-reveal-banner 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Full-screen jackpot flash — white pulse → gold drift → fade. */
+@keyframes fetch-pokies-jackpot-flash {
+  0% { background: rgba(255, 255, 255, 0); opacity: 0; }
+  10% { background: rgba(255, 255, 255, 0.85); opacity: 1; }
+  35% { background: rgba(255, 214, 0, 0.55); opacity: 1; }
+  100% { background: rgba(255, 214, 0, 0); opacity: 0; }
+}
+.fetch-pokies-jackpot-flash {
+  background: rgba(255, 255, 255, 0);
+  animation: fetch-pokies-jackpot-flash 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  mix-blend-mode: screen;
+}
+
+/* Reel strip — beef up the motion blur during the spin. */
+.fetch-pokies-reel-strip--spin {
+  animation: fetch-pokies-reel-rumble 0.18s linear infinite;
+  filter: blur(0.9px) brightness(1.2) saturate(1.15);
+}
+
+/* Cabinet bulb hue cycle while the machine is spinning. */
+@keyframes fetch-pokies-bulbs-cycle {
+  0% { filter: blur(0.5px) hue-rotate(0deg); }
+  100% { filter: blur(0.5px) hue-rotate(360deg); }
+}
+.fetch-pokies-machine--spin .fetch-pokies-bulbs {
+  animation: fetch-pokies-bulbs-cycle 2.4s linear infinite, fetch-pokies-bulbs-blink 0.55s ease-in-out infinite alternate;
+}
+
+/* Physical cabinet lever */
+.fetch-pokies-lever {
+  width: 2.1rem;
+  height: 5.2rem;
+  transform-origin: 50% 0.45rem;
+  filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.7));
+}
+
+.fetch-pokies-lever__stem {
+  position: absolute;
+  left: 50%;
+  top: 0.75rem;
+  width: 0.52rem;
+  height: 3.5rem;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #d8b4fe 0%, #7c3aed 52%, #3b0764 100%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 0 18px rgba(168, 85, 247, 0.55);
+}
+
+.fetch-pokies-lever__knob {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 1.55rem;
+  height: 1.55rem;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.85), transparent 22%),
+    radial-gradient(circle at 50% 50%, #fde047 0%, #f59e0b 52%, #92400e 100%);
+  border: 1px solid rgba(253, 224, 71, 0.85);
+  box-shadow: 0 0 20px rgba(255, 214, 0, 0.8);
+}
+
+@keyframes fetch-pokies-lever-arc {
+  0%, 100% { rotate: 0deg; }
+  32% { rotate: 31deg; }
+  60% { rotate: 25deg; }
+}
+
+.fetch-pokies-lever--pull {
+  animation: fetch-pokies-lever-arc 0.82s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Energy inside the actual pokie box: scan beam + neon pulse, no extra banners. */
+.fetch-pokies-cabinet-energy {
+  opacity: 0;
+  background:
+    linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.14) 44%, transparent 58%),
+    radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.22), transparent 62%);
+  mix-blend-mode: screen;
+}
+
+@keyframes fetch-pokies-cabinet-energy-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-40%) skewX(-14deg);
+  }
+  18% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(40%) skewX(-14deg);
+  }
+}
+
+@keyframes fetch-pokies-cabinet-energy-win {
+  0%, 100% {
+    opacity: 0.45;
+    box-shadow: inset 0 0 18px rgba(168, 85, 247, 0.45);
+  }
+  50% {
+    opacity: 0.9;
+    box-shadow: inset 0 0 34px rgba(255, 214, 0, 0.45);
+  }
+}
+
+.fetch-pokies-cabinet-energy--spin {
+  animation: fetch-pokies-cabinet-energy-sweep 0.75s linear infinite;
+}
+
+.fetch-pokies-cabinet-energy--win {
+  animation: fetch-pokies-cabinet-energy-win 0.55s ease-in-out infinite;
+}
+
+@keyframes fetch-pokies-cabinet-sparks {
+  0%, 100% {
+    opacity: 0.35;
+    background-position: 8% 22%, 92% 18%, 15% 86%, 84% 82%, 50% 8%;
+  }
+  50% {
+    opacity: 0.95;
+    background-position: 14% 18%, 86% 24%, 22% 78%, 78% 88%, 56% 12%;
+  }
+}
+
+.fetch-pokies-cabinet-sparks {
+  background:
+    radial-gradient(circle, rgba(255, 214, 0, 0.95) 0 2px, transparent 3px),
+    radial-gradient(circle, rgba(168, 85, 247, 0.95) 0 2px, transparent 3px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px),
+    radial-gradient(circle, rgba(255, 214, 0, 0.85) 0 1px, transparent 2px),
+    radial-gradient(circle, rgba(168, 85, 247, 0.85) 0 1px, transparent 2px);
+  background-repeat: no-repeat;
+  background-size: 8px 8px, 8px 8px, 6px 6px, 6px 6px, 6px 6px;
+  animation: fetch-pokies-cabinet-sparks 1.2s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+
+@keyframes fetch-pokies-intro-sheet-up {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.fetch-pokies-intro-sheet {
+  animation: fetch-pokies-intro-sheet-up 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Reduce motion preference — disable arcade animations. */
+@media (prefers-reduced-motion: reduce) {
+  .fetch-pokies-particle,
+  .fetch-pokies-jackpot-confetti,
+  .fetch-pokies-tile-shine,
+  .fetch-pokies-tile--spin,
+  .fetch-pokies-machine--spin,
+  .fetch-pokies-machine--win,
+  .fetch-pokies-machine--jackpot,
+  .fetch-pokies-mascot,
+  .fetch-pokies-mascot--excited,
+  .fetch-pokies-mascot--cheer,
+  .fetch-pokies-mascot--shock,
+  .fetch-pokies-bubble,
+  .fetch-pokies-spin-btn,
+  .fetch-pokies-spin-btn--charging,
+  .fetch-pokies-auto-icon,
+  .fetch-pokies-floater,
+  .fetch-pokies-tag-pulse,
+  .fetch-pokies-win-shake,
+  .fetch-pokies-win-icon,
+  .fetch-pokies-tile--jackpot,
+  .fetch-pokies-reel-strip--spin,
+  .fetch-pokies-cell--jackpot img,
+  .fetch-pokies-cell--win,
+  .fetch-pokies-payline--win,
+  .fetch-pokies-arrow--win,
+  .fetch-pokies-bulbs,
+  .fetch-pokies-streak-chip,
+  .fetch-pokies-meter-fill--ready,
+  .fetch-pokies-ticker,
+  .fetch-pokies-reveal-banner,
+  .fetch-pokies-jackpot-flash,
+  .fetch-pokies-cabinet-energy--spin,
+  .fetch-pokies-cabinet-energy--win,
+  .fetch-pokies-lever--pull,
+  .fetch-pokies-cabinet-sparks,
+  .fetch-pokies-intro-sheet {
+    animation: none !important;
+  }
+  .fetch-pokies-reel-strip {
+    transition: none !important;
   }
 }
 

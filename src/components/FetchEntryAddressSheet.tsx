@@ -407,26 +407,26 @@ function FetchEntryAddressSheetShell({
           <>
             <div className="relative z-[5] flex shrink-0 justify-center pt-3 pb-2" aria-hidden>
               <span className="h-1 w-10 rounded-full bg-[#4c1d95]/18" />
-            </div>
+        </div>
             <div className={`relative z-[5] flex min-h-0 flex-1 flex-col gap-4 px-5 pb-5 pt-2 transition-[filter,opacity] duration-500 ${isCoinPhase ? 'pointer-events-none blur-[6px] opacity-60' : 'blur-0 opacity-100'}`}>
               <div className="space-y-2">
                 <h2 id="fetch-entry-address-heading" className="text-[1.45rem] font-black leading-tight tracking-tight text-zinc-950">
                   Where should we deliver?
-                </h2>
+            </h2>
                 <p className="text-[13px] font-medium leading-snug text-zinc-500">
                   Enter your address to <span className="font-extrabold text-[#4c1d95]">collect 100 coins</span>.
-                </p>
-              </div>
+            </p>
+          </div>
 
               {hasMapsKey && mapsReady ? (
-                <>
-                  <PlacesAddressAutocomplete
-                    apiKey={mapsApiKey}
-                    field="pickup"
-                    placeholder="Street address or suburb"
-                    autoFocus
+              <>
+                <PlacesAddressAutocomplete
+                  apiKey={mapsApiKey}
+                  field="pickup"
+                  placeholder="Street address or suburb"
+                  autoFocus
                     onResolved={(p) => { setPendingPlace(p); setAddressText(p.formattedAddress) }}
-                    suggestionsMountRef={suggestionsMountRef}
+                  suggestionsMountRef={suggestionsMountRef}
                     className={brandedInputClass}
                   />
                   <div ref={suggestionsMountRef} className="fetch-entry-address-suggestions min-h-0 shrink-0" />
@@ -445,14 +445,14 @@ function FetchEntryAddressSheetShell({
               {locError ? <p className="text-[12px] font-semibold text-red-600" role="alert">{locError}</p> : null}
 
               <div className="mt-auto flex flex-col gap-2.5 pt-2">
-                {hasMapsKey ? (
+            {hasMapsKey ? (
                   <button type="button" onClick={useCurrentLocation} disabled={!mapsReady || locBusy} className="self-start text-[12px] font-bold text-[#4c1d95]/75 underline decoration-[#4c1d95]/25 underline-offset-[3px] transition-colors hover:text-[#4c1d95] disabled:cursor-not-allowed disabled:opacity-35">
                     {locBusy ? 'Locating...' : 'Use current address'}
-                  </button>
-                ) : null}
+              </button>
+            ) : null}
 
-                <button
-                  type="button"
+            <button
+              type="button"
                   onClick={() => {
                     const place: ResolvedPlace = pendingPlace ?? { formattedAddress: addressText.trim(), placeId: '', coords: { lat: 0, lng: 0 } }
                     startCelebration(place)
@@ -470,13 +470,13 @@ function FetchEntryAddressSheetShell({
                     <path d="M12 8v13" stroke="currentColor" strokeWidth="1.8" />
                   </svg>
                   Collect coins
-                </button>
+            </button>
 
                 <button type="button" onClick={onDismiss} className="w-full py-1.5 text-center text-[12px] font-bold text-zinc-400 transition-colors hover:text-[#4c1d95]/75">
-                  Not now
-                </button>
-              </div>
-            </div>
+              Not now
+            </button>
+          </div>
+        </div>
           </>
         ) : null}
 
