@@ -25,10 +25,10 @@ export function HomeBiddingWarTopBanner({ onJoin }: HomeBiddingWarTopBannerProps
           draggable={false}
           className="pointer-events-none block w-full select-none"
         />
-        <span className="pointer-events-none absolute inset-x-3 bottom-3 z-[2] overflow-hidden rounded-full bg-gradient-to-b from-[#a855f7] via-[#7c3aed] to-[#4c1d95] px-4 py-3 text-center text-[14px] font-black uppercase tracking-[0.1em] text-white shadow-[0_14px_28px_-12px_rgba(76,29,149,0.75),inset_0_1px_0_rgba(255,255,255,0.28)] ring-1 ring-white/25">
+        <span className="pointer-events-none absolute inset-x-3 bottom-2.5 z-[2] overflow-hidden rounded-full border border-white/95 bg-gradient-to-b from-white via-[#faf8ff] to-[#e9e4f4] px-4 py-3 text-center text-[14px] font-black uppercase tracking-[0.1em] text-[#4c1d95] shadow-[inset_0_3px_6px_rgba(255,255,255,1),inset_0_-10px_24px_rgba(76,29,149,0.12),0_5px_0_0_#5b21b6,0_12px_28px_-10px_rgba(76,29,149,0.45)]">
           <span
             aria-hidden
-            className="fetch-bidwar-premium-cta-shimmer absolute inset-y-0 -left-[45%] w-[42%] skew-x-[-18deg] bg-white/35 blur-[1px]"
+            className="fetch-bidwar-premium-cta-shimmer absolute inset-y-0 -left-[45%] w-[42%] skew-x-[-18deg] bg-white/45 blur-[1px]"
           />
           <span className="relative z-[1] inline-flex items-center justify-center gap-2">
             Join the war

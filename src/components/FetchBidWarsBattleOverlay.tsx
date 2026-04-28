@@ -40,6 +40,7 @@ import {
   playUserJoined,
   playWinFanfare,
 } from '../lib/fetchBattleSounds'
+import { useIsTopBidderActive } from '../lib/data'
 
 /**
  * Remaining-seconds thresholds used to derive the overlay's pre-live stage
@@ -881,6 +882,7 @@ function LiveStage({
   const viewerIsTop = live.topBidderId === VIEWER_ID
   const topBidder = live.bidders.find((b) => b.id === live.topBidderId)
   const recentBids = bidLog.slice(0, 3)
+  const topBidderBadgeActive = useIsTopBidderActive()
 
   const stepDown = () =>
     setBidCustomCents(Math.max(live.currentBidCents + live.bidIncrementCents, bidCustomCents - live.bidIncrementCents))
@@ -1013,12 +1015,20 @@ function LiveStage({
             </p>
           </div>
           {topBidder && (
-            <p className="mb-1.5 text-[12px] font-semibold text-zinc-400">
+            <p className="mb-1.5 flex items-center gap-1 text-[12px] font-semibold text-zinc-400">
               by{' '}
               <span className="font-bold text-[#1c1528]">
                 {topBidder.id === VIEWER_ID ? 'You' : topBidder.name}
               </span>
-              {viewerIsTop ? ' 🔥🔥' : ''}
+              {viewerIsTop ? <span aria-hidden>🔥🔥</span> : null}
+              {topBidder.id === VIEWER_ID && topBidderBadgeActive ? (
+                <span
+                  aria-label="Top Bidder badge active"
+                  className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-amber-700 ring-1 ring-amber-300"
+                >
+                  <span aria-hidden>👑</span> Top
+                </span>
+              ) : null}
             </p>
           )}
           {/* Countdown */}

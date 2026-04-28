@@ -52,6 +52,7 @@ import {
   skipEntryAddressSheetForSession,
 } from '../lib/fetchEntryAddressOnboarding'
 import { FETCH_GEMS_PATH, FETCH_MARKETPLACE_LIST_PATH } from '../lib/fetchRoutes'
+import { ambientRegisterHome, ambientSetPokiesDuck } from '../lib/audio/fetchAmbientMusic'
 import { PokiesGame } from '../components/bidwars/PokiesGame'
 import { SellOptionsSheet } from '../components/bidwars/SellOptionsSheet'
 import { ServicesExploreHomePanel } from '../components/ServicesExploreHomePanel'
@@ -84,7 +85,12 @@ import { BookingCompletionSummary } from '../components/booking/BookingCompletio
 import { TripSheetCard } from '../components/booking/TripSheetCard'
 import { TripDriverStatusStrip } from '../components/booking/TripDriverStatusStrip'
 import { TripPriceEstimateStrip } from '../components/booking/TripPriceEstimateStrip'
-import { FetchEyesHomeIcon } from '../components/icons/HomeShellNavIcons'
+import {
+  FetchActivityNavIcon,
+  FetchEyesHomeIcon,
+  FetchProfileNavIcon,
+  FetchSearchNavIcon,
+} from '../components/icons/HomeShellNavIcons'
 import {
   postFetchAiChat,
   postFetchAiChatStream,
@@ -812,6 +818,16 @@ export default function HomeView({
   const [bidwarsHubView, setBidwarsHubView] = useState<BidwarsHubView | null>(null)
   const [sellSheetOpen, setSellSheetOpen] = useState(false)
   const [pokiesOpen, setPokiesOpen] = useState(false)
+
+  useEffect(() => {
+    ambientRegisterHome(1)
+    return () => ambientRegisterHome(-1)
+  }, [])
+
+  useEffect(() => {
+    ambientSetPokiesDuck(pokiesOpen)
+  }, [pokiesOpen])
+
   useEffect(() => {
     try {
       const rawListing = sessionStorage.getItem('fetch.pendingPeerListingHandoff')
@@ -5120,15 +5136,7 @@ export default function HomeView({
           }}
         >
           <span className="fetch-home-intent-bottom-nav__icon-inner">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden className="block">
-              <circle cx="10.75" cy="10.75" r="6.35" stroke="currentColor" strokeWidth="1.85" />
-              <path
-                d="M15.4 15.4 20.25 20.25"
-                stroke="currentColor"
-                strokeWidth="1.85"
-                strokeLinecap="round"
-              />
-            </svg>
+            <FetchSearchNavIcon className="block" active={homeShellTab === 'search'} />
             <span className="fetch-home-intent-bottom-nav__label">Search</span>
           </span>
         </button>
@@ -5178,20 +5186,7 @@ export default function HomeView({
           }}
         >
           <span className="fetch-home-intent-bottom-nav__icon-inner">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden className="block">
-              <path
-                d="M5.5 6.5h10.2c.9 0 1.6.7 1.6 1.6v4.2c0 .9-.7 1.6-1.6 1.6h-2.1l-2.4 1.6v-1.6H5.5c-.9 0-1.6-.7-1.6-1.6V8.1c0-.9.7-1.6 1.6-1.6Z"
-                stroke="currentColor"
-                strokeWidth="1.85"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M7.2 9.1h5.1M7.2 11.2h3.4"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-              />
-            </svg>
+            <FetchActivityNavIcon className="block" active={homeShellTab === 'chat'} />
             <span className="fetch-home-intent-bottom-nav__label">Activity</span>
           </span>
         </button>
@@ -5205,22 +5200,7 @@ export default function HomeView({
           }}
         >
           <span className="fetch-home-intent-bottom-nav__icon-inner">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden className="block">
-              <path
-                d="M12 11.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
-                stroke="currentColor"
-                strokeWidth="1.85"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M5.2 20.1v-.4c0-2.3 1.5-3.7 3.3-4.2 1.1-.3 2.2-.4 3.5-.4s2.4.1 3.5.4c1.8.5 3.3 1.8 3.3 4.1v.4"
-                stroke="currentColor"
-                strokeWidth="1.85"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <FetchProfileNavIcon className="block" active={false} />
             <span className="fetch-home-intent-bottom-nav__label">Profile</span>
           </span>
         </button>
@@ -5663,6 +5643,21 @@ export default function HomeView({
       !brainImmersive,
   )
 
+  /** Dedicated shell tabs need the bottom dock even before the main map card has finished bootstrapping. */
+  const shellTabNeedsPersistentDock =
+    homeShellTab === 'chat' ||
+    homeShellTab === 'search' ||
+    homeShellTab === 'reels' ||
+    homeShellTab === 'marketplace'
+
+  const showHomeShellBottomDock = Boolean(
+    homeBrainFlow == null && !brainImmersive && (cardVisible || shellTabNeedsPersistentDock),
+  )
+
+  /** Bidwars overlay is its own portal â€” dock renders there so it stays visible on Activity / hub profile. */
+  const homeShellDockBehindHub = showHomeShellBottomDock && bidwarsHubView == null ? homeShellFooterNav : null
+  const homeShellDockInsideHub = showHomeShellBottomDock ? homeShellFooterNav : undefined
+
   useEffect(() => {
     if (sheetGestureActive) return
     if (showPickup || showDropoff || showDualAddresses) {
@@ -5756,6 +5751,7 @@ export default function HomeView({
           setBidwarsHubView(null)
           onHomeShellTabChange('chat')
         }}
+        bottomNav={homeShellDockInsideHub}
       />
 
       <SellOptionsSheet
@@ -7859,7 +7855,7 @@ export default function HomeView({
       cardVisible &&
       homeBrainFlow == null ? (
         <HomeShellMarketplacePage
-          bottomNav={showHomeShellChrome ? homeShellFooterNav : null}
+          bottomNav={homeShellDockBehindHub}
           hardwareProducts={HARDWARE_PRODUCTS}
           cartQtyById={marketplaceCartQtyById}
           setCartQtyById={setMarketplaceCartQtyById}
@@ -7882,7 +7878,7 @@ export default function HomeView({
       cardVisible &&
       homeBrainFlow == null ? (
         <HomeShellReelsPage
-          bottomNav={showHomeShellChrome ? homeShellFooterNav : null}
+          bottomNav={homeShellDockBehindHub}
           onMenuAccount={onAccountNavigate}
           onCommerceAction={onDropsCommerceAction}
           dropsNavRepeatTick={dropsNavRepeatTick}
@@ -7896,7 +7892,7 @@ export default function HomeView({
       cardVisible &&
       homeBrainFlow == null ? (
         <HomeShellChatHubPage
-          bottomNav={showHomeShellChrome ? homeShellFooterNav : null}
+          bottomNav={homeShellDockBehindHub}
           onMenuAccount={onAccountNavigate}
           onChatWithField={onChatHubOpenField}
           initialThreadId={pendingChatThreadId}
@@ -8097,7 +8093,7 @@ export default function HomeView({
               </div>
             </div>
           ) : null}
-          {showHomeShellChrome ? homeShellFooterNav : null}
+          {homeShellDockBehindHub}
         </div>
       ) : null}
 

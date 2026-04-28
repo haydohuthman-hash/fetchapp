@@ -5,7 +5,12 @@
  */
 
 import { AppHeader } from '../../components/bidwars'
-import { formatAud, useAuction, useOrders } from '../../lib/data'
+import {
+  formatAud,
+  useAuction,
+  useOrders,
+  useShippingCreditCount,
+} from '../../lib/data'
 
 type Props = {
   onBack: () => void
@@ -24,6 +29,7 @@ export default function OrderConfirmedView({ onBack, onContinue }: Props) {
   const orders = useOrders()
   const order = orders[0] ?? null
   const auction = useAuction(order?.auctionId)
+  const shippingCreditsLeft = useShippingCreditCount()
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[min(100%,430px)] flex-col bg-[#f8f6fd]">
@@ -59,6 +65,17 @@ export default function OrderConfirmedView({ onBack, onContinue }: Props) {
                 Shipping
               </p>
               <p className="mt-1 text-[14px] font-bold text-zinc-900">{order.shippingAddress}</p>
+              {order.freeShippingApplied ? (
+                <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.08em] text-emerald-700 ring-1 ring-emerald-200">
+                  <span aria-hidden>🚚</span>
+                  Free shipping applied · Prize Spin
+                </p>
+              ) : shippingCreditsLeft > 0 ? (
+                <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.08em] text-amber-700 ring-1 ring-amber-200">
+                  <span aria-hidden>🚚</span>
+                  {shippingCreditsLeft} shipping credit{shippingCreditsLeft === 1 ? '' : 's'} ready for next win
+                </p>
+              ) : null}
               <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-zinc-50 p-3 ring-1 ring-zinc-200">
                 <div>
                   <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-zinc-400">

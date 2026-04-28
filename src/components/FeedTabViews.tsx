@@ -11,8 +11,27 @@ import {
   type LiveBidState,
   type StartingSoonBattle,
 } from '../lib/fetchBidWarsBattles'
+import { ambientRegisterBidWars } from '../lib/audio/fetchAmbientMusic'
 import { FetchBidWarsBattleOverlay } from './FetchBidWarsBattleOverlay'
 import { StartingSoonListingSheet } from './StartingSoonListingSheet'
+import { useIsAuctionBoosted } from '../lib/data'
+
+/**
+ * Small reusable "BOOSTED" badge shown on listings/auctions that were
+ * published while the user had an active Prize Spin "Seller Boost" perk.
+ */
+function BoostedBadge({ id }: { id: string }) {
+  const boosted = useIsAuctionBoosted(id)
+  if (!boosted) return null
+  return (
+    <span
+      className="absolute right-1 top-1 z-[3] inline-flex items-center gap-1 rounded-md bg-amber-400 px-1.5 py-[3px] text-[9.5px] font-black uppercase tracking-[0.08em] text-amber-950 shadow-[0_4px_12px_-4px_rgba(217,119,6,0.55)] ring-1 ring-amber-500"
+      aria-label="Seller boosted listing"
+    >
+      <span aria-hidden>⚡</span> Boosted
+    </span>
+  )
+}
 
 function reelPoster(r: DropReel): string | undefined {
   return r.imageUrls?.[0]?.trim() || r.poster?.trim() || undefined
@@ -60,6 +79,7 @@ function LiveNowCard({ reel, onOpen }: { reel: DropReel; onOpen: (reel: DropReel
           className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"
           aria-hidden
         />
+        <BoostedBadge id={reel.id} />
         <div className="pointer-events-none absolute left-1 top-1 z-[3] flex max-w-[calc(100%-0.5rem)] items-stretch overflow-hidden whitespace-nowrap rounded-md shadow-[0_6px_18px_-10px_rgba(76,29,149,0.6)] ring-1 ring-black/15">
           <span className="flex items-center bg-rose-600 px-1.5 py-[3px] text-[10px] font-extrabold uppercase leading-none tracking-wide text-white">
             Live
@@ -684,6 +704,8 @@ function StartingSoonRow({
           </span>
         )}
 
+        <BoostedBadge id={battle.id} />
+
         {photoCount > 1 && !isLive ? (
           <span className="absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight text-white backdrop-blur-sm">
             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -864,6 +886,13 @@ export const UpcomingLivesList = memo(function UpcomingLivesList() {
   const handleClose = useCallback(() => {
     setActiveBattleId(null)
   }, [])
+
+  useEffect(() => {
+    const on = activeBattleId != null
+    if (!on) return undefined
+    ambientRegisterBidWars(1)
+    return () => ambientRegisterBidWars(-1)
+  }, [activeBattleId])
 
   if (!hero) {
     return (

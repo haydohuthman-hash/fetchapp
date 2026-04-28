@@ -12,6 +12,7 @@ import {
   uploadListingImagesForCreate,
   withListingImages,
 } from '../lib/listingsApi'
+import { flagAuctionBoosted, useIsSellerBoosted } from '../lib/data'
 
 const LIST_CATEGORIES: { id: string; label: string }[] = [
   { id: 'general', label: 'General' },
@@ -38,6 +39,7 @@ export type FetchMarketplaceListingCreateViewProps = {
 export default function FetchMarketplaceListingCreateView({ onDone }: FetchMarketplaceListingCreateViewProps) {
   const [sp] = useSearchParams()
   const editId = (sp.get('edit') || '').trim()
+  const sellerBoostActive = useIsSellerBoosted()
 
   const [loading, setLoading] = useState(Boolean(editId))
   const [saving, setSaving] = useState(false)
@@ -181,6 +183,11 @@ export default function FetchMarketplaceListingCreateView({ onDone }: FetchMarke
         }
 
         await publishListing(id)
+        if (sellerBoostActive) {
+          // Flag the listing as boosted in the unified store so feed/profile
+          // surfaces can render the seller-boost badge for the active window.
+          flagAuctionBoosted(id)
+        }
         setFiles([])
         onDone()
       } catch (e) {
@@ -202,6 +209,7 @@ export default function FetchMarketplaceListingCreateView({ onDone }: FetchMarke
       locationLabel,
       onDone,
       priceAud,
+      sellerBoostActive,
       title,
     ],
   )
@@ -241,6 +249,13 @@ export default function FetchMarketplaceListingCreateView({ onDone }: FetchMarke
       {err ? (
         <p className="mb-4 rounded-xl border border-[#00ff6a]/35 bg-black/45 px-3 py-2 text-[12px] text-white">
           {err}
+        </p>
+      ) : null}
+
+      {sellerBoostActive ? (
+        <p className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.08em] text-amber-700 ring-1 ring-amber-300">
+          <span aria-hidden>📈</span>
+          Seller Boost active · this listing will be boosted
         </p>
       ) : null}
 

@@ -25,7 +25,7 @@ type FeedTab = (typeof FEED_TABS)[number]
 function FeedTabBar({ value, onChange }: { value: FeedTab; onChange: (t: FeedTab) => void }) {
   return (
     <nav
-      className="mt-[3.875rem] flex w-full items-stretch border-b border-zinc-200/70 px-0"
+      className="mt-[3.875rem] flex w-full items-stretch border-b border-zinc-300/90 px-0"
       role="tablist"
       aria-label="Feed"
     >
@@ -40,10 +40,10 @@ function FeedTabBar({ value, onChange }: { value: FeedTab; onChange: (t: FeedTab
             aria-selected={active}
             onClick={() => onChange(t)}
             className={[
-              'relative flex flex-1 items-center justify-center gap-1.5 border-0 bg-transparent px-1 pb-2.5 pt-3 text-[13px] font-semibold leading-none tracking-[-0.01em] transition-colors sm:text-sm',
+              'relative flex flex-1 items-center justify-center gap-1.5 border-0 bg-transparent px-1 pb-2.5 pt-3 text-[13px] font-bold leading-none tracking-[-0.01em] transition-colors sm:text-sm',
               active
                 ? 'text-[#4c1d95]'
-                : 'text-zinc-400 hover:text-zinc-600',
+                : 'text-[#1c1340] hover:text-[#4c1d95] active:text-[#3b1670]',
             ].join(' ')}
           >
             {isLive ? (
@@ -54,7 +54,7 @@ function FeedTabBar({ value, onChange }: { value: FeedTab; onChange: (t: FeedTab
             ) : null}
             {t}
             {active ? (
-              <span className="absolute inset-x-0 bottom-0 h-[2.5px] rounded-full bg-[#4c1d95]" />
+              <span className="absolute inset-x-0 bottom-0 h-[3px] rounded-full bg-[#4c1d95] shadow-[0_-1px_8px_rgba(76,29,149,0.35)]" />
             ) : null}
           </button>
         )

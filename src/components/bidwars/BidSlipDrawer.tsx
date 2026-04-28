@@ -8,11 +8,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
+  consumeBidBoost,
   formatAud,
   placeBid,
   useAuction,
+  useBidBoostCount,
+  useIsTopBidderActive,
   useWalletBalanceCents,
 } from '../../lib/data'
+
+/** A Bid Boost adds +$1 to the next eligible bid. */
+const BID_BOOST_VALUE_CENTS = 100
 
 type Props = {
   open: boolean
@@ -25,20 +31,32 @@ type Props = {
 export function BidSlipDrawer({ open, auctionId, bidAmountCents, onClose, onConfirmed }: Props) {
   const auction = useAuction(auctionId ?? undefined)
   const wallet = useWalletBalanceCents()
+  const bidBoostCount = useBidBoostCount()
+  const topBidderActive = useIsTopBidderActive()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [useBoost, setUseBoost] = useState(false)
+
+  const finalBidCents = useBoost ? bidAmountCents + BID_BOOST_VALUE_CENTS : bidAmountCents
 
   const savings = useMemo(() => {
     if (!auction) return 0
-    return Math.max(0, auction.estValueCents - bidAmountCents)
-  }, [auction, bidAmountCents])
+    return Math.max(0, auction.estValueCents - finalBidCents)
+  }, [auction, finalBidCents])
 
   useEffect(() => {
     if (!open) {
       setBusy(false)
       setError(null)
+      setUseBoost(false)
     }
   }, [open])
+
+  // Default the toggle to ON whenever the drawer reopens with at least one
+  // boost available, so the perk doesn't sit unused.
+  useEffect(() => {
+    if (open) setUseBoost(bidBoostCount > 0)
+  }, [open, bidBoostCount])
 
   useEffect(() => {
     if (!open) return
@@ -52,8 +70,8 @@ export function BidSlipDrawer({ open, auctionId, bidAmountCents, onClose, onConf
   if (!open || !auction) return null
   if (typeof document === 'undefined') return null
 
-  const insufficient = wallet < bidAmountCents
-  const validBid = bidAmountCents > auction.currentBidCents
+  const insufficient = wallet < finalBidCents
+  const validBid = finalBidCents > auction.currentBidCents
 
   const onConfirm = async () => {
     if (busy) return
@@ -68,12 +86,14 @@ export function BidSlipDrawer({ open, auctionId, bidAmountCents, onClose, onConf
     }
     setBusy(true)
     try {
-      const ok = placeBid(auction.id, bidAmountCents)
+      // Consume the Bid Boost first so we don't double-spend on retries.
+      if (useBoost && bidBoostCount > 0) consumeBidBoost()
+      const ok = placeBid(auction.id, finalBidCents)
       if (!ok) {
         setError('Could not place bid. Try again.')
         return
       }
-      onConfirmed?.(auction.id, bidAmountCents)
+      onConfirmed?.(auction.id, finalBidCents)
       onClose()
     } finally {
       setBusy(false)
@@ -144,11 +164,16 @@ export function BidSlipDrawer({ open, auctionId, bidAmountCents, onClose, onConf
           </div>
           <div className="rounded-2xl bg-violet-50 p-3 ring-1 ring-violet-200">
             <dt className="text-[10px] font-black uppercase tracking-[0.12em] text-[#4c1d95]/75">
-              Your bid
+              Your bid {useBoost ? '· boosted' : ''}
             </dt>
             <dd className="mt-1 text-[18px] font-black tabular-nums text-[#4c1d95]">
-              {formatAud(bidAmountCents)}
+              {formatAud(finalBidCents)}
             </dd>
+            {useBoost ? (
+              <p className="mt-0.5 text-[10px] font-bold text-violet-600">
+                +{formatAud(BID_BOOST_VALUE_CENTS)} from Bid Boost
+              </p>
+            ) : null}
           </div>
           <div className="rounded-2xl bg-emerald-50 p-3 ring-1 ring-emerald-200">
             <dt className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700/85">
@@ -167,6 +192,59 @@ export function BidSlipDrawer({ open, auctionId, bidAmountCents, onClose, onConf
             </dd>
           </div>
         </dl>
+
+        {bidBoostCount > 0 ? (
+          <button
+            type="button"
+            onClick={() => setUseBoost((v) => !v)}
+            aria-pressed={useBoost}
+            className={[
+              'mt-3 flex w-full items-center justify-between gap-2 rounded-2xl p-3 ring-1 transition-colors',
+              useBoost
+                ? 'bg-violet-50 ring-violet-300 text-[#4c1d95]'
+                : 'bg-white ring-zinc-200 text-zinc-700',
+            ].join(' ')}
+          >
+            <span className="flex items-center gap-2">
+              <span className={[
+                'grid h-9 w-9 place-items-center rounded-xl text-white',
+                useBoost ? 'bg-[#4c1d95]' : 'bg-zinc-300',
+              ].join(' ')}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M13 2L4.5 14H12l-1 8 8.5-12H12l1-8z" />
+                </svg>
+              </span>
+              <span className="text-left">
+                <span className="block text-[12.5px] font-black">
+                  Use Bid Boost {useBoost ? `(+${formatAud(BID_BOOST_VALUE_CENTS)})` : ''}
+                </span>
+                <span className="block text-[10.5px] font-semibold">
+                  {bidBoostCount} available · adds {formatAud(BID_BOOST_VALUE_CENTS)} to this bid
+                </span>
+              </span>
+            </span>
+            <span
+              className={[
+                'inline-flex h-6 w-10 shrink-0 items-center rounded-full p-0.5 transition-colors',
+                useBoost ? 'bg-[#4c1d95]' : 'bg-zinc-300',
+              ].join(' ')}
+              aria-hidden
+            >
+              <span
+                className={[
+                  'h-5 w-5 rounded-full bg-white shadow-sm transition-transform',
+                  useBoost ? 'translate-x-4' : 'translate-x-0',
+                ].join(' ')}
+              />
+            </span>
+          </button>
+        ) : null}
+
+        {topBidderActive ? (
+          <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-[10.5px] font-black uppercase tracking-[0.08em] text-amber-700 ring-1 ring-amber-300">
+            <span aria-hidden>👑</span> Top Bidder badge active
+          </p>
+        ) : null}
 
         <div className="mt-3 flex items-center justify-between rounded-2xl bg-white p-3 ring-1 ring-zinc-200">
           <div className="flex items-center gap-2">
@@ -197,7 +275,7 @@ export function BidSlipDrawer({ open, auctionId, bidAmountCents, onClose, onConf
             disabled={busy || !validBid}
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] py-3.5 text-[15px] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(76,29,149,0.55),inset_0_1px_0_rgba(255,255,255,0.25)] ring-1 ring-white/10 transition-transform active:scale-[0.985] disabled:opacity-60"
           >
-            {busy ? 'Placing bid…' : `Confirm ${formatAud(bidAmountCents)} bid`}
+            {busy ? 'Placing bid…' : `Confirm ${formatAud(finalBidCents)} bid`}
           </button>
           <button
             type="button"

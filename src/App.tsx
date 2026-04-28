@@ -37,6 +37,7 @@ import { cleanupSupabaseOAuthUrl } from './lib/supabase/oauthSession'
 import { setAuthState } from './lib/authState'
 import { FetchVoiceProvider } from './voice/FetchVoiceContext'
 import { FetchAppShellSuspenseFallback } from './components/FetchAppShellSuspenseFallback'
+import { FetchAppBottomNav } from './components/FetchAppBottomNav'
 import { FetchBoomerangSplash } from './components/FetchBoomerangSplash'
 
 const homeChunk = () => import('./views/HomeView')
@@ -482,43 +483,48 @@ function App() {
 
       if (isProfileSurface) {
         return (
-          <Suspense
-            fallback={
-              <FetchAppShellSuspenseFallback title="Loading…" subtitle="Preparing your marketplace profile." />
-            }
-          >
-            {pathname === FETCH_GEMS_PATH ? (
-              <FetchGemsView onBack={() => navigate(FETCH_APP_PATH)} />
-            ) : pathname === FETCH_PROFILE_PATH ? (
-              <FetchProfilePage
-                onOpenApp={() => navigate(FETCH_APP_PATH)}
-                onOpenDrops={() => {
-                  try {
-                    sessionStorage.setItem('fetch.pendingHomeShellTab', 'reels')
-                  } catch {
-                    /* ignore */
-                  }
-                  navigate(FETCH_APP_PATH)
-                }}
-                onEditProfile={() => navigate(FETCH_PROFILE_EDIT_PATH)}
-                onListItem={() => navigate(FETCH_MARKETPLACE_LIST_PATH)}
-                onEditListing={(listingId) =>
-                  navigate(`${FETCH_MARKETPLACE_LIST_PATH}?edit=${encodeURIComponent(listingId)}`)
-                }
-                onCashOut={() => navigate(FETCH_WALLET_CASH_OUT_PATH)}
-                onAddCredits={() => navigate(FETCH_WALLET_ADD_CREDITS_PATH)}
-              />
-            ) : pathname === FETCH_PROFILE_EDIT_PATH ? (
-              <FetchProfileEditView onDone={() => navigate(FETCH_PROFILE_PATH, { replace: true })} />
-            ) : pathname === FETCH_MARKETPLACE_LIST_PATH ? (
-              <FetchMarketplaceListingCreateView onDone={() => navigate(FETCH_PROFILE_PATH, { replace: true })} />
-            ) : (
-              <FetchWalletPlaceholderView
-                variant={pathname === FETCH_WALLET_CASH_OUT_PATH ? 'cashOut' : 'credits'}
-                onBack={() => navigate(FETCH_PROFILE_PATH)}
-              />
-            )}
-          </Suspense>
+          <>
+            <Suspense
+              fallback={
+                <FetchAppShellSuspenseFallback title="Loading…" subtitle="Preparing your marketplace profile." />
+              }
+            >
+              <div className="pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))]">
+                {pathname === FETCH_GEMS_PATH ? (
+                  <FetchGemsView onBack={() => navigate(FETCH_APP_PATH)} />
+                ) : pathname === FETCH_PROFILE_PATH ? (
+                  <FetchProfilePage
+                    onOpenApp={() => navigate(FETCH_APP_PATH)}
+                    onOpenDrops={() => {
+                      try {
+                        sessionStorage.setItem('fetch.pendingHomeShellTab', 'reels')
+                      } catch {
+                        /* ignore */
+                      }
+                      navigate(FETCH_APP_PATH)
+                    }}
+                    onEditProfile={() => navigate(FETCH_PROFILE_EDIT_PATH)}
+                    onListItem={() => navigate(FETCH_MARKETPLACE_LIST_PATH)}
+                    onEditListing={(listingId) =>
+                      navigate(`${FETCH_MARKETPLACE_LIST_PATH}?edit=${encodeURIComponent(listingId)}`)
+                    }
+                    onCashOut={() => navigate(FETCH_WALLET_CASH_OUT_PATH)}
+                    onAddCredits={() => navigate(FETCH_WALLET_ADD_CREDITS_PATH)}
+                  />
+                ) : pathname === FETCH_PROFILE_EDIT_PATH ? (
+                  <FetchProfileEditView onDone={() => navigate(FETCH_PROFILE_PATH, { replace: true })} />
+                ) : pathname === FETCH_MARKETPLACE_LIST_PATH ? (
+                  <FetchMarketplaceListingCreateView onDone={() => navigate(FETCH_PROFILE_PATH, { replace: true })} />
+                ) : (
+                  <FetchWalletPlaceholderView
+                    variant={pathname === FETCH_WALLET_CASH_OUT_PATH ? 'cashOut' : 'credits'}
+                    onBack={() => navigate(FETCH_PROFILE_PATH)}
+                  />
+                )}
+              </div>
+            </Suspense>
+            <FetchAppBottomNav />
+          </>
         )
       }
 

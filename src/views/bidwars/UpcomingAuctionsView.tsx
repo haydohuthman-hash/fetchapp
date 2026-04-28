@@ -3,7 +3,8 @@
  * AuctionRoom in lobby mode.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { ambientRegisterBidWars } from '../../lib/audio/fetchAmbientMusic'
 import { AppHeader, AuctionRoom, CountdownTimer, EmptyState, LiveBadge } from '../../components/bidwars'
 import {
   formatAud,
@@ -42,6 +43,14 @@ export default function UpcomingAuctionsView({ onBack }: Props) {
   const upcoming = useUpcomingAuctions()
   const groups = groupByDay(upcoming)
   const [openAuctionId, setOpenAuctionId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const open = openAuctionId != null
+    if (!open) return undefined
+    ambientRegisterBidWars(1)
+    return () => ambientRegisterBidWars(-1)
+  }, [openAuctionId])
+
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[min(100%,430px)] flex-col bg-[#f8f6fd]">
       <AppHeader title="Upcoming" subtitle="Set reminders for live drops" showBack onBack={onBack} />

@@ -6,16 +6,19 @@
 
 import { useState } from 'react'
 import { AppHeader, EmptyState } from '../../components/bidwars'
+import { PokiesRewardsWalletMini } from '../../components/bidwars/PokiesRewardsWalletMini'
 import {
   depositWallet,
   formatAud,
   instantCash,
+  useNowEverySecond,
+  useUserPerks,
   useWalletBalanceCents,
   useWalletTxns,
   useWinningBalanceCents,
   withdrawWallet,
 } from '../../lib/data'
-import type { WalletTxnKind } from '../../lib/data'
+import type { UserPerks, WalletTxnKind } from '../../lib/data'
 
 type Props = {
   onBack: () => void
@@ -129,6 +132,10 @@ export default function WalletView({ onBack }: Props) {
           </p>
         ) : null}
 
+        <ActivePerksSection />
+
+        <PokiesRewardsWalletMini />
+
         <section className="rounded-3xl bg-white p-3 shadow-sm ring-1 ring-zinc-200">
           <div className="flex items-center justify-between px-1 pb-2">
             <p className="text-[12px] font-black uppercase tracking-[0.12em] text-zinc-500">
@@ -192,4 +199,153 @@ function ActionTile({
       <span className="text-[12.5px] font-black tracking-tight text-zinc-950">{label}</span>
     </button>
   )
+}
+
+/**
+ * Active perks earned from Prize Spin. Time-based perks tick down once per
+ * second; counters apply at the surface they affect (BidSlipDrawer for bid
+ * boosts, OrderConfirmedView for shipping credits).
+ */
+function ActivePerksSection() {
+  const perks = useUserPerks()
+  const now = useNowEverySecond()
+  const rows: Array<{
+    key: string
+    icon: string
+    title: string
+    body: string
+    tone: 'live' | 'static'
+    badge?: string
+  }> = collectActivePerks(perks, now)
+
+  if (rows.length === 0) return null
+
+  return (
+    <section className="rounded-3xl bg-white p-3 shadow-sm ring-1 ring-zinc-200">
+      <div className="flex items-center justify-between px-1 pb-2">
+        <p className="text-[12px] font-black uppercase tracking-[0.12em] text-zinc-500">
+          Active perks
+        </p>
+        <p className="text-[10px] font-bold text-zinc-400">{rows.length} active</p>
+      </div>
+      <ul className="flex flex-col gap-1.5">
+        {rows.map((r) => (
+          <li
+            key={r.key}
+            className={[
+              'flex items-center gap-3 rounded-2xl px-3 py-2 ring-1',
+              r.tone === 'live'
+                ? 'bg-amber-50 ring-amber-200'
+                : 'bg-violet-50 ring-violet-200',
+            ].join(' ')}
+          >
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[18px] ring-1 ring-zinc-200">
+              {r.icon}
+            </span>
+            <span className="min-w-0 flex-1">
+              <p className="line-clamp-1 text-[13px] font-black tracking-tight text-zinc-950">
+                {r.title}
+              </p>
+              <p className="line-clamp-1 text-[11px] font-semibold text-zinc-500">{r.body}</p>
+            </span>
+            {r.badge ? (
+              <span
+                className={[
+                  'rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] ring-1',
+                  r.tone === 'live'
+                    ? 'bg-amber-100 text-amber-700 ring-amber-300'
+                    : 'bg-violet-100 text-[#4c1d95] ring-violet-200',
+                ].join(' ')}
+              >
+                {r.badge}
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+function formatRemainingShort(expiresAt: number, now: number): string {
+  const ms = expiresAt - now
+  if (ms <= 0) return 'expired'
+  const sec = Math.floor(ms / 1000)
+  const hr = Math.floor(sec / 3600)
+  const min = Math.floor((sec % 3600) / 60)
+  if (hr >= 1) return `${hr}h ${min.toString().padStart(2, '0')}m left`
+  if (min >= 1) return `${min}m ${(sec % 60).toString().padStart(2, '0')}s left`
+  return `${sec}s left`
+}
+
+function collectActivePerks(perks: UserPerks, now: number) {
+  const rows: Array<{
+    key: string
+    icon: string
+    title: string
+    body: string
+    tone: 'live' | 'static'
+    badge?: string
+  }> = []
+  if (perks.bidBoosts > 0) {
+    rows.push({
+      key: 'bidBoosts',
+      icon: '⚡',
+      title: 'Bid Boosts',
+      body: 'Adds +$1 to your next eligible bid. Toggle in the Bid Slip.',
+      tone: 'static',
+      badge: `${perks.bidBoosts}x`,
+    })
+  }
+  if (perks.shippingCredits > 0) {
+    rows.push({
+      key: 'shipping',
+      icon: '🚚',
+      title: 'Free Shipping',
+      body: 'Auto-applies to your next won auction.',
+      tone: 'static',
+      badge: `${perks.shippingCredits}x`,
+    })
+  }
+  if (perks.freeSpins > 0) {
+    rows.push({
+      key: 'freeSpins',
+      icon: '🎟️',
+      title: 'Free Spins',
+      body: 'Use them in Prize Spin (Basic tier).',
+      tone: 'static',
+      badge: `${perks.freeSpins}x`,
+    })
+  }
+  if (perks.vipExpiresAt && perks.vipExpiresAt > now) {
+    rows.push({
+      key: 'vip',
+      icon: '👑',
+      title: 'VIP Pass',
+      body: 'Better Prize Spin odds while active.',
+      tone: 'live',
+      badge: formatRemainingShort(perks.vipExpiresAt, now),
+    })
+  }
+  if (perks.topBidderExpiresAt && perks.topBidderExpiresAt > now) {
+    rows.push({
+      key: 'topBidder',
+      icon: '🏆',
+      title: 'Top Bidder',
+      body: 'Crown badge shown next to your name in auctions.',
+      tone: 'live',
+      badge: formatRemainingShort(perks.topBidderExpiresAt, now),
+    })
+  }
+  if (perks.sellerBoostExpiresAt && perks.sellerBoostExpiresAt > now) {
+    rows.push({
+      key: 'sellerBoost',
+      icon: '📈',
+      title: 'Seller Boost',
+      body: 'New listings publish with the boosted badge.',
+      tone: 'live',
+      badge: formatRemainingShort(perks.sellerBoostExpiresAt, now),
+    })
+  }
+  return rows
 }

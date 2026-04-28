@@ -7,7 +7,8 @@
  * overlay (e.g. from the Activity bottom-nav tab or the Profile/account chip).
  */
 
-import { useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { ambientRegisterBidWars } from '../../lib/audio/fetchAmbientMusic'
 import { createPortal } from 'react-dom'
 import { AuctionRoom } from '../../components/bidwars'
 import type { Auction, Category } from '../../lib/data'
@@ -35,12 +36,22 @@ type Props = {
   initial: BidwarsHubView
   onClose: () => void
   onOpenChat?: () => void
+  /** Same bottom nav as the home shell so Activity / hub profile keep the dock visible. */
+  bottomNav?: ReactNode
 }
 
-export function BidwarsHub({ open, initial, onClose, onOpenChat }: Props) {
+export function BidwarsHub({ open, initial, onClose, onOpenChat, bottomNav }: Props) {
   const [stack, setStack] = useState<BidwarsHubView[]>([initial])
   const [openAuction, setOpenAuction] = useState<Auction | null>(null)
   const [postWin, setPostWin] = useState(false)
+
+  useEffect(() => {
+    const active = open && openAuction != null
+    if (active) ambientRegisterBidWars(1)
+    return () => {
+      if (active) ambientRegisterBidWars(-1)
+    }
+  }, [open, openAuction])
 
   // Reset to initial when reopened.
   const [lastOpen, setLastOpen] = useState(open)
@@ -61,6 +72,7 @@ export function BidwarsHub({ open, initial, onClose, onOpenChat }: Props) {
   const reset = (v: BidwarsHubView) => setStack([v])
 
   const onOpenAuction = (a: Auction) => setOpenAuction(a)
+
   const onAuctionRoomClose = () => {
     setOpenAuction(null)
     if (postWin) {
@@ -70,7 +82,12 @@ export function BidwarsHub({ open, initial, onClose, onOpenChat }: Props) {
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[9970] bg-[#f8f6fd]" role="dialog" aria-modal="true">
+    <div
+      className="fixed inset-0 z-[9970] flex flex-col bg-[#f8f6fd]"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       {top.kind === 'activity' ? (
         <ActivityView
           onBack={goBack}
@@ -131,6 +148,12 @@ export function BidwarsHub({ open, initial, onClose, onOpenChat }: Props) {
           if (openAuction) push({ kind: 'category', category: openAuction.category as unknown as Category })
         }}
       />
+      </div>
+      {bottomNav ? (
+        <div className="fetch-home-marketplace-shell-footer shrink-0 pb-[env(safe-area-inset-bottom,0px)]">
+          {bottomNav}
+        </div>
+      ) : null}
     </div>,
     document.body,
   )

@@ -7,6 +7,7 @@ import './fetch-theme.css'
 import { FetchAccentProvider } from './theme/FetchAccentContext'
 import { FetchThemeProvider } from './theme/FetchThemeContext'
 import App from './App.tsx'
+import { FetchAppErrorBoundary } from './components/FetchAppErrorBoundary'
 import { AdminApp } from './admin/AdminApp'
 import { FetchAnalyticsPing } from './components/FetchAnalyticsPing'
 
@@ -26,7 +27,14 @@ createRoot(document.getElementById('root')!).render(
           <FetchAnalyticsPing />
           <Routes>
             <Route path="/admin/*" element={<AdminApp />} />
-            <Route path="*" element={<App />} />
+            <Route
+              path="*"
+              element={
+                <FetchAppErrorBoundary surface="main">
+                  <App />
+                </FetchAppErrorBoundary>
+              }
+            />
           </Routes>
         </BrowserRouter>
       </FetchAccentProvider>

@@ -132,6 +132,11 @@ export type Order = {
   status: 'paid' | 'shipped' | 'delivered'
   placedAt: number
   trackingUrl?: string
+  /**
+   * True when a Prize Spin "Free shipping" credit was consumed for this order.
+   * Surfaces a green "Free shipping applied" line item in the order view.
+   */
+  freeShippingApplied?: boolean
 }
 
 export type ActivityKind = 'bid' | 'win' | 'outbid' | 'message' | 'reminder'
@@ -143,4 +148,32 @@ export type ActivityEntry = {
   title: string
   body: string
   ref?: { kind: 'auction'; auctionId: string }
+}
+
+/**
+ * In-app perks earned via Prize Spin (or, for new users, the starter grant).
+ * Counts are integer balances; expiry fields are ms-epoch timestamps.
+ *
+ * Stored in the unified store so that bidding, checkout, listing, and pokies
+ * surfaces can all read the same source of truth and stay in sync.
+ */
+export type UserPerks = {
+  /** In-app spin tokens; 1 gem = 1 spin token (decoupled from cash wallet). */
+  gemBalance: number
+  /** Free Prize Spins — consumed before gems on Basic-tier spins. */
+  freeSpins: number
+  /** Number of unspent +$1 bid boosts. */
+  bidBoosts: number
+  /** Number of unredeemed free-shipping credits, capped per credit on use. */
+  shippingCredits: number
+  /** ms-epoch when VIP status ends; null if not active. */
+  vipExpiresAt: number | null
+  /** ms-epoch when the temporary Top Bidder badge ends; null if not active. */
+  topBidderExpiresAt: number | null
+  /** ms-epoch when seller-boost is active for newly created listings; null if not active. */
+  sellerBoostExpiresAt: number | null
+  /** Lifetime jackpot count (just stats). */
+  jackpotsHit: number
+  /** Lifetime mystery prizes still pending reveal — left here for any future "open a mystery box later" flow. */
+  mysteryPending: number
 }

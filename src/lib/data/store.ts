@@ -7,7 +7,7 @@
  * from Supabase when the API lands without changing call sites.
  */
 
-import { useEffect, useMemo, useSyncExternalStore } from 'react'
+import { useMemo, useRef, useSyncExternalStore } from 'react'
 import {
   ACTIVITY,
   AUCTIONS,
@@ -29,10 +29,16 @@ import type {
   Order,
   Reward,
   Seller,
+  UserPerks,
   WalletTransaction,
 } from './types'
 
 const STORAGE_KEY = 'fetchit.bidwars.state.v1'
+const STARTER_GEMS = 100
+const STARTER_FREE_SPINS = 3
+const STARTER_FLAG_KEY = 'fetchit.pokies.starterGranted.v1'
+/** Legacy localStorage key for the old in-component pokies wallet. */
+const LEGACY_POKIES_KEY = 'fetchit.pokies.state.v1'
 
 type Listener = () => void
 
@@ -47,16 +53,87 @@ type StoreState = {
   activity: ActivityEntry[]
   walletBalanceCents: number
   winningBalanceCents: number
+  userPerks: UserPerks
+  /** Set of auction ids that should render the "boosted" treatment. */
+  boostedAuctionIds: string[]
 }
 
 const listeners = new Set<Listener>()
 
-function loadPersisted(): { walletBalanceCents?: number; watchlist?: string[] } {
+const DEFAULT_PERKS: UserPerks = {
+  gemBalance: STARTER_GEMS,
+  freeSpins: STARTER_FREE_SPINS,
+  bidBoosts: 0,
+  shippingCredits: 0,
+  vipExpiresAt: null,
+  topBidderExpiresAt: null,
+  sellerBoostExpiresAt: null,
+  jackpotsHit: 0,
+  mysteryPending: 0,
+}
+
+type LegacyPokiesWallet = Partial<{
+  freeSpins: number
+  bidBoosts: number
+  shippingCredits: number
+  sellerBoostMinutes: number
+  vipMinutes: number
+  topBidderMinutes: number
+  mysteryPending: number
+  jackpotsHit: number
+}>
+
+function tryLoadLegacyPokies(): UserPerks | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(LEGACY_POKIES_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { wallet?: LegacyPokiesWallet }
+    const w = parsed.wallet
+    if (!w) return null
+    const minutesToExpiry = (n: number | undefined): number | null =>
+      n && n > 0 ? Date.now() + n * 60_000 : null
+    return {
+      gemBalance: STARTER_GEMS,
+      freeSpins: w.freeSpins ?? STARTER_FREE_SPINS,
+      bidBoosts: w.bidBoosts ?? 0,
+      shippingCredits: w.shippingCredits ?? 0,
+      vipExpiresAt: minutesToExpiry(w.vipMinutes),
+      topBidderExpiresAt: minutesToExpiry(w.topBidderMinutes),
+      sellerBoostExpiresAt: minutesToExpiry(w.sellerBoostMinutes),
+      jackpotsHit: w.jackpotsHit ?? 0,
+      mysteryPending: w.mysteryPending ?? 0,
+    }
+  } catch {
+    return null
+  }
+}
+
+type Persisted = {
+  walletBalanceCents?: number
+  watchlist?: string[]
+  userPerks?: UserPerks
+  boostedAuctionIds?: string[]
+}
+
+function loadPersisted(): Persisted {
   if (typeof window === 'undefined') return {}
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return {}
-    return JSON.parse(raw) as { walletBalanceCents?: number; watchlist?: string[] }
+    const parsed = JSON.parse(raw) as unknown
+    if (!parsed || typeof parsed !== 'object') return {}
+    const p = parsed as Record<string, unknown>
+    const out: Persisted = {}
+    if (typeof p.walletBalanceCents === 'number') out.walletBalanceCents = p.walletBalanceCents
+    if (Array.isArray(p.watchlist)) out.watchlist = p.watchlist.filter((x): x is string => typeof x === 'string')
+    if (p.userPerks && typeof p.userPerks === 'object') {
+      out.userPerks = { ...DEFAULT_PERKS, ...(p.userPerks as Partial<UserPerks>) }
+    }
+    if (Array.isArray(p.boostedAuctionIds)) {
+      out.boostedAuctionIds = p.boostedAuctionIds.filter((x): x is string => typeof x === 'string')
+    }
+    return out
   } catch {
     return {}
   }
@@ -70,11 +147,29 @@ function persist(state: StoreState) {
       JSON.stringify({
         walletBalanceCents: state.walletBalanceCents,
         watchlist: state.user.watchlist,
-      }),
+        userPerks: state.userPerks,
+        boostedAuctionIds: state.boostedAuctionIds,
+      } satisfies Persisted),
     )
   } catch {
     /* ignore quota / private mode */
   }
+}
+
+function resolveStarterPerks(persisted: Persisted): UserPerks {
+  if (persisted.userPerks) return { ...DEFAULT_PERKS, ...persisted.userPerks }
+  if (typeof window === 'undefined') return DEFAULT_PERKS
+  // First time we see this user — try to inherit from the old in-component
+  // pokies wallet so existing rewards aren't lost on the upgrade.
+  const legacy = tryLoadLegacyPokies()
+  if (legacy) return legacy
+  // Otherwise grant the 100-gem starter pack on first encounter.
+  try {
+    localStorage.setItem(STARTER_FLAG_KEY, '1')
+  } catch {
+    /* ignore */
+  }
+  return DEFAULT_PERKS
 }
 
 const persisted = loadPersisted()
@@ -91,6 +186,8 @@ const state: StoreState = {
   walletBalanceCents:
     persisted.walletBalanceCents ?? WALLET_TXNS.at(-1)?.balanceAfterCents ?? 27_000,
   winningBalanceCents: 8_500,
+  userPerks: resolveStarterPerks(persisted),
+  boostedAuctionIds: persisted.boostedAuctionIds ?? [],
 }
 
 function emit() {
@@ -203,6 +300,49 @@ export function useActivity(): ActivityEntry[] {
   return useStore((s) => s.activity)
 }
 
+export function useUserPerks(): UserPerks {
+  return useStore((s) => s.userPerks)
+}
+
+export function useGemBalance(): number {
+  return useStore((s) => s.userPerks.gemBalance)
+}
+
+export function useFreeSpins(): number {
+  return useStore((s) => s.userPerks.freeSpins)
+}
+
+export function useBidBoostCount(): number {
+  return useStore((s) => s.userPerks.bidBoosts)
+}
+
+export function useShippingCreditCount(): number {
+  return useStore((s) => s.userPerks.shippingCredits)
+}
+
+/** Re-evaluated every second so countdown chips stay live. */
+export function useIsVipActive(): boolean {
+  const expires = useStore((s) => s.userPerks.vipExpiresAt)
+  const now = useNowEverySecond()
+  return expires != null && expires > now
+}
+
+export function useIsTopBidderActive(): boolean {
+  const expires = useStore((s) => s.userPerks.topBidderExpiresAt)
+  const now = useNowEverySecond()
+  return expires != null && expires > now
+}
+
+export function useIsSellerBoosted(): boolean {
+  const expires = useStore((s) => s.userPerks.sellerBoostExpiresAt)
+  const now = useNowEverySecond()
+  return expires != null && expires > now
+}
+
+export function useIsAuctionBoosted(auctionId: string | null | undefined): boolean {
+  return useStore((s) => (auctionId ? s.boostedAuctionIds.includes(auctionId) : false))
+}
+
 /* --------------------------------- actions -------------------------------- */
 
 function pushActivity(entry: ActivityEntry) {
@@ -290,6 +430,16 @@ export function recordWin(auctionId: string): { paidCents: number; savedCents: n
   state.auctions = state.auctions.map((a) =>
     a.id === auctionId ? { ...a, status: 'won' } : a,
   )
+  // Apply a Prize Spin "Free shipping" credit if one is available. This both
+  // marks the order with the green line item and decrements the credit.
+  let freeShippingApplied = false
+  if (state.userPerks.shippingCredits > 0) {
+    state.userPerks = {
+      ...state.userPerks,
+      shippingCredits: state.userPerks.shippingCredits - 1,
+    }
+    freeShippingApplied = true
+  }
   state.orders = [
     {
       id: genId('ord'),
@@ -300,6 +450,7 @@ export function recordWin(auctionId: string): { paidCents: number; savedCents: n
       paymentMethodLast4: '4242',
       status: 'paid',
       placedAt: Date.now(),
+      freeShippingApplied,
     },
     ...state.orders,
   ]
@@ -391,6 +542,163 @@ export function markAllNotificationsRead(): void {
   emit()
 }
 
+/* ------------------------- perk + gem-economy actions --------------------- */
+
+function patchPerks(patch: Partial<UserPerks>): void {
+  state.userPerks = { ...state.userPerks, ...patch }
+  emit()
+  persist(state)
+}
+
+export function grantGems(amount: number, label = 'Gems'): void {
+  if (!Number.isFinite(amount) || amount <= 0) return
+  patchPerks({ gemBalance: state.userPerks.gemBalance + Math.floor(amount) })
+  pushActivity({
+    id: genId('act'),
+    kind: 'reminder',
+    createdAt: Date.now(),
+    title: `+${Math.floor(amount)} gems`,
+    body: label,
+  })
+}
+
+/**
+ * Spend `amount` gems. Returns true on success, false if insufficient.
+ * Caller is responsible for surfacing the paywall when this returns false.
+ */
+export function spendGems(amount: number, _label = 'Prize Spin'): boolean {
+  void _label
+  if (!Number.isFinite(amount) || amount <= 0) return false
+  if (state.userPerks.gemBalance < amount) return false
+  patchPerks({ gemBalance: state.userPerks.gemBalance - Math.floor(amount) })
+  return true
+}
+
+export function grantFreeSpins(amount: number): void {
+  if (!Number.isFinite(amount) || amount <= 0) return
+  patchPerks({ freeSpins: state.userPerks.freeSpins + Math.floor(amount) })
+}
+
+export function consumeFreeSpin(): boolean {
+  if (state.userPerks.freeSpins <= 0) return false
+  patchPerks({ freeSpins: state.userPerks.freeSpins - 1 })
+  return true
+}
+
+export function grantBidBoosts(amount: number): void {
+  if (!Number.isFinite(amount) || amount <= 0) return
+  patchPerks({ bidBoosts: state.userPerks.bidBoosts + Math.floor(amount) })
+}
+
+export function consumeBidBoost(): boolean {
+  if (state.userPerks.bidBoosts <= 0) return false
+  patchPerks({ bidBoosts: state.userPerks.bidBoosts - 1 })
+  return true
+}
+
+export function grantShippingCredits(amount: number): void {
+  if (!Number.isFinite(amount) || amount <= 0) return
+  patchPerks({ shippingCredits: state.userPerks.shippingCredits + Math.floor(amount) })
+}
+
+export function consumeShippingCredit(): boolean {
+  if (state.userPerks.shippingCredits <= 0) return false
+  patchPerks({ shippingCredits: state.userPerks.shippingCredits - 1 })
+  return true
+}
+
+function extendExpiry(current: number | null, deltaMs: number): number {
+  const base = current && current > Date.now() ? current : Date.now()
+  return base + Math.max(0, deltaMs)
+}
+
+export function extendVip(durationMs: number): void {
+  patchPerks({ vipExpiresAt: extendExpiry(state.userPerks.vipExpiresAt, durationMs) })
+}
+
+export function extendTopBidder(durationMs: number): void {
+  patchPerks({ topBidderExpiresAt: extendExpiry(state.userPerks.topBidderExpiresAt, durationMs) })
+}
+
+export function extendSellerBoost(durationMs: number): void {
+  patchPerks({ sellerBoostExpiresAt: extendExpiry(state.userPerks.sellerBoostExpiresAt, durationMs) })
+}
+
+export function recordJackpotHit(): void {
+  patchPerks({ jackpotsHit: state.userPerks.jackpotsHit + 1 })
+}
+
+/**
+ * Mark a freshly created auction/listing as boosted, if the user has an active
+ * seller-boost perk. Idempotent.
+ */
+export function flagAuctionBoosted(auctionId: string): boolean {
+  if (!auctionId) return false
+  const expires = state.userPerks.sellerBoostExpiresAt
+  if (!expires || expires <= Date.now()) return false
+  if (state.boostedAuctionIds.includes(auctionId)) return true
+  state.boostedAuctionIds = [auctionId, ...state.boostedAuctionIds].slice(0, 60)
+  emit()
+  persist(state)
+  return true
+}
+
+/**
+ * Mock IAP. Real implementation should swap this for a Stripe / Apple / Google
+ * IAP call before granting gems. Today it just adds the gems and pushes a
+ * "deposit"-style activity entry so the user can see the purchase.
+ */
+export function purchaseGemPack(args: {
+  amount: number
+  priceLabel: string
+  description?: string
+}): void {
+  grantGems(args.amount, args.description ?? `Bought ${args.amount} gems · ${args.priceLabel}`)
+}
+
+/**
+ * Sweep expired time-based perks. Cheap to call from a 60-second tick.
+ * Caller can run this from anywhere; it only emits when something actually
+ * changed so React subscribers won't churn.
+ */
+export function expirePerksIfDue(): void {
+  const now = Date.now()
+  const p = state.userPerks
+  let changed = false
+  const patch: Partial<UserPerks> = {}
+  if (p.vipExpiresAt && p.vipExpiresAt <= now) {
+    patch.vipExpiresAt = null
+    changed = true
+  }
+  if (p.topBidderExpiresAt && p.topBidderExpiresAt <= now) {
+    patch.topBidderExpiresAt = null
+    changed = true
+  }
+  if (p.sellerBoostExpiresAt && p.sellerBoostExpiresAt <= now) {
+    patch.sellerBoostExpiresAt = null
+    changed = true
+  }
+  if (changed) patchPerks(patch)
+}
+
+// App-wide, module-level sweep so perks expire even when the pokies surface
+// isn't open. Runs once per minute and is a no-op when nothing has changed.
+// Wrapped in try/catch so a misbehaving environment can never block the page.
+if (typeof window !== 'undefined') {
+  try {
+    expirePerksIfDue()
+    window.setInterval(() => {
+      try {
+        expirePerksIfDue()
+      } catch {
+        /* ignore */
+      }
+    }, 60_000)
+  } catch {
+    /* ignore */
+  }
+}
+
 /* --------------------- formatters used across surfaces -------------------- */
 
 export function formatAud(cents: number): string {
@@ -409,16 +717,28 @@ export function formatMmSs(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
+/**
+ * Wall-clock tick every second for live countdowns.
+ * The snapshot value is stable between interval fires — `getSnapshot` must not
+ * return a fresh `Date.now()` on every read or React can hit "Maximum update
+ * depth exceeded" (Strict Mode calls getSnapshot more than once per render).
+ */
 export function useNowEverySecond(): number {
-  const subscribeNow = useMemo(
-    () => (cb: () => void) => {
-      const id = window.setInterval(cb, 1_000)
+  const snapRef = useRef(typeof Date.now === 'function' ? Date.now() : 0)
+  const subscribe = useMemo(
+    () => (notify: () => void) => {
+      snapRef.current = Date.now()
+      const id = window.setInterval(() => {
+        snapRef.current = Date.now()
+        notify()
+      }, 1_000)
       return () => window.clearInterval(id)
     },
     [],
   )
-  const value = useSyncExternalStore(subscribeNow, () => Date.now(), () => Date.now())
-  // Touch the value to satisfy React's hot reload edge cases.
-  useEffect(() => undefined, [value])
-  return value
+  return useSyncExternalStore(
+    subscribe,
+    () => snapRef.current,
+    () => snapRef.current,
+  )
 }

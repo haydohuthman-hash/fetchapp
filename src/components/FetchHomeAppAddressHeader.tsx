@@ -26,25 +26,24 @@ function SearchNavGlyph({ className = '' }: { className?: string }) {
 }
 
 /**
- * Pokies (slot machine) glyph — small playful icon used in the header to
- * launch the Pokies overlay.
+ * Game controller glyph — gamepad silhouette used in the header to launch
+ * the Pokies / arcade overlay. Replaces the older slot-machine glyph.
  */
-function PokiesGlyph({ className = '' }: { className?: string }) {
+function GameControllerGlyph({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="3" y="5" width="18" height="14" rx="3" fill="#4c1d95" stroke="#4c1d95" strokeWidth="0.6" />
-      <rect x="5" y="8" width="14" height="6" rx="1.6" fill="#fff" />
-      <path d="M9 8v6M14 8v6" stroke="#4c1d95" strokeWidth="0.9" />
-      <circle cx="6.6" cy="11" r="0.9" fill="#f59e0b" />
-      <circle cx="11.5" cy="11" r="0.9" fill="#22c55e" />
-      <circle cx="16.4" cy="11" r="0.9" fill="#fb7185" />
-      <path d="M3 16h18" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" />
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M19.5 13.4c.7-.4 1.3.5.6 1.1l-1 .9.3 1.4c.2.7-.6 1-1 .5l-.9-.9-1.3.4c-.7.2-1-.7-.4-1l1-.7-.2-1.4c-.1-.7.7-1 1.1-.4z"
-        fill="#fde047"
-        stroke="#92400e"
-        strokeWidth="0.4"
+        d="M6.2 6.5h11.6c2.2 0 3.7 1.6 3.7 3.9v3.1c0 1.7-1.1 3.2-2.7 3.2-1.1 0-2-.6-2.6-1.7l-.7-1.3H8.5l-.7 1.3c-.6 1.1-1.5 1.7-2.6 1.7-1.6 0-2.7-1.5-2.7-3.2v-3.1c0-2.3 1.5-3.9 3.7-3.9z"
+        fill="#4c1d95"
       />
+      {/* D-pad */}
+      <rect x="6.2" y="10.5" width="3.4" height="1.4" rx="0.35" fill="#fff" />
+      <rect x="7.4" y="9.3" width="1.4" height="3.4" rx="0.35" fill="#fff" />
+      {/* Action buttons */}
+      <circle cx="14.5" cy="9.6" r="0.95" fill="#fde047" />
+      <circle cx="16.6" cy="11.2" r="0.95" fill="#22c55e" />
+      <circle cx="14.5" cy="12.8" r="0.95" fill="#fb7185" />
+      <circle cx="12.4" cy="11.2" r="0.95" fill="#fff" />
     </svg>
   )
 }
@@ -221,50 +220,29 @@ export function FetchHomeAppAddressHeader({
           ].join(' ')}
           style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
         >
-          <div className="flex w-full min-w-0 items-center justify-between gap-3">
-            <div className="flex min-w-0 items-start gap-2" aria-label="fetchit, bid wars">
-              {/* Rounded purple play mark — no circle bg (Heroicons-style rounded play) */}
-              <svg
-                viewBox="0 0 20 20"
-                className="fetch-header-violet-ink mt-0.5 h-7 w-7 shrink-0"
-                fill="currentColor"
-                aria-hidden
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5.25 5.653c0-.856.927-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.346a1.125 1.125 0 0 1-1.667-.985V5.653z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <div className="flex min-w-0 flex-col gap-0.5">
-                <div className="fetch-app-brand-wordmark flex min-w-0 items-baseline font-extrabold tracking-[-0.03em]">
-                  <span className="text-[1.35rem] leading-none text-zinc-900 sm:text-[1.45rem]">fetch</span>
-                  <span className="fetch-header-violet-ink text-[1.35rem] leading-none sm:text-[1.45rem]">it</span>
-                </div>
-                <p className="fetch-header-violet-ink text-[10px] font-black uppercase leading-none tracking-[0.2em] sm:text-[11px]">
-                  BID WARS
-                </p>
-              </div>
-            </div>
+          <div className="flex w-full min-w-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={onOpenSearch}
+              className="fetch-apple-warp-btn flex min-w-0 flex-1 items-center gap-2 rounded-full bg-violet-50/80 px-3.5 py-2 text-left ring-1 ring-violet-200/80 transition-[background-color,transform] hover:bg-violet-100/80 active:scale-[0.99]"
+              aria-label="Search Fetchit"
+            >
+              <SearchNavGlyph className="block h-[18px] w-[18px] shrink-0 text-[#4c1d95]/80" />
+              <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold leading-none text-[#4c1d95]/70">
+                Search categories, sellers, drops…
+              </span>
+            </button>
             <div className="flex shrink-0 items-center gap-0.5 self-center">
               {onOpenPokies ? (
                 <button
                   type="button"
                   onClick={onOpenPokies}
                   className={`${brandMinimalIconBtn} fetch-pokies-icon-btn`}
-                  aria-label="Open Pokies"
+                  aria-label="Open arcade"
                 >
-                  <PokiesGlyph />
+                  <GameControllerGlyph />
                 </button>
               ) : null}
-              <button
-                type="button"
-                onClick={onOpenSearch}
-                className={brandMinimalIconBtn}
-                aria-label="Search"
-              >
-                <SearchNavGlyph className="block" />
-              </button>
               <button
                 type="button"
                 onClick={onOpenChat}
@@ -287,9 +265,9 @@ export function FetchHomeAppAddressHeader({
           type="button"
           onClick={onOpenPokies}
           className={`${headerChromeIconBtn} fetch-pokies-icon-btn`}
-          aria-label="Open Pokies"
+          aria-label="Open arcade"
         >
-          <PokiesGlyph />
+          <GameControllerGlyph />
         </button>
       ) : null}
       <button type="button" onClick={onOpenAccount} className={headerChromeIconBtn} aria-label="Account">

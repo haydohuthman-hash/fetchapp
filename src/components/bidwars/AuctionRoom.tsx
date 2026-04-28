@@ -21,6 +21,7 @@ import {
   setAuctionStatus,
   toggleWatch,
   useAuction,
+  useIsTopBidderActive,
   useIsWatching,
   useSeller,
 } from '../../lib/data'
@@ -225,6 +226,7 @@ type ActiveStageProps = {
 function ActiveStage({ mode, phase, auctionId, onBidPress, minNextBidCents }: ActiveStageProps) {
   const auction = useAuction(auctionId)
   const seller = useSeller(auction?.sellerId ?? null)
+  const topBidderActive = useIsTopBidderActive()
   const [customOpen, setCustomOpen] = useState(false)
   const [customDollars, setCustomDollars] = useState<string>(() =>
     auction ? Math.ceil(minNextBidCents / 100).toString() : '',
@@ -361,20 +363,33 @@ function ActiveStage({ mode, phase, auctionId, onBidPress, minNextBidCents }: Ac
               No bids yet — be the first.
             </p>
           ) : (
-            recentBids.map((b, i) => (
-              <div
-                key={b.id}
-                className={[
-                  'flex items-center justify-between rounded-xl bg-white px-3 py-2 ring-1',
-                  i === 0 ? 'ring-violet-300 shadow-sm' : 'ring-zinc-200',
-                ].join(' ')}
-              >
-                <span className="text-[12px] font-black text-zinc-900">{b.handle}</span>
-                <span className="text-[12px] font-black tabular-nums text-[#4c1d95]">
-                  {formatAud(b.amountCents)}
-                </span>
-              </div>
-            ))
+            recentBids.map((b, i) => {
+              const isYou = b.handle === '@you'
+              return (
+                <div
+                  key={b.id}
+                  className={[
+                    'flex items-center justify-between rounded-xl bg-white px-3 py-2 ring-1',
+                    i === 0 ? 'ring-violet-300 shadow-sm' : 'ring-zinc-200',
+                  ].join(' ')}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-[12px] font-black text-zinc-900">{b.handle}</span>
+                    {isYou && topBidderActive ? (
+                      <span
+                        aria-label="Top Bidder badge active"
+                        className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-amber-700 ring-1 ring-amber-300"
+                      >
+                        <span aria-hidden>👑</span> Top
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="text-[12px] font-black tabular-nums text-[#4c1d95]">
+                    {formatAud(b.amountCents)}
+                  </span>
+                </div>
+              )
+            })
           )}
         </div>
       </section>
@@ -413,6 +428,7 @@ function ClassicSummary({ auctionId, minNextBidCents }: { auctionId: string; min
 
 function BidWarSummary({ auctionId }: { auctionId: string }) {
   const auction = useAuction(auctionId)
+  const topBidderActive = useIsTopBidderActive()
   if (!auction) return null
   const youAreLeading = auction.topBidderId === 'me_viewer'
   const opponentBid = Math.max(0, auction.currentBidCents - 250)
@@ -426,6 +442,7 @@ function BidWarSummary({ auctionId }: { auctionId: string }) {
           name="You"
           amount={yourBid}
           leading={youAreLeading}
+          badge={topBidderActive ? 'topBidder' : null}
         />
         <span className="grid h-12 w-12 place-items-center rounded-full bg-zinc-900 text-white text-[12px] font-black uppercase tracking-[0.12em]">
           VS
@@ -436,6 +453,7 @@ function BidWarSummary({ auctionId }: { auctionId: string }) {
           name="Jordan"
           amount={opponentBid}
           leading={!youAreLeading}
+          badge={null}
         />
       </div>
       <BidWarMeter
@@ -461,19 +479,32 @@ function SidePill({
   name,
   amount,
   leading,
+  badge,
 }: {
   align: 'left' | 'right'
   handle: string
   name: string
   amount: number
   leading: boolean
+  badge: 'topBidder' | null
 }) {
+  const justify = align === 'right' ? 'justify-end' : 'justify-start'
   return (
     <div className={['min-w-0 flex-1', align === 'right' ? 'text-right' : 'text-left'].join(' ')}>
       <p className="line-clamp-1 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-400">
         {handle}
       </p>
-      <p className="line-clamp-1 text-[14px] font-black tracking-tight text-zinc-950">{name}</p>
+      <p className={['flex items-center gap-1', justify].join(' ')}>
+        <span className="line-clamp-1 text-[14px] font-black tracking-tight text-zinc-950">{name}</span>
+        {badge === 'topBidder' ? (
+          <span
+            aria-label="Top Bidder badge active"
+            className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-amber-700 ring-1 ring-amber-300"
+          >
+            <span aria-hidden>👑</span>
+          </span>
+        ) : null}
+      </p>
       <p className={[
         'mt-1 text-[18px] font-black tabular-nums',
         leading ? 'text-[#4c1d95]' : 'text-zinc-700',
