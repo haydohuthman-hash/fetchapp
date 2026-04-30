@@ -183,6 +183,49 @@ html[data-fetch-theme='light'] .fetch-home-phone-stage {
   animation-delay: 630ms;
 }
 
+/* Bid Wars CTA — slow premium sheen */
+@keyframes fetch-bid-war-sheen {
+  0% {
+    transform: translateX(-120%) skewX(-14deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.65;
+  }
+  40% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(220%) skewX(-14deg);
+    opacity: 0;
+  }
+}
+
+.fetch-bid-war-btn-sheen {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.fetch-bid-war-btn-sheen__bar {
+  position: absolute;
+  top: -40%;
+  left: 0;
+  width: 38%;
+  height: 180%;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 35%,
+    rgba(255, 255, 255, 0.42) 50%,
+    rgba(255, 255, 255, 0.08) 65%,
+    transparent 100%
+  );
+  animation: fetch-bid-war-sheen 2.85s ease-in-out infinite;
+}
+
 /* Marketplace header: Fetch eyes â€” slow, soft blinks + gentle drifting pupils (loops). */
 @keyframes fetch-marketplace-eyes-blink {
   0%,
@@ -1237,6 +1280,15 @@ html[data-fetch-theme='light'] .fetch-home-phone-stage {
 
   .fetch-reels-tab-splash--out-to-left {
     animation: fetch-reels-tab-splash-out-to-left 0.32s cubic-bezier(0.4, 0, 0.8, 0.4) both;
+  }
+
+  /* Home shell page route transitions (forward/back from bottom nav tab clicks). */
+  .fetch-home-shell-route-enter--from-right {
+    animation: fetch-reels-feed-tab-in-from-right 0.34s cubic-bezier(0.22, 0.88, 0.24, 1) both;
+  }
+
+  .fetch-home-shell-route-enter--from-left {
+    animation: fetch-reels-feed-tab-in-from-left 0.34s cubic-bezier(0.22, 0.88, 0.24, 1) both;
   }
 }
 
@@ -7200,13 +7252,13 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   opacity: 1;
 }
 
-/* App header host: always white across the app. */
+/* App header host: transparent chrome across home surfaces. */
 .fetch-app-address-header,
 .fetch-home-phone-stage .fetch-app-address-header {
-  background-color: #ffffff !important;
+  background-color: transparent !important;
   background-image: none !important;
   border: none !important;
-  box-shadow: 0 1px 0 rgba(76, 29, 149, 0.06) !important;
+  box-shadow: none !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
   color: #1c1528 !important;
@@ -7236,12 +7288,36 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   color: #1c1528 !important;
 }
 
-/* Header buttons: light violet, always */
-.fetch-app-address-header .fetch-apple-warp-btn,
-.fetch-app-address-header button.fetch-apple-warp-btn {
-  background-color: rgba(76, 29, 149, 0.08) !important;
-  border-color: rgba(76, 29, 149, 0.18) !important;
+/* Header buttons: icon-only, no pill background (search chip excluded — it keeps a visible border). */
+.fetch-app-address-header .fetch-apple-warp-btn:not(.fetch-home-search-chip-bar),
+.fetch-app-address-header button.fetch-apple-warp-btn:not(.fetch-home-search-chip-bar) {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: #1c1528 !important;
+}
+
+.fetch-app-address-header .fetch-apple-warp-btn:not(.fetch-home-search-chip-bar):hover,
+.fetch-app-address-header button.fetch-apple-warp-btn:not(.fetch-home-search-chip-bar):hover {
+  background-color: transparent !important;
   color: #4c1d95 !important;
+}
+
+.fetch-purple-gem-pulse {
+  color: #4c1d95 !important;
+  animation: fetch-purple-gem-pulse 1.45s ease-in-out infinite;
+}
+
+@keyframes fetch-purple-gem-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 rgba(76, 29, 149, 0));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(124, 58, 237, 0.5));
+    transform: scale(1.08);
+  }
 }
 
 .fetch-home-phone-stage main[aria-label='Explore'] .text-zinc-900,
@@ -7665,38 +7741,32 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  /* Lift orb so its center sits on the bar's top edge (half above, half inside). */
-  transform: translateY(-1.55rem);
+  box-sizing: border-box;
+  /* Lift orb above the bar; less negative = sits lower on screen */
+  transform: translateY(-0.95rem);
   border-radius: 9999px;
+  border: 4px solid #ffffff;
   background-color: #4c1d95 !important;
   color: #ffffff !important;
-  box-shadow:
-    0 14px 30px -10px rgba(76, 29, 149, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: none;
+  transition: transform 0.18s ease;
 }
 
 @media (min-width: 640px) {
   .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab-orb {
     width: 3.3rem;
     height: 3.3rem;
-    transform: translateY(-1.65rem);
+    transform: translateY(-1.05rem);
   }
 }
 
-.fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab:hover .fetch-home-intent-bottom-nav__fab-orb {
-  box-shadow:
-    0 16px 34px -10px rgba(76, 29, 149, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
-}
-
 .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab:active .fetch-home-intent-bottom-nav__fab-orb {
-  transform: translateY(-1.55rem) scale(0.95);
+  transform: translateY(-0.95rem) scale(0.95);
 }
 
 @media (min-width: 640px) {
   .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab:active .fetch-home-intent-bottom-nav__fab-orb {
-    transform: translateY(-1.65rem) scale(0.95);
+    transform: translateY(-1.05rem) scale(0.95);
   }
 }
 
@@ -7957,6 +8027,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-app-shell-inner .fetch-home-search-hero__field {
   background-color: #ffffff !important;
   border: 1px solid rgba(76, 29, 149, 0.14) !important;
+  border-radius: 9999px !important; /* pill search bar */
   box-shadow: 0 2px 12px rgba(76, 29, 149, 0.07);
 }
 .fetch-app-shell-inner .fetch-home-search-hero__field:focus-within {
@@ -8011,6 +8082,25 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   }
 }
 
+/* Home bidding-war banner CTA — white extrusion: 1px steps so the stack is solid with no gaps */
+.fetch-bidwar-home-banner-cta-3d {
+  box-shadow:
+    inset 0 2px 0 #fff,
+    inset 0 -3px 0 #3d147a,
+    0 1px 0 0 #fff,
+    0 2px 0 0 #fff,
+    0 3px 0 0 #fff,
+    0 4px 0 0 #fff,
+    0 5px 0 0 #fff,
+    0 6px 0 0 #fff,
+    0 7px 0 0 #fff,
+    0 8px 0 0 #fff,
+    0 9px 0 0 #fff,
+    0 10px 0 0 #fff,
+    0 11px 0 0 #fff,
+    0 12px 0 0 #fff;
+}
+
 /* Up Next hero — animated shimmer + imminent pulse ring */
 .fetch-battle-hero {
   isolation: isolate;
@@ -8021,16 +8111,18 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
+  /* Soft highlight sweep — tuned for white/lavender base */
   background: linear-gradient(
     115deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.18) 50%,
-    transparent 70%
+    transparent 32%,
+    rgba(255, 255, 255, 0.9) 50%,
+    transparent 68%
   );
   background-size: 220% 100%;
   background-repeat: no-repeat;
   animation: fetch-battle-hero-sheen 3.6s ease-in-out infinite;
-  mix-blend-mode: screen;
+  mix-blend-mode: normal;
+  opacity: 0.45;
   z-index: 0;
 }
 .fetch-battle-hero--upnext::after {
@@ -8040,8 +8132,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   border-radius: inherit;
   pointer-events: none;
   background:
-    radial-gradient(160% 70% at 100% 0%, rgba(255, 255, 255, 0.18) 0%, transparent 55%),
-    radial-gradient(120% 80% at 0% 100%, rgba(124, 58, 237, 0.35) 0%, transparent 60%);
+    radial-gradient(160% 70% at 100% 0%, rgba(124, 58, 237, 0.09) 0%, transparent 55%),
+    radial-gradient(120% 80% at 0% 100%, rgba(192, 132, 252, 0.14) 0%, transparent 58%);
   z-index: 0;
 }
 
@@ -8051,7 +8143,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
     opacity: 0;
   }
   35% {
-    opacity: 1;
+    opacity: 0.5;
   }
   60% {
     background-position: -120% 0;
@@ -8067,13 +8159,13 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   0%,
   100% {
     box-shadow:
-      0 22px 50px -20px rgba(76, 29, 149, 0.7),
-      0 0 0 0 rgba(252, 211, 77, 0);
+      0 18px 44px -28px rgba(76, 29, 149, 0.22),
+      0 0 0 0 rgba(245, 158, 11, 0);
   }
   50% {
     box-shadow:
-      0 22px 50px -20px rgba(76, 29, 149, 0.7),
-      0 0 0 8px rgba(252, 211, 77, 0.22);
+      0 18px 44px -28px rgba(76, 29, 149, 0.3),
+      0 0 0 10px rgba(245, 158, 11, 0.18);
   }
 }
 
@@ -12539,6 +12631,129 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   }
 }
 
+/* ── Premium one-time route skeleton ───────────────────────────── */
+.fetch-premium-page-skeleton {
+  animation: fetch-premium-page-skeleton-out 220ms ease-out 780ms forwards;
+}
+
+.fetch-premium-page-skeleton__top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: max(1.25rem, env(safe-area-inset-top, 0px));
+  padding: 1rem 0.25rem;
+}
+
+.fetch-premium-page-skeleton__card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow:
+    0 18px 46px -30px rgba(76, 29, 149, 0.42),
+    inset 0 0 0 1px rgba(76, 29, 149, 0.08);
+}
+
+.fetch-premium-page-skeleton__card--tight {
+  padding: 0.9rem 0.9rem 1rem;
+}
+
+.fetch-premium-page-skeleton__shine {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f1ecff 0%, #ffffff 42%, #e8ddff 100%);
+}
+
+.fetch-premium-page-skeleton__shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%) skewX(-18deg);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 18%,
+    rgba(255, 255, 255, 0.9) 48%,
+    rgba(190, 166, 255, 0.25) 64%,
+    transparent 100%
+  );
+  animation: fetch-premium-page-skeleton-sheen 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.fetch-premium-page-skeleton__circle {
+  width: 5rem;
+  height: 5rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(76, 29, 149, 0.08);
+}
+
+.fetch-premium-page-skeleton__line {
+  height: 0.75rem;
+  border-radius: 999px;
+}
+
+.fetch-premium-page-skeleton__line--title {
+  width: 9.5rem;
+  height: 1.15rem;
+}
+
+.fetch-premium-page-skeleton__line--short {
+  width: 5.8rem;
+  margin-top: 0.75rem;
+}
+
+.fetch-premium-page-skeleton__line--stat {
+  width: 2.6rem;
+  height: 0.7rem;
+}
+
+.fetch-premium-page-skeleton__line--section {
+  width: 7.5rem;
+  height: 0.8rem;
+}
+
+.fetch-premium-page-skeleton__mini {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.95rem;
+}
+
+.fetch-premium-page-skeleton__badge {
+  width: 3.8rem;
+  height: 4.15rem;
+  flex: 0 0 auto;
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+}
+
+.fetch-premium-page-skeleton__tile {
+  aspect-ratio: 1;
+  border-radius: 1.25rem;
+}
+
+@keyframes fetch-premium-page-skeleton-sheen {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(130%) skewX(-18deg);
+  }
+}
+
+@keyframes fetch-premium-page-skeleton-out {
+  to {
+    opacity: 0;
+    transform: scale(1.01);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fetch-premium-page-skeleton,
+  .fetch-premium-page-skeleton__shine::after {
+    animation: none;
+  }
+}
+
 /* ── For You content fade-in after skeleton ────────────────────── */
 @keyframes fetch-for-you-fadein {
   0% {
@@ -12798,7 +13013,7 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
 /* ══ Home (phase === "home") — light shell, dark purple primary ══ */
 .fetch-app-shell-bg.fetch-app-shell--home-light,
 .fetch-app-shell-inner.fetch-app-shell--home-light {
-  --fetch-home-canvas: #f3f0fa;
+  --fetch-home-canvas: #ffffff;
   --fetch-home-elev: #ffffff;
   --fetch-home-primary: #4c1d95;
   --fetch-home-primary-mid: #6d28d9;
@@ -12934,15 +13149,16 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
 
 /* App header: light bar + boomerang reads as dark silhouette */
 .fetch-app-shell--home-light .fetch-home-phone-stage .fetch-app-address-header {
-  background-color: var(--fetch-home-elev) !important;
+  background-color: transparent !important;
   border: none !important;
-  box-shadow: 0 1px 0 rgba(76, 29, 149, 0.08) !important;
+  box-shadow: none !important;
 }
-.fetch-app-shell--home-light .fetch-app-address-header .fetch-apple-warp-btn,
-.fetch-app-shell--home-light .fetch-app-address-header button.fetch-apple-warp-btn {
-  background-color: rgba(76, 29, 149, 0.08) !important;
-  border-color: rgba(76, 29, 149, 0.18) !important;
-  color: var(--fetch-home-primary) !important;
+.fetch-app-shell--home-light .fetch-app-address-header .fetch-apple-warp-btn:not(.fetch-home-search-chip-bar),
+.fetch-app-shell--home-light .fetch-app-address-header button.fetch-apple-warp-btn:not(.fetch-home-search-chip-bar) {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: var(--fetch-home-ink) !important;
 }
 .fetch-app-shell--home-light .fetch-app-address-header .text-white,
 .fetch-app-shell--home-light .fetch-app-address-header .text-white\/88,
@@ -13052,9 +13268,8 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
 .fetch-app-shell--home-light .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab-orb {
   background-color: var(--fetch-home-primary) !important;
   color: #ffffff !important;
-  box-shadow:
-    0 10px 28px -8px rgba(76, 29, 149, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+  border: 4px solid #ffffff !important;
+  box-shadow: none !important;
 }
 
 .fetch-app-shell--home-light

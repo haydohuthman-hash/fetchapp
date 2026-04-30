@@ -405,9 +405,11 @@ function HomeShellMarketplacePageInner({
     return new Map(list.map((p) => [p.id, p] as const))
   }, [catalogProducts])
 
-  const openSellerInDrops = useCallback(() => {
-    onRequestHomeShellTab?.('reels')
-  }, [onRequestHomeShellTab])
+  const openSellerTools = useCallback(() => {
+    setSellerOverlayLanding('feed')
+    setSellerOverlayMountKey((k) => k + 1)
+    setSellerToolsOpen(true)
+  }, [])
 
   const closePeerListingSheet = useCallback(() => {
     setPeerListingSheet(null)
@@ -1317,7 +1319,7 @@ function HomeShellMarketplacePageInner({
                           <button
                             type="button"
                             className="shrink-0 rounded-lg bg-[#4c1d95] px-3 py-2 text-[12px] font-bold text-white active:bg-[#5b21b6]"
-                            onClick={openSellerInDrops}
+                            onClick={openSellerTools}
                           >
                             View in Drops
                           </button>

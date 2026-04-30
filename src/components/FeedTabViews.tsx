@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CURATED_DROP_REELS } from '../lib/drops/constants'
 import type { DropReel } from '../lib/drops/types'
+import fetchitLiveNoOneOnlineUrl from '../assets/fetchit-live-no-one-online-hero.png'
 import {
   STARTING_SOON_BATTLES,
   applyNewBid,
@@ -47,6 +48,9 @@ function viewerCount(id: string): string {
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
   return String(24 + (h % 480))
 }
+
+/** Stable default when no `reels` prop is passed — real live data should replace this. */
+const LIVE_NOW_DEFAULT_EMPTY_REELS: readonly DropReel[] = []
 
 /* ─── Live Now — 2-column grid ─────────────────────────────────── */
 
@@ -115,15 +119,47 @@ function LiveNowCard({ reel, onOpen }: { reel: DropReel; onOpen: (reel: DropReel
 export const LiveNowGrid = memo(function LiveNowGrid({
   onOpenDrops,
   onOpenLive,
+  reels = LIVE_NOW_DEFAULT_EMPTY_REELS,
+  onGetNotified,
 }: {
   onOpenDrops: () => void
   onOpenLive?: (reel: DropReel) => void
+  /** Currently live drops/reels from your backend; empty shows the offline hero. */
+  reels?: readonly DropReel[]
+  onGetNotified?: () => void
 }) {
-  const reels = useMemo(() => [...CURATED_DROP_REELS].slice(0, 6), [])
   const openLive = onOpenLive ?? (() => onOpenDrops())
+  const [notifyAck, setNotifyAck] = useState(false)
+
+  const handleGetNotified = useCallback(() => {
+    onGetNotified?.()
+    setNotifyAck(true)
+  }, [onGetNotified])
 
   if (reels.length === 0) {
-    return <p className="px-3 py-8 text-center text-sm text-zinc-400">No one is live right now. Check back soon.</p>
+    return (
+      <div className="flex flex-col items-center gap-4 rounded-2xl bg-white px-3 py-5 dark:bg-zinc-900">
+        <img
+          src={fetchitLiveNoOneOnlineUrl}
+          alt="No one is live online right now"
+          className="mx-auto w-full max-w-[min(100%,26rem)] select-none object-contain"
+          draggable={false}
+        />
+        {notifyAck ? (
+          <p className="text-center text-[13px] font-medium text-zinc-600 dark:text-zinc-400">
+            You&apos;re on the list — we&apos;ll ping you when someone goes live.
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={handleGetNotified}
+            className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#4c1d95] px-6 text-[14px] font-extrabold text-white shadow-[0_10px_22px_-12px_rgba(76,29,149,0.75)] ring-1 ring-black/10 transition-transform active:scale-[0.98] dark:ring-white/15"
+          >
+            Get notified
+          </button>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -457,8 +493,8 @@ function UpNextHeroCard({
       className={[
         'fetch-battle-hero relative overflow-hidden rounded-3xl p-3 transition-colors',
         isLive
-          ? 'fetch-battle-hero--live bg-gradient-to-br from-[#2a1055] via-[#3b0764] to-[#1e0a3c] ring-2 ring-red-500/45 shadow-[0_22px_48px_-22px_rgba(239,68,68,0.55)]'
-          : 'fetch-battle-hero--upnext bg-gradient-to-br from-[#7c3aed] via-[#5b21b6] to-[#3b0764] ring-1 ring-white/15 shadow-[0_22px_50px_-20px_rgba(76,29,149,0.7)]',
+          ? 'fetch-battle-hero--live border border-red-200/90 bg-gradient-to-br from-white via-[#fff7f7] to-[#ffe9e9] shadow-[0_18px_44px_-28px_rgba(239,68,68,0.35)]'
+          : 'fetch-battle-hero--upnext border border-violet-200/80 bg-gradient-to-br from-white via-[#faf8ff] to-[#f3e8ff] shadow-[0_18px_44px_-28px_rgba(76,29,149,0.22)]',
         aboutToStart ? 'fetch-battle-hero--imminent' : '',
       ].join(' ')}
       aria-label={
@@ -474,7 +510,7 @@ function UpNextHeroCard({
               'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] shadow-sm ring-1 backdrop-blur-sm',
               isLive
                 ? 'fetch-battle-live-pill bg-red-600 text-white ring-white/15'
-                : 'bg-white/15 text-white ring-white/20',
+                : 'bg-violet-600 text-white ring-violet-500/25 shadow-[0_1px_2px_rgba(76,29,149,0.12)]',
             ].join(' ')}
           >
             {isLive ? (
@@ -492,10 +528,12 @@ function UpNextHeroCard({
           <span
             key={`tm-${remaining}`}
             className={[
-              'rounded-full bg-black/35 px-2.5 py-1 text-[12px] font-black uppercase tracking-[0.08em] tabular-nums ring-1 ring-white/10',
+              'rounded-full px-2.5 py-1 text-[12px] font-black uppercase tracking-[0.08em] tabular-nums ring-1',
               isLive
-                ? remaining <= 5 ? 'text-red-200' : 'text-white'
-                : aboutToStart ? 'text-amber-200' : 'text-white',
+                ? ['bg-white/95 ring-red-200/90', remaining <= 5 ? 'text-red-700' : 'text-red-600'].join(' ')
+                : aboutToStart
+                  ? 'bg-amber-50 text-amber-800 ring-amber-200/90'
+                  : 'bg-white/95 text-violet-950 ring-violet-200/90 shadow-[0_2px_8px_-4px_rgba(76,29,149,0.12)]',
             ].join(' ')}
           >
             {formatMmSs(remaining)}
@@ -504,45 +542,59 @@ function UpNextHeroCard({
 
         <div className="grid grid-cols-[minmax(0,1fr)_8.75rem] gap-3">
           <div className="min-w-0 self-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/55">
+            <p
+              className={[
+                'text-[10px] font-black uppercase tracking-[0.16em]',
+                isLive ? 'text-red-600/85' : 'text-violet-600/85',
+              ].join(' ')}
+            >
               {isLive ? 'Current bid' : 'Featured battle'}
             </p>
             <p
               key={isLive ? `bid-${live!.currentBidCents}` : `count-${remaining}`}
               className={[
-                'mt-1 font-black leading-none tabular-nums tracking-[-0.035em] text-white',
-                isLive ? 'fetch-battle-current-bid text-[2.2rem]' : 'text-[1.65rem]',
+                'mt-1 font-black leading-none tabular-nums tracking-[-0.035em]',
+                isLive
+                  ? 'fetch-battle-current-bid text-[2.2rem] text-red-700'
+                  : 'text-[1.65rem] text-[#1c1528]',
               ].join(' ')}
               style={{
-                textShadow: isLive
-                  ? '0 2px 14px rgba(239,68,68,0.35)'
-                  : '0 2px 18px rgba(76,29,149,0.55)',
+                textShadow: isLive ? '0 1px 0 rgba(255,255,255,0.8)' : undefined,
               }}
             >
               {isLive ? formatAudCents(live!.currentBidCents) : battle.title}
             </p>
             {!isLive ? (
               battle.subtitle ? (
-                <p className="mt-1 text-[13px] font-bold leading-tight text-white/82">{battle.subtitle}</p>
+                <p className="mt-1 text-[13px] font-bold leading-tight text-zinc-600">{battle.subtitle}</p>
               ) : null
             ) : (
               <>
                 {topBidder ? (
-                  <p className="mt-1 text-[11px] font-semibold leading-tight text-white/75">
-                    Leading <span className="font-bold text-white">{topBidder.handle}</span>
+                  <p className="mt-1 text-[11px] font-semibold leading-tight text-zinc-600">
+                    Leading <span className="font-bold text-red-700">{topBidder.handle}</span>
                   </p>
                 ) : null}
-                <p className="mt-1.5 text-[13px] font-extrabold leading-tight text-white">
+                <p className="mt-1.5 text-[13px] font-extrabold leading-tight text-[#1c1528]">
                   {battle.title}
                   {battle.subtitle ? (
-                    <span className="ml-1 font-semibold text-white/70">· {battle.subtitle}</span>
+                    <span className="ml-1 font-semibold text-zinc-500">· {battle.subtitle}</span>
                   ) : null}
                 </p>
               </>
             )}
-            <p className="mt-2 inline-flex rounded-full bg-white/10 px-2 py-1 text-[11px] font-bold text-white/78 ring-1 ring-white/10">
+            <p
+              className={[
+                'mt-2 inline-flex rounded-full px-2 py-1 text-[11px] font-bold ring-1',
+                isLive
+                  ? 'bg-red-50/95 text-red-700 ring-red-200/90'
+                  : 'bg-violet-50/95 text-violet-900 ring-violet-200/90',
+              ].join(' ')}
+            >
               Est. value&nbsp;
-              <span className="font-black tabular-nums text-white">{formatAudCents(battle.estValueCents)}</span>
+              <span className={`font-black tabular-nums ${isLive ? 'text-red-800' : 'text-violet-950'}`}>
+                {formatAudCents(battle.estValueCents)}
+              </span>
             </p>
           </div>
 
@@ -553,7 +605,9 @@ function UpNextHeroCard({
             aria-label={`View photos and details for ${battle.title}`}
             className={[
               'relative aspect-square overflow-hidden rounded-2xl bg-zinc-100 ring-1 transition-transform active:scale-[0.98]',
-              isLive ? 'ring-red-500/40' : 'ring-white/40',
+              isLive
+                ? 'ring-red-300/90 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.75)]'
+                : 'ring-violet-200/90 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.65)]',
             ].join(' ')}
           >
             <img
@@ -563,12 +617,24 @@ function UpNextHeroCard({
               loading="lazy"
               draggable={false}
             />
-            <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/5" />
+            <span
+              className={[
+                'pointer-events-none absolute inset-0 bg-gradient-to-t',
+                isLive ? 'from-red-950/20 via-transparent to-white/35' : 'from-violet-950/10 via-transparent to-white/30',
+              ].join(' ')}
+            />
             {isLive ? (
-              <span className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-red-500/70 [box-shadow:0_0_30px_rgba(239,68,68,0.45)]" />
+              <span className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-red-300/90 [box-shadow:0_0_20px_rgba(239,68,68,0.22)]" />
             ) : null}
             {(battle.photos?.length ?? 0) > 1 ? (
-              <span className="pointer-events-none absolute right-1.5 top-1.5 flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.04em] text-white ring-1 ring-white/30 backdrop-blur-sm">
+              <span
+                className={[
+                  'pointer-events-none absolute right-1.5 top-1.5 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.04em] backdrop-blur-sm',
+                  isLive
+                    ? 'bg-white/92 text-red-700 ring-1 ring-red-200/80'
+                    : 'bg-black/50 text-white ring-1 ring-white/30',
+                ].join(' ')}
+              >
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <path
                     d="M4 7h3l2-2h6l2 2h3v12H4z"
@@ -591,8 +657,8 @@ function UpNextHeroCard({
           className={[
             'flex w-full items-center justify-center gap-1.5 rounded-full px-4 py-3 text-[12px] font-black uppercase tracking-[0.1em] active:scale-[0.97]',
             isLive
-              ? 'fetch-battle-join-pulse bg-gradient-to-b from-red-500 via-red-600 to-red-700 text-white shadow-[0_14px_28px_-10px_rgba(239,68,68,0.8)]'
-              : 'bg-white text-[#4c1d95] shadow-[0_16px_30px_-10px_rgba(0,0,0,0.55)] hover:bg-violet-50',
+              ? 'fetch-battle-join-pulse bg-gradient-to-b from-red-500 via-red-600 to-red-700 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_6px_0_0_#b91c1c] ring-1 ring-red-400/35'
+              : 'bg-violet-600 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_6px_0_0_#4c1d95] ring-1 ring-violet-500/30 hover:bg-violet-700',
           ].join(' ')}
         >
           {isLive ? (
@@ -624,19 +690,20 @@ function UpNextHeroCard({
         aria-hidden
         className={[
           'pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full blur-2xl transition-colors',
-          isLive ? 'bg-red-500/30' : 'bg-fuchsia-400/35',
+          isLive ? 'bg-red-300/35' : 'bg-violet-300/35',
         ].join(' ')}
       />
       <span
         aria-hidden
         className={[
           'pointer-events-none absolute -left-16 -bottom-16 h-48 w-48 rounded-full blur-3xl transition-colors',
-          isLive ? 'bg-red-700/25' : 'bg-indigo-500/30',
+          isLive ? 'bg-rose-200/60' : 'bg-fuchsia-200/50',
         ].join(' ')}
       />
     </article>
   )
 }
+
 
 function StartingSoonRow({
   battle,
@@ -664,7 +731,7 @@ function StartingSoonRow({
       className={[
         'group relative flex flex-col overflow-hidden rounded-2xl bg-white text-left transition-[box-shadow,transform]',
         isLive
-          ? 'ring-2 ring-red-500/70 shadow-[0_14px_28px_-14px_rgba(239,68,68,0.6)]'
+          ? 'ring-2 ring-red-300/90 shadow-[0_14px_28px_-18px_rgba(239,68,68,0.35)]'
           : 'ring-1 ring-violet-200/70 shadow-[0_8px_20px_-14px_rgba(76,29,149,0.35)]',
       ].join(' ')}
     >
@@ -687,11 +754,14 @@ function StartingSoonRow({
         />
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/55 via-black/25 to-transparent"
+          className={[
+            'pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t',
+            isLive ? 'from-red-950/30 via-red-950/8 to-transparent' : 'from-violet-950/35 via-violet-950/8 to-transparent',
+          ].join(' ')}
         />
 
         {isLive ? (
-          <span className="fetch-battle-live-pill absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-md bg-red-600 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tabular-nums leading-none text-white shadow-sm">
+          <span className="fetch-battle-live-pill absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-md bg-red-600 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tabular-nums leading-none text-white shadow-[0_2px_8px_-4px_rgba(239,68,68,0.6)] ring-1 ring-red-400/35">
             <span className="relative flex h-1 w-1">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
               <span className="relative inline-flex h-1 w-1 rounded-full bg-white" />
@@ -699,7 +769,7 @@ function StartingSoonRow({
             {formatMmSs(remaining)}
           </span>
         ) : (
-          <span className="absolute left-1.5 top-1.5 rounded-md bg-black/75 px-1.5 py-0.5 text-[10px] font-black tabular-nums leading-none text-white backdrop-blur-[2px]">
+          <span className="absolute left-1.5 top-1.5 rounded-md bg-white/95 px-1.5 py-0.5 text-[10px] font-black tabular-nums leading-none text-violet-950 shadow-sm ring-1 ring-violet-200/80 backdrop-blur-sm">
             {formatMmSs(remaining)}
           </span>
         )}
@@ -707,7 +777,7 @@ function StartingSoonRow({
         <BoostedBadge id={battle.id} />
 
         {photoCount > 1 && !isLive ? (
-          <span className="absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight text-white backdrop-blur-sm">
+          <span className="absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 rounded-full bg-white/92 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight text-violet-900 shadow-sm ring-1 ring-violet-200/80 backdrop-blur-sm">
             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path
                 d="M4 7h3l2-2h6l2 2h3v12H4z"
@@ -723,7 +793,7 @@ function StartingSoonRow({
         ) : null}
 
         {isLive ? (
-          <span className="fetch-battle-join-pulse pointer-events-none absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 rounded-full bg-gradient-to-b from-red-500 via-red-600 to-red-700 px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] text-white shadow-[0_8px_18px_-6px_rgba(239,68,68,0.75)]">
+          <span className="fetch-battle-join-pulse pointer-events-none absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 rounded-full bg-gradient-to-b from-red-500 via-red-600 to-red-700 px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_4px_0_0_#b91c1c] ring-1 ring-red-400/35">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
               <path d="M13 2L4.09 12.26a1 1 0 00.78 1.63L11 14l-2 8 9-10.26A1 1 0 0017.13 10.1L11 10l2-8z" />
             </svg>
@@ -916,32 +986,38 @@ export const UpcomingLivesList = memo(function UpcomingLivesList() {
         onOpenDetails={() => setDetailsBattleId(hero.id)}
       />
 
-      <div className="mt-1 flex items-center justify-between px-1">
-        <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-zinc-500">
-          More starting soon
-        </p>
-      </div>
+      <section className="rounded-3xl border border-violet-200/70 bg-white/95 p-3 shadow-[0_12px_28px_-20px_rgba(76,29,149,0.28)]">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[11px] font-black uppercase tracking-[0.1em] text-violet-700">Round Queue</p>
+            <p className="text-[12px] font-medium text-zinc-500">Pick a room and enter when ready.</p>
+          </div>
+          <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-violet-700 ring-1 ring-violet-200/90">
+            {restIds.length} rooms
+          </span>
+        </div>
 
-      <div className="grid grid-cols-2 gap-2.5">
-        {restIds.map((id) => {
-          const b = battlesById[id]
-          if (!b) return null
-          const s = stateById[id] ?? { phase: 'upcoming' as const, remaining: b.startsInSec }
-          return (
-            <StartingSoonRow
-              key={id}
-              battle={b}
-              phase={s.phase}
-              remaining={s.remaining}
-              live={s.live}
-              reminded={Boolean(reminded[id])}
-              onRemind={handleRemind}
-              onJoin={() => openBattle(id)}
-              onOpenDetails={() => setDetailsBattleId(id)}
-            />
-          )
-        })}
-      </div>
+        <div className="grid grid-cols-2 gap-2.5">
+          {restIds.map((id) => {
+            const b = battlesById[id]
+            if (!b) return null
+            const s = stateById[id] ?? { phase: 'upcoming' as const, remaining: b.startsInSec }
+            return (
+              <StartingSoonRow
+                key={id}
+                battle={b}
+                phase={s.phase}
+                remaining={s.remaining}
+                live={s.live}
+                reminded={Boolean(reminded[id])}
+                onRemind={handleRemind}
+                onJoin={() => openBattle(id)}
+                onOpenDetails={() => setDetailsBattleId(id)}
+              />
+            )
+          })}
+        </div>
+      </section>
 
       {detailsBattle && detailsState ? (
         <StartingSoonListingSheet

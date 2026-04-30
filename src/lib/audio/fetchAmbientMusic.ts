@@ -2,30 +2,35 @@
  * Global ambient music — chill on the home shell, "war" during Bid Wars.
  *
  * Two-tier audio strategy:
- *  1. Prefer real audio files at `public/audio/home-chill.mp3` and
- *     `public/audio/bidwars-war.mp3` (drop in your own track or licensed loop).
+ *  1. Prefer real audio files at `public/audio/home-chill.mp3`,
+ *     `public/audio/adventure-excite.mp3`, and `public/audio/bidwars-war.mp3`
+ *     (drop in your own track or licensed loop).
  *  2. If the file is missing / fails to load, fall back to a richer Web Audio
- *     synthesis (chord progression for chill, drum+bass beat for war).
+ *     synthesis (chord progression for chill, upbeat arps for adventure,
+ *     drum+bass beat for war).
  *
  * Reference counting from screens (HomeView, BidwarsHub, etc.) decides which
  * bed plays. Pokies has its own bed, so it can fully duck this one.
  *
  * Public API:
  *  - `ambientRegisterHome(+1/-1)`
+ *  - `ambientRegisterAdventure(+1/-1)`
  *  - `ambientRegisterBidWars(+1/-1)`
  *  - `ambientSetPokiesDuck(boolean)`
  *  - `ambientSetMusicEnabled(boolean)` / `ambientIsMusicEnabled()`
  */
 
-type Bed = 'chill' | 'war' | null
+type Bed = 'chill' | 'adventure' | 'war' | null
 
 const HOME_AUDIO_URL = `${import.meta.env.BASE_URL}audio/home-chill.mp3`
+const ADVENTURE_AUDIO_URL = `${import.meta.env.BASE_URL}audio/adventure-excite.mp3`
 const WAR_AUDIO_URL = `${import.meta.env.BASE_URL}audio/bidwars-war.mp3`
 
 const STORAGE_KEY = 'fetch.ambientMusic.enabled.v1'
 
 /* ---------------- shared state ---------------- */
 let homeRef = 0
+let adventureRef = 0
 let bidwarsRef = 0
 let pokiesDuck = false
 let currentBed: Bed = null
@@ -45,8 +50,9 @@ type FileBed = {
   /** Pending init promise (only one in flight). */
   init: Promise<boolean> | null
 }
-const fileBeds: Record<'chill' | 'war', FileBed> = {
+const fileBeds: Record<Exclude<Bed, null>, FileBed> = {
   chill: { url: HOME_AUDIO_URL, audio: null, ready: null, init: null },
+  adventure: { url: ADVENTURE_AUDIO_URL, audio: null, ready: null, init: null },
   war: { url: WAR_AUDIO_URL, audio: null, ready: null, init: null },
 }
 
@@ -98,6 +104,7 @@ function attachResumeOnce() {
   const go = () => {
     void getCtx()?.resume()
     if (currentBed === 'chill') void playChillFile()
+    if (currentBed === 'adventure') void playAdventureFile()
     if (currentBed === 'war') void playWarFile()
     syncAmbient()
   }
@@ -107,7 +114,7 @@ function attachResumeOnce() {
 }
 
 /* ---------------- HTMLAudio loaders + fades ---------------- */
-function ensureFileBed(kind: 'chill' | 'war'): FileBed {
+function ensureFileBed(kind: Exclude<Bed, null>): FileBed {
   const bed = fileBeds[kind]
   if (bed.audio) return bed
   if (typeof document === 'undefined') return bed
@@ -121,7 +128,7 @@ function ensureFileBed(kind: 'chill' | 'war'): FileBed {
   return bed
 }
 
-function tryLoadBed(kind: 'chill' | 'war'): Promise<boolean> {
+function tryLoadBed(kind: Exclude<Bed, null>): Promise<boolean> {
   const bed = ensureFileBed(kind)
   if (bed.ready === true) return Promise.resolve(true)
   if (bed.ready === false) return Promise.resolve(false)
@@ -180,28 +187,61 @@ function fadeAudioElement(a: HTMLAudioElement, target: number, ms = 600) {
 }
 
 function stopAllFiles() {
-  for (const k of ['chill', 'war'] as const) {
+  for (const k of ['chill', 'adventure', 'war'] as const) {
     const a = fileBeds[k].audio
     if (a) fadeAudioElement(a, 0, 400)
+  }
+}
+
+function fadeOutOtherFiles(active: Exclude<Bed, null>) {
+  for (const k of ['chill', 'adventure', 'war'] as const) {
+    if (k === active) continue
+    const a = fileBeds[k].audio
+    if (a) fadeAudioElement(a, 0, 300)
+  }
+}
+
+/** Stops other HTMLAudio beds immediately (avoids overlap with in-flight volume ramps). */
+function silenceFileBedsExcept(active: Exclude<Bed, null>) {
+  for (const k of ['chill', 'adventure', 'war'] as const) {
+    if (k === active) continue
+    const a = fileBeds[k].audio
+    if (!a) continue
+    try {
+      a.pause()
+    } catch {
+      /* */
+    }
+    a.volume = 0
   }
 }
 
 async function playChillFile(): Promise<boolean> {
   const ok = await tryLoadBed('chill')
   if (!ok || !musicEnabled) return ok
-  const war = fileBeds.war.audio
+  if (desiredBed() !== 'chill' || currentBed !== 'chill') return ok
   const chill = fileBeds.chill.audio
-  if (war) fadeAudioElement(war, 0, 400)
+  fadeOutOtherFiles('chill')
   if (chill) fadeAudioElement(chill, 0.42, 800)
+  return true
+}
+
+async function playAdventureFile(): Promise<boolean> {
+  const ok = await tryLoadBed('adventure')
+  if (!ok || !musicEnabled) return ok
+  if (desiredBed() !== 'adventure' || currentBed !== 'adventure') return ok
+  const adventure = fileBeds.adventure.audio
+  fadeOutOtherFiles('adventure')
+  if (adventure) fadeAudioElement(adventure, 0.34, 650)
   return true
 }
 
 async function playWarFile(): Promise<boolean> {
   const ok = await tryLoadBed('war')
   if (!ok || !musicEnabled) return ok
+  if (desiredBed() !== 'war' || currentBed !== 'war') return ok
   const war = fileBeds.war.audio
-  const chill = fileBeds.chill.audio
-  if (chill) fadeAudioElement(chill, 0, 350)
+  fadeOutOtherFiles('war')
   if (war) fadeAudioElement(war, 0.6, 700)
   return true
 }
@@ -573,6 +613,152 @@ function startWarProcedural(): ProceduralBed {
   }
 }
 
+function startAdventureProcedural(): ProceduralBed {
+  const ctxOrNull = getCtx()
+  if (!ctxOrNull || !masterGain) return { stop: () => undefined }
+  const ctx: AudioContext = ctxOrNull
+  const dest: GainNode = masterGain
+
+  if (!drumKick) drumKick = makeKickBuffer(ctx)
+  if (!drumHat) drumHat = makeHatBuffer(ctx)
+
+  const bus = ctx.createGain()
+  bus.gain.value = 0.42
+
+  const hp = ctx.createBiquadFilter()
+  hp.type = 'highpass'
+  hp.frequency.value = 42
+
+  const lp = ctx.createBiquadFilter()
+  lp.type = 'lowpass'
+  lp.frequency.value = 1450
+  lp.Q.value = 0.55
+  bus.connect(hp).connect(lp).connect(dest)
+
+  const drumBus = ctx.createGain()
+  drumBus.gain.value = 0.5
+  drumBus.connect(bus)
+
+  const arpBus = ctx.createGain()
+  arpBus.gain.value = 0.14
+  arpBus.connect(bus)
+
+  const bpm = 128
+  const beat = 60 / bpm
+  const sixteenth = beat / 4
+  const progression = [
+    [261.63, 329.63, 392.0, 523.25],
+    [220.0, 293.66, 369.99, 440.0],
+    [329.63, 392.0, 493.88, 659.25],
+    [196.0, 261.63, 329.63, 392.0],
+  ]
+  const scheduledOscs: OscillatorNode[] = []
+  const scheduledSrcs: AudioBufferSourceNode[] = []
+  let stopped = false
+
+  function fireBuffer(buf: AudioBuffer, when: number, gain = 1) {
+    const s = ctx.createBufferSource()
+    s.buffer = buf
+    const g = ctx.createGain()
+    g.gain.value = gain
+    s.connect(g).connect(drumBus)
+    s.start(when)
+    scheduledSrcs.push(s)
+  }
+
+  function scheduleBar(startAtSec: number, idx: number) {
+    for (let b = 0; b < 4; b++) {
+      fireBuffer(drumKick as AudioBuffer, startAtSec + b * beat, b === 0 ? 0.55 : 0.3)
+    }
+    for (let s = 0; s < 16; s++) {
+      if (s % 2 !== 0) continue
+      fireBuffer(drumHat as AudioBuffer, startAtSec + s * sixteenth, s % 4 === 0 ? 0.16 : 0.09)
+    }
+
+    const notes = progression[idx % progression.length]
+    for (let s = 0; s < 16; s++) {
+      if (s % 2 !== 0) continue
+      const note = notes[(s / 2 + idx) % notes.length]
+      const t0 = startAtSec + s * sixteenth
+      const t1 = t0 + sixteenth * 1.35
+      const o = ctx.createOscillator()
+      o.type = s % 4 === 0 ? 'sine' : 'triangle'
+      o.frequency.setValueAtTime(note, t0)
+      const g = ctx.createGain()
+      g.gain.setValueAtTime(0, t0)
+      g.gain.linearRampToValueAtTime(s % 4 === 0 ? 0.024 : 0.016, t0 + 0.03)
+      g.gain.exponentialRampToValueAtTime(0.0008, t1 + 0.08)
+      const f = ctx.createBiquadFilter()
+      f.type = 'lowpass'
+      f.frequency.setValueAtTime(900 + s * 20, t0)
+      f.Q.value = 1.2
+      o.connect(f).connect(g).connect(arpBus)
+      o.start(t0)
+      o.stop(t1 + 0.04)
+      scheduledOscs.push(o)
+    }
+
+    const root = notes[0] / 2
+    const bass = ctx.createOscillator()
+    bass.type = 'sawtooth'
+    bass.frequency.setValueAtTime(root, startAtSec)
+    const bassGain = ctx.createGain()
+    bassGain.gain.setValueAtTime(0, startAtSec)
+    bassGain.gain.linearRampToValueAtTime(0.055, startAtSec + 0.08)
+    bassGain.gain.setValueAtTime(0.055, startAtSec + beat * 3.5)
+    bassGain.gain.linearRampToValueAtTime(0, startAtSec + beat * 4)
+    bass.connect(bassGain).connect(bus)
+    bass.start(startAtSec)
+    bass.stop(startAtSec + beat * 4 + 0.04)
+    scheduledOscs.push(bass)
+  }
+
+  let nextBarAt = ctx.currentTime + 0.04
+  let barIdx = 0
+  scheduleBar(nextBarAt, barIdx++)
+  nextBarAt += beat * 4
+  scheduleBar(nextBarAt, barIdx++)
+  nextBarAt += beat * 4
+
+  function tick() {
+    if (stopped) return
+    const now = ctx.currentTime
+    while (nextBarAt - now < beat * 4) {
+      scheduleBar(nextBarAt, barIdx++)
+      nextBarAt += beat * 4
+    }
+    timer = window.setTimeout(tick, 220)
+  }
+  let timer = window.setTimeout(tick, 220)
+
+  return {
+    stop() {
+      stopped = true
+      window.clearTimeout(timer)
+      for (const o of scheduledOscs) disposeOscillator(o)
+      for (const s of scheduledSrcs) {
+        try {
+          s.stop()
+        } catch {
+          /* */
+        }
+        try {
+          s.disconnect()
+        } catch {
+          /* */
+        }
+      }
+      try {
+        bus.disconnect()
+        drumBus.disconnect()
+        arpBus.disconnect()
+      } catch {
+        /* */
+      }
+    },
+  }
+}
+
 function stopProcedural() {
   if (proc) {
     proc.stop()
@@ -585,11 +771,17 @@ function desiredBed(): Bed {
   if (!musicEnabled) return null
   if (pokiesDuck) return null
   if (bidwarsRef > 0) return 'war'
+  if (adventureRef > 0) return 'adventure'
   if (homeRef > 0) return 'chill'
   return null
 }
 
+let pendingApply: { bed: Bed; promise: Promise<void> } | null = null
+/** Incremented on every `applyBed` start so in-flight awaits cannot finish with the wrong procedural/file ramp. */
+let applySeq = 0
+
 async function applyBed(want: Bed) {
+  const mySeq = ++applySeq
   /** Always stop the procedural bed when bed changes (or stops). */
   stopProcedural()
 
@@ -599,20 +791,34 @@ async function applyBed(want: Bed) {
     return
   }
 
+  /** Cut non-active file beds immediately so adventure/war cannot linger under async load. */
+  silenceFileBedsExcept(want)
+
   /** Try real audio file first. */
-  const okFile = want === 'chill' ? await playChillFile() : await playWarFile()
+  const okFile =
+    want === 'chill'
+      ? await playChillFile()
+      : want === 'adventure'
+        ? await playAdventureFile()
+        : await playWarFile()
+  if (mySeq !== applySeq) return
+
   if (okFile) {
     rampMaster(0)
     return
   }
 
   /** Fallback to procedural (file missing). */
+  if (mySeq !== applySeq) return
   stopAllFiles()
-  proc = want === 'chill' ? startChillProcedural() : startWarProcedural()
-  rampMaster(want === 'war' ? 0.18 : 0.14, 0.9)
+  proc =
+    want === 'chill'
+      ? startChillProcedural()
+      : want === 'adventure'
+        ? startAdventureProcedural()
+        : startWarProcedural()
+  rampMaster(want === 'war' ? 0.18 : want === 'adventure' ? 0.16 : 0.14, 0.9)
 }
-
-let pendingApply: { bed: Bed; promise: Promise<void> } | null = null
 
 function syncAmbient() {
   attachResumeOnce()
@@ -632,6 +838,11 @@ function syncAmbient() {
 /* ---------------- Public API ---------------- */
 export function ambientRegisterHome(delta: 1 | -1) {
   homeRef = Math.max(0, homeRef + delta)
+  syncAmbient()
+}
+
+export function ambientRegisterAdventure(delta: 1 | -1) {
+  adventureRef = Math.max(0, adventureRef + delta)
   syncAmbient()
 }
 

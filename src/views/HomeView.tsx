@@ -33,6 +33,7 @@ import {
   type FetchOrbExpression,
 } from '../components/JarvisNeuralOrb'
 import { FetchStripePaymentElement } from '../components/FetchStripePaymentElement'
+import { FetchPremiumPageSkeleton, useOneTimePageSkeleton } from '../components/FetchPremiumPageSkeleton'
 import { HomeFetchLogoAndVoiceDock } from '../components/HomeFetchLogoAndVoiceDock'
 import { AppleMapsNavRoutePanel } from '../components/AppleMapsNavRoutePanel'
 import { MysteryAdventurePanel } from '../components/MysteryAdventurePanel'
@@ -65,8 +66,6 @@ import type {
   MarketplaceSellerHubHandoff,
 } from '../components/HomeShellMarketplacePage'
 import type { MarketplacePeerBrowseFilter } from '../components/ExploreBrowseBanner'
-import { HomeShellReelsPage } from '../components/HomeShellReelsPage'
-import type { DropsCommerceTarget } from '../lib/drops/types'
 import type { ExploreCategoryRowPromoDef } from '../lib/exploreCategoryRowPromos'
 import searchRealBabyKidsUrl from '../assets/search-categories-real/baby-kids.png'
 import searchRealCoinsMoneyUrl from '../assets/search-categories-real/coins-money.png'
@@ -81,6 +80,7 @@ import searchRealToysHobbiesUrl from '../assets/search-categories-real/toys-hobb
 import searchRealTradingCardGamesUrl from '../assets/search-categories-real/trading-card-games.png'
 import searchRealWomensFashionUrl from '../assets/search-categories-real/womens-fashion.png'
 import { BidwarsHub, type BidwarsHubView } from './bidwars'
+import { FetchBidWarsMatchmakingOverlay } from '../components/FetchBidWarsMatchmakingOverlay'
 import { BookingCompletionSummary } from '../components/booking/BookingCompletionSummary'
 import { TripSheetCard } from '../components/booking/TripSheetCard'
 import { TripDriverStatusStrip } from '../components/booking/TripDriverStatusStrip'
@@ -724,6 +724,13 @@ const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
   },
 ]
 
+const HOME_SHELL_TAB_TRANSITION_ORDER: Record<HomeShellTab, number> = {
+  services: 0,
+  search: 1,
+  marketplace: 2,
+  chat: 3,
+}
+
 /** Search category tiles — deterministic counts until wired to analytics. */
 function searchCategoryTileViewerCount(tileIndex: number): number {
   const base = 16 + ((tileIndex * 47 + 11) % 156)
@@ -813,16 +820,35 @@ export default function HomeView({
   /** Map-forward mode from the sheet maps control (traffic + optional follow) without chat directions. */
   const [homeMapExploreMode, setHomeMapExploreMode] = useState(false)
   const [homeShellTab, setHomeShellTab] = useState<HomeShellTab>('services')
+  const [homeShellTabEnterClass, setHomeShellTabEnterClass] = useState('')
+  const prevHomeShellTabTransitionRef = useRef<HomeShellTab>('services')
   const [entryAddressSheetOpen, setEntryAddressSheetOpen] = useState(false)
   const [headerCoinBalance, setHeaderCoinBalance] = useState(0)
   const [bidwarsHubView, setBidwarsHubView] = useState<BidwarsHubView | null>(null)
+  const [bidwarsMatchmakingOpen, setBidwarsMatchmakingOpen] = useState(false)
   const [sellSheetOpen, setSellSheetOpen] = useState(false)
   const [pokiesOpen, setPokiesOpen] = useState(false)
+  const showHomeTabSkeleton = useOneTimePageSkeleton(`home-tab:${homeShellTab}`)
 
   useEffect(() => {
     ambientRegisterHome(1)
     return () => ambientRegisterHome(-1)
   }, [])
+
+  useEffect(() => {
+    const prev = prevHomeShellTabTransitionRef.current
+    prevHomeShellTabTransitionRef.current = homeShellTab
+    if (prev === homeShellTab) return
+    const prevIdx = HOME_SHELL_TAB_TRANSITION_ORDER[prev] ?? 0
+    const nextIdx = HOME_SHELL_TAB_TRANSITION_ORDER[homeShellTab] ?? 0
+    setHomeShellTabEnterClass(
+      nextIdx >= prevIdx
+        ? 'fetch-home-shell-route-enter--from-right'
+        : 'fetch-home-shell-route-enter--from-left',
+    )
+    const t = window.setTimeout(() => setHomeShellTabEnterClass(''), 360)
+    return () => window.clearTimeout(t)
+  }, [homeShellTab])
 
   useEffect(() => {
     ambientSetPokiesDuck(pokiesOpen)
@@ -843,7 +869,7 @@ export default function HomeView({
         return
       }
       const raw = sessionStorage.getItem('fetch.pendingHomeShellTab')
-      if (raw === 'chat' || raw === 'services' || raw === 'marketplace' || raw === 'reels' || raw === 'search') {
+      if (raw === 'chat' || raw === 'services' || raw === 'marketplace' || raw === 'search') {
         sessionStorage.removeItem('fetch.pendingHomeShellTab')
         setHomeShellTab(raw as HomeShellTab)
       }
@@ -865,14 +891,9 @@ export default function HomeView({
     () => Object.values(marketplaceCartQtyById).some((q) => typeof q === 'number' && q > 0),
     [marketplaceCartQtyById],
   )
-  /** Increment while already on Drops to reopen the menu (upload / go live). */
-  const [dropsNavRepeatTick, setDropsNavRepeatTick] = useState(0)
   /** Global FAB → seller overlay (post listing) on marketplace tab. */
   const [sellerHubHandoff, setSellerHubHandoff] = useState<MarketplaceSellerHubHandoff | null>(null)
-  /** Global FAB → open Go live sheet on Drops tab. */
-  const [goLiveSheetTick] = useState(0)
   const shellShopOrChat =
-    homeShellTab === 'reels' ||
     homeShellTab === 'marketplace' ||
     homeShellTab === 'chat' ||
     homeShellTab === 'search'
@@ -3307,7 +3328,7 @@ export default function HomeView({
         setDropsProductHandoff(null)
         setDropsListingHandoff(null)
       }
-      if (tab === 'reels' || tab === 'marketplace' || tab === 'chat') {
+      if (tab === 'marketplace' || tab === 'chat') {
         if (!chatNavRoute) setHomeMapExploreMode(false)
         setSheetSnap('closed')
       } else {
@@ -3363,39 +3384,6 @@ export default function HomeView({
     bumpInteraction()
     onHomeShellTabChange('search')
   }, [bumpInteraction, onHomeShellTabChange])
-
-  const onDropsCommerceAction = useCallback(
-    (
-      commerce: DropsCommerceTarget,
-      action: 'fetch_it' | 'buy_now' | 'place_bid',
-      meta?: { bidAmountAud?: number },
-    ) => {
-      bumpInteraction()
-      if (action === 'place_bid' && meta?.bidAmountAud != null) {
-        appendHomeAlert({
-          title: 'Bid (demo)',
-          body: `Offer $${meta.bidAmountAud} AUD recorded â€” production will sync bids to the server.`,
-        })
-      }
-      const mode = action === 'fetch_it' ? 'sheet' : action === 'place_bid' ? 'bid' : 'buyNow'
-      setDropsProductHandoff(null)
-      setDropsListingHandoff(null)
-      if (commerce.kind === 'marketplace_product') {
-        setDropsProductHandoff({ productId: commerce.productId, mode: mode === 'bid' ? 'sheet' : mode })
-        onHomeShellTabChange('marketplace')
-      } else if (commerce.kind === 'buy_sell_listing') {
-        if (action === 'fetch_it') {
-          bumpInteraction()
-          setDropsListingHandoff({ listingId: commerce.listingId, mode: 'sheet' })
-          onHomeShellTabChange('marketplace')
-          return
-        }
-        setDropsListingHandoff({ listingId: commerce.listingId, mode })
-        onHomeShellTabChange('marketplace')
-      }
-    },
-    [appendHomeAlert, bumpInteraction, onHomeShellTabChange],
-  )
 
   const clearDropsProductHandoff = useCallback(() => setDropsProductHandoff(null), [])
   const clearDropsListingHandoff = useCallback(() => setDropsListingHandoff(null), [])
@@ -5144,7 +5132,6 @@ export default function HomeView({
           type="button"
           className={[
             'fetch-home-intent-bottom-nav__fab',
-            homeShellTab === 'reels' ? 'fetch-home-intent-bottom-nav__fab--active' : '',
           ]
             .filter(Boolean)
             .join(' ')}
@@ -5647,7 +5634,6 @@ export default function HomeView({
   const shellTabNeedsPersistentDock =
     homeShellTab === 'chat' ||
     homeShellTab === 'search' ||
-    homeShellTab === 'reels' ||
     homeShellTab === 'marketplace'
 
   const showHomeShellBottomDock = Boolean(
@@ -5680,14 +5666,6 @@ export default function HomeView({
     prevHomeShellTabRef.current = homeShellTab
     if (brainImmersive) return
     if (prev !== 'services') return
-    if (homeShellTab === 'reels') {
-      void speakLine('Drops â€” scroll short commerce videos, like, save, and share.', {
-        debounceKey: 'reels_tab_ready_line',
-        debounceMs: 0,
-        withVoiceHold: true,
-      })
-      return
-    }
     if (homeShellTab === 'marketplace') {
       void speakLine(
         'Fetch marketplace is open â€” browse store items and local peer listings in one place.',
@@ -5718,7 +5696,7 @@ export default function HomeView({
         homeBrainFlow === 'tunnel' ? 'tunnel' : homeBrainFlow ? 'brain' : 'idle'
       }
     >
-      {showAppAddressHeader ? (
+      {showAppAddressHeader && !servicesExploreFullPage ? (
         <FetchHomeAppAddressHeader
           onSearchSubmit={onAppTopSearchSubmit}
           onOpenAccount={onAppTopAccount}
@@ -5753,17 +5731,20 @@ export default function HomeView({
         }}
         bottomNav={homeShellDockInsideHub}
       />
+      <FetchBidWarsMatchmakingOverlay
+        open={bidwarsMatchmakingOpen}
+        onClose={() => setBidwarsMatchmakingOpen(false)}
+      />
+      <FetchPremiumPageSkeleton visible={showHomeTabSkeleton} />
 
       <SellOptionsSheet
         open={sellSheetOpen}
         onClose={() => setSellSheetOpen(false)}
         onSellItem={() => navigate(FETCH_MARKETPLACE_LIST_PATH)}
         onGoLive={() => {
-          if (homeShellTab === 'reels') {
-            setDropsNavRepeatTick((n) => n + 1)
-          } else {
-            onHomeShellTabChange('reels')
-          }
+          setSellSheetOpen(false)
+          setSellerHubHandoff({ id: Date.now(), panel: 'create' })
+          onHomeShellTabChange('marketplace')
         }}
       />
 
@@ -5775,7 +5756,7 @@ export default function HomeView({
           if (goal === 'list') {
             navigate(FETCH_MARKETPLACE_LIST_PATH)
           } else if (goal === 'live') {
-            if (homeShellTab !== 'reels') onHomeShellTabChange('reels')
+            onHomeShellTabChange('marketplace')
           }
           // 'streak' / 'invite' just dismiss for now — there's no dedicated route yet.
         }}
@@ -5852,11 +5833,16 @@ export default function HomeView({
 
       {!brainImmersive && servicesExploreFullPage ? (
         <>
-        <div className="fetch-explore-full-page-shell absolute inset-0 z-[52] flex min-h-dvh flex-col bg-[#f3f0fa]">
+        <div
+          className={[
+            'fetch-explore-full-page-shell absolute inset-0 z-[52] flex min-h-dvh flex-col bg-[#f3f0fa]',
+            homeShellTab === 'services' ? homeShellTabEnterClass : '',
+          ].join(' ')}
+        >
           {!forYouLoaded ? (
             <main
               className={[
-                'mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f3f0fa] pb-2',
+                'mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f3f0fa] pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+1rem)]',
                 exploreFullPageMainTopPad,
               ].join(' ')}
               role="main"
@@ -5867,8 +5853,7 @@ export default function HomeView({
           ) : (
             <main
               className={[
-                'mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f3f0fa] px-3 pb-2 animate-[fetch-for-you-fadein_0.45s_ease_both]',
-                exploreFullPageMainTopPad,
+                'mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f3f0fa] pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+1rem)] animate-[fetch-for-you-fadein_0.45s_ease_both]',
               ].join(' ')}
               role="main"
               aria-label="Explore"
@@ -5887,7 +5872,7 @@ export default function HomeView({
                 onExploreFeedScrollTop={
                   servicesExploreFullPage ? onExploreFullPageFeedScroll : undefined
                 }
-                onOpenDrops={() => onHomeShellTabChange('reels')}
+                onOpenDrops={() => onHomeShellTabChange('marketplace')}
                 onOpenMarketplace={() => onHomeShellTabChange('marketplace')}
                 onOpenSearch={() => {
                   bumpInteraction()
@@ -5902,6 +5887,11 @@ export default function HomeView({
                   bumpInteraction()
                   setDropsListingHandoff({ listingId, mode: 'buyNow' })
                   onHomeShellTabChange('marketplace')
+                }}
+                onViewBackpack={onAppTopOpenCart}
+                onJoinBidWar={() => {
+                  bumpInteraction()
+                  setBidwarsMatchmakingOpen(true)
                 }}
                 intentOrbHintBubble={intentOrbHintBubble}
                 intentOrbHintCopy={HOME_INTENT_ORB_BUBBLE_HINT}
@@ -6320,7 +6310,7 @@ export default function HomeView({
                   <ServicesExploreHomePanel
                     furniturePromoBleed="tight"
                     scanning={scanning}
-                    onOpenDrops={() => onHomeShellTabChange('reels')}
+                    onOpenDrops={() => onHomeShellTabChange('marketplace')}
                     onOpenMarketplace={() => onHomeShellTabChange('marketplace')}
                     onOpenSearch={() => {
                       bumpInteraction()
@@ -6335,6 +6325,11 @@ export default function HomeView({
                       bumpInteraction()
                       setDropsListingHandoff({ listingId, mode: 'buyNow' })
                       onHomeShellTabChange('marketplace')
+                    }}
+                    onViewBackpack={onAppTopOpenCart}
+                    onJoinBidWar={() => {
+                      bumpInteraction()
+                      setBidwarsMatchmakingOpen(true)
                     }}
                     intentOrbHintBubble={intentOrbHintBubble}
                     intentOrbHintCopy={HOME_INTENT_ORB_BUBBLE_HINT}
@@ -7854,60 +7849,55 @@ export default function HomeView({
       homeShellTab === 'marketplace' &&
       cardVisible &&
       homeBrainFlow == null ? (
-        <HomeShellMarketplacePage
-          bottomNav={homeShellDockBehindHub}
-          hardwareProducts={HARDWARE_PRODUCTS}
-          cartQtyById={marketplaceCartQtyById}
-          setCartQtyById={setMarketplaceCartQtyById}
-          onMenuAccount={onAccountNavigate}
-          dropsProductHandoff={dropsProductHandoff}
-          onDropsProductHandoffConsumed={clearDropsProductHandoff}
-          onOpenListingChat={openListingChatHandoff}
-          onBookDriver={onBuySellBookDriver}
-          dropsListingHandoff={dropsListingHandoff}
-          onDropsListingHandoffConsumed={clearDropsListingHandoff}
-          browseHandoff={marketplaceBrowseHandoff}
-          onBrowseHandoffConsumed={clearMarketplaceBrowseHandoff}
-          sellerHubHandoff={sellerHubHandoff}
-          onSellerHubHandoffConsumed={clearSellerHubHandoff}
-        />
+        <div className={homeShellTabEnterClass}>
+          <HomeShellMarketplacePage
+            bottomNav={homeShellDockBehindHub}
+            hardwareProducts={HARDWARE_PRODUCTS}
+            cartQtyById={marketplaceCartQtyById}
+            setCartQtyById={setMarketplaceCartQtyById}
+            onMenuAccount={onAccountNavigate}
+            dropsProductHandoff={dropsProductHandoff}
+            onDropsProductHandoffConsumed={clearDropsProductHandoff}
+            onOpenListingChat={openListingChatHandoff}
+            onBookDriver={onBuySellBookDriver}
+            dropsListingHandoff={dropsListingHandoff}
+            onDropsListingHandoffConsumed={clearDropsListingHandoff}
+            browseHandoff={marketplaceBrowseHandoff}
+            onBrowseHandoffConsumed={clearMarketplaceBrowseHandoff}
+            sellerHubHandoff={sellerHubHandoff}
+            onSellerHubHandoffConsumed={clearSellerHubHandoff}
+          />
+        </div>
       ) : null}
-
-      {!brainImmersive &&
-      homeShellTab === 'reels' &&
-      cardVisible &&
-      homeBrainFlow == null ? (
-        <HomeShellReelsPage
-          bottomNav={homeShellDockBehindHub}
-          onMenuAccount={onAccountNavigate}
-          onCommerceAction={onDropsCommerceAction}
-          dropsNavRepeatTick={dropsNavRepeatTick}
-          goLiveSheetTick={goLiveSheetTick}
-        />
-      ) : null}
-
 
       {!brainImmersive &&
       homeShellTab === 'chat' &&
       cardVisible &&
       homeBrainFlow == null ? (
-        <HomeShellChatHubPage
-          bottomNav={homeShellDockBehindHub}
-          onMenuAccount={onAccountNavigate}
-          onChatWithField={onChatHubOpenField}
-          initialThreadId={pendingChatThreadId}
-          onConsumedInitialThread={() => setPendingChatThreadId(null)}
-          listingUnread={messagesUnread.listing}
-          supportUnread={messagesUnread.support}
-          onFetchIt={onChatFetchItListing}
-        />
+        <div className={homeShellTabEnterClass}>
+          <HomeShellChatHubPage
+            bottomNav={homeShellDockBehindHub}
+            onMenuAccount={onAccountNavigate}
+            onChatWithField={onChatHubOpenField}
+            initialThreadId={pendingChatThreadId}
+            onConsumedInitialThread={() => setPendingChatThreadId(null)}
+            listingUnread={messagesUnread.listing}
+            supportUnread={messagesUnread.support}
+            onFetchIt={onChatFetchItListing}
+          />
+        </div>
       ) : null}
 
       {!brainImmersive &&
       homeShellTab === 'search' &&
       cardVisible &&
       homeBrainFlow == null ? (
-        <div className="fetch-home-search-route absolute inset-0 z-[52] flex min-h-dvh flex-col bg-[#f8f6fd]">
+        <div
+          className={[
+            'fetch-home-search-route absolute inset-0 z-[52] flex min-h-dvh flex-col bg-[#f8f6fd]',
+            homeShellTabEnterClass,
+          ].join(' ')}
+        >
           <main
             className="fetch-home-search-categories mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f8f6fd] px-3 pb-2 pt-[calc(max(0.5rem,env(safe-area-inset-top,0px))+5.1rem)]"
             role="main"
@@ -7924,7 +7914,7 @@ export default function HomeView({
                 onAppTopSearchSubmit(searchQuery.trim())
               }}
             >
-              <label className="fetch-home-search-hero__field flex h-12 w-full items-center gap-2 rounded-2xl px-3 transition-[border-color,box-shadow] duration-200">
+              <label className="fetch-home-search-hero__field flex h-12 w-full items-center gap-2 rounded-full px-3 transition-[border-color,box-shadow] duration-200">
                 <svg className="h-5 w-5 shrink-0 text-zinc-500" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <path
                     d="M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15zM16.5 16.5L21 21"
@@ -8043,7 +8033,7 @@ export default function HomeView({
                   {pendingSearchCategoryChoice.title}
                 </h2>
                 <p className="px-4 pb-3 text-center text-[12px] font-medium leading-snug text-zinc-500">
-                  Open listings or jump to live videos?
+                  Open matching marketplace listings.
                 </p>
                 <div className="border-t border-zinc-200/80">
                   <button
@@ -8063,23 +8053,6 @@ export default function HomeView({
                     <span className="min-w-0 flex-1">
                       <span className="block">Listings</span>
                       <span className="mt-0.5 block text-[11px] font-medium text-zinc-500">See matching marketplace items</span>
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onHomeShellTabChange('reels')
-                      setPendingSearchCategoryChoice(null)
-                    }}
-                    className="flex w-full items-center gap-3 border-t border-zinc-200/80 px-4 py-3.5 text-left text-[15px] font-semibold text-zinc-900 transition-colors active:bg-violet-50"
-                  >
-                    <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 ring-1 ring-red-500/30">
-                      <span className="absolute inline-flex h-2.5 w-2.5 animate-ping rounded-full bg-red-500 opacity-60" aria-hidden />
-                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.85)]" aria-hidden />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block">Live</span>
-                      <span className="mt-0.5 block text-[11px] font-medium text-zinc-500">Watch related live videos</span>
                     </span>
                   </button>
                 </div>

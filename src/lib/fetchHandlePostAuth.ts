@@ -1,5 +1,4 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js'
-import { needsDropsCreatorOnboarding } from './drops/fetchDropsCreatorOnboarding'
 import { FETCH_APP_PATH, FETCH_PROFILE_PATH } from './fetchRoutes'
 import { hasEntryAddressSheetAfterSignupRequest } from './fetchEntryAddressOnboarding'
 import { refreshSessionFromSupabase, seedSessionCacheFromSupabaseUser } from './fetchUserSession'
@@ -29,7 +28,7 @@ export type HandlePostAuthContext = {
   /** Last applied route key — prevents duplicate navigations from rapid auth events. */
   lastRouteKeyRef: { current: string | null }
   /** Keeps the in-app phase aligned with the URL after navigation. */
-  setAppPhase: (phase: 'home' | 'dropsSetup') => void
+  setAppPhase: (phase: 'home') => void
 }
 
 /**
@@ -46,16 +45,14 @@ export async function handlePostAuthUser(authUser: User, ctx: HandlePostAuthCont
 
   seedSessionCacheFromSupabaseUser(authUser)
 
-  const drops = needsDropsCreatorOnboarding()
   const addressPromptAfterSignup = hasEntryAddressSheetAfterSignupRequest()
-  const path: string = drops || addressPromptAfterSignup ? FETCH_APP_PATH : FETCH_PROFILE_PATH
+  const path: string = addressPromptAfterSignup ? FETCH_APP_PATH : FETCH_PROFILE_PATH
 
-  const routeKey = `${authUser.id}|${path}|${drops ? 'drops' : 'main'}`
+  const routeKey = `${authUser.id}|${path}|main`
   if (ctx.lastRouteKeyRef.current !== routeKey) {
     ctx.lastRouteKeyRef.current = routeKey
-    console.log('[ROUTE] handlePostAuthUser apply', { path, drops, addressPromptAfterSignup })
-    if (drops) ctx.setAppPhase('dropsSetup')
-    else ctx.setAppPhase('home')
+    console.log('[ROUTE] handlePostAuthUser apply', { path, addressPromptAfterSignup })
+    ctx.setAppPhase('home')
     ctx.navigate(path, { replace: true })
   } else {
     console.log('[ROUTE] handlePostAuthUser skip (already applied)', routeKey)

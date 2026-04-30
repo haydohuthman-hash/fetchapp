@@ -198,9 +198,9 @@ export type HomeShellBuySellPageProps = {
   onMenuAccount?: () => void
   /** Create/open a listing DM and let the shell switch to the chat tab. */
   onOpenListingChat?: (listingId: string) => void | Promise<void>
-  /** Switch shell tab (e.g. open Drops from marketplace). */
+  /** Switch shell tab from marketplace. */
   onRequestHomeShellTab?: (tab: HomeShellTab) => void
-  /** From Drops: open a peer listing (and optionally start buy). */
+  /** Open a peer listing handoff (and optionally start buy). */
   dropsListingHandoff?: BuySellDropsListingHandoff | null
   onDropsListingHandoffConsumed?: () => void
   /** Jump to home services and start pick & drop booking. */
@@ -748,9 +748,9 @@ function HomeShellBuySellPageInner({
     }
   }
 
-  const openSellerInDrops = useCallback(() => {
-    onRequestHomeShellTab?.('reels')
-  }, [onRequestHomeShellTab])
+  const openSellerTools = useCallback(() => {
+    setPanel('create')
+  }, [])
 
   const startBuy = async (listing: PeerListing) => {
     setBuyErr(null)
@@ -2346,7 +2346,7 @@ function HomeShellBuySellPageInner({
                 <button
                   type="button"
                   className="shrink-0 rounded-lg bg-zinc-900 px-3 py-2 text-[12px] font-bold text-white active:bg-zinc-800"
-                  onClick={openSellerInDrops}
+                  onClick={openSellerTools}
                 >
                   View in Drops
                 </button>

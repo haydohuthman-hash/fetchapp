@@ -1,5 +1,4 @@
 import { normalizeEmail, type FetchUserRecord, loadSession } from './fetchUserSession'
-import { completeDropsCreatorOnboarding, needsDropsCreatorOnboarding } from './drops/fetchDropsCreatorOnboarding'
 import { completePlatformOnboarding, needsPlatformOnboarding } from './fetchPlatformIdentity'
 
 /** Password for the local Supabase demo user (pair with {@link getFetchDevDemoUserEmail}). */
@@ -30,19 +29,16 @@ export function isFetchDevDemoSession(session: FetchUserRecord | null): boolean 
 }
 
 /**
- * When the signed-in user is the local demo account, mark platform + Drops creator
- * onboarding complete so Reels posting and marketplace seller flows are reachable.
+ * When the signed-in user is the local demo account, mark platform onboarding
+ * complete so marketplace seller flows are reachable.
  */
 export function applyFetchDevDemoLocalBootstrap(): void {
   if (!isFetchDevDemoSession(loadSession())) return
   if (needsPlatformOnboarding()) {
     completePlatformOnboarding({
       role: 'fetcher',
-      interests: ['buy_browse', 'sell', 'drops'],
+      interests: ['buy_browse', 'sell'],
     })
-  }
-  if (needsDropsCreatorOnboarding()) {
-    completeDropsCreatorOnboarding()
   }
 }
 

@@ -29,7 +29,7 @@ export type HomeBookingSheetSurface =
   | 'confirm'
   | 'live'
 
-export type HomeShellTab = 'services' | 'reels' | 'marketplace' | 'chat' | 'search'
+export type HomeShellTab = 'services' | 'marketplace' | 'chat' | 'search'
 
 const SNAP_ORDER: HomeBookingSheetSnap[] = ['closed', 'compact', 'half', 'full']
 
@@ -202,7 +202,7 @@ function ShellModeSwitchButton({
   const baseBtn =
     sizeClass +
     ' fetch-home-sheet-chrome-btn flex shrink-0 items-center justify-center rounded-full transition-[transform,colors,box-shadow] active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/35'
-  const goShop = tab === 'services' || tab === 'reels'
+  const goShop = tab === 'services'
   return (
     <button
       type="button"
@@ -753,7 +753,6 @@ export function FetchHomeBookingSheet({
             ) : null}
             {closedPeekShellRow ? (
               homeShellTab === 'services' ||
-              homeShellTab === 'reels' ||
               homeShellTab === 'marketplace' ||
               homeShellTab === 'chat' ? (
                 <>

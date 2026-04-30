@@ -430,3 +430,162 @@ export function playConfettiPops(): void {
     osc(c, m, freq, 0.07 + Math.random() * 0.07, 'square', 0.14 + Math.random() * 0.1, delay)
   }
 }
+
+/* ─── Matchmaking overlay SFX ───────────────────────────────────────────── */
+
+/**
+ * Soft radar ping during the matchmaking search phase.
+ * Pitch wobbles over time so successive pings don't feel monotonous.
+ */
+export function playMatchmakingPing(): void {
+  const c = ctx()
+  if (!c) return
+  const m = out(c, 0.42)
+  const base = 880 + Math.random() * 220
+  osc(c, m, base, 0.1, 'sine', 0.22)
+  osc(c, m, base * 1.5, 0.08, 'sine', 0.1, 0.04)
+  noise(c, m, 0.04, 0.08, 0.02)
+}
+
+/**
+ * Whoosh used when a new listing card slides into the vote phase.
+ */
+export function playListingReveal(): void {
+  const c = ctx()
+  if (!c) return
+  const m = out(c, 0.6)
+  const t = c.currentTime
+
+  /* Up-sweep */
+  const node = c.createOscillator()
+  const g = c.createGain()
+  node.type = 'sawtooth'
+  node.frequency.setValueAtTime(220, t)
+  node.frequency.exponentialRampToValueAtTime(960, t + 0.22)
+  g.gain.setValueAtTime(0.001, t)
+  g.gain.linearRampToValueAtTime(0.32, t + 0.08)
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32)
+  node.connect(g)
+  g.connect(m)
+  node.start(t)
+  node.stop(t + 0.36)
+
+  /* Air whoosh */
+  noise(c, m, 0.28, 0.32, 0)
+
+  /* Bright tag */
+  osc(c, m, 1320, 0.18, 'sine', 0.18, 0.18)
+}
+
+/**
+ * Vote passes — bright two-tone confirm with a quick shimmer tail.
+ */
+export function playVotePass(): void {
+  const c = ctx()
+  if (!c) return
+  const m = out(c, 0.7)
+  ;([523.3, 783.9, 1046.5] as const).forEach((f, i) => {
+    osc(c, m, f, 0.18, 'triangle', 0.32, i * 0.06)
+  })
+  osc(c, m, 1568, 0.28, 'sine', 0.18, 0.2)
+}
+
+/**
+ * Vote fails — short descending buzzer (reject).
+ */
+export function playVoteReject(): void {
+  const c = ctx()
+  if (!c) return
+  const m = out(c, 0.55)
+  const t = c.currentTime
+  const node = c.createOscillator()
+  const g = c.createGain()
+  node.type = 'sawtooth'
+  node.frequency.setValueAtTime(280, t)
+  node.frequency.linearRampToValueAtTime(150, t + 0.32)
+  g.gain.setValueAtTime(0.34, t)
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.42)
+  node.connect(g)
+  g.connect(m)
+  node.start(t)
+  node.stop(t + 0.45)
+  /* Light noise to give it some grit */
+  noise(c, m, 0.18, 0.18, 0.02)
+}
+
+/**
+ * Gift card landing pop — bouncy "boop" + sparkle for the first-adventure
+ * map flying into the backpack.
+ */
+export function playGiftPop(): void {
+  const c = ctx()
+  if (!c) return
+  const m = out(c, 0.7)
+  const t = c.currentTime
+
+  /* Bouncy sine pop */
+  const node = c.createOscillator()
+  const g = c.createGain()
+  node.type = 'sine'
+  node.frequency.setValueAtTime(220, t)
+  node.frequency.exponentialRampToValueAtTime(660, t + 0.06)
+  node.frequency.exponentialRampToValueAtTime(360, t + 0.18)
+  g.gain.setValueAtTime(0.001, t)
+  g.gain.linearRampToValueAtTime(0.5, t + 0.04)
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32)
+  node.connect(g)
+  g.connect(m)
+  node.start(t)
+  node.stop(t + 0.36)
+
+  /* Sparkle on top */
+  ;([1320, 1760, 2349] as const).forEach((f, i) => {
+    osc(c, m, f, 0.18, 'sine', 0.16, 0.05 + i * 0.04)
+  })
+
+  /* Subtle noise click */
+  noise(c, m, 0.04, 0.12, 0)
+}
+
+/**
+ * Bid War horn — big triumphant blast when a listing wins the vote and the
+ * full-screen bidding stage takes over. Layered low-brass + impact + sparkle.
+ */
+export function playBidWarHorn(): void {
+  const c = ctx()
+  if (!c) return
+  const m = out(c, 0.85)
+  const t = c.currentTime
+
+  /* Low brass swell */
+  const brass = c.createOscillator()
+  const bg = c.createGain()
+  const ds = distort(c, 70)
+  brass.type = 'sawtooth'
+  brass.frequency.setValueAtTime(98, t)
+  brass.frequency.linearRampToValueAtTime(196, t + 0.18)
+  brass.frequency.setValueAtTime(196, t + 0.6)
+  brass.frequency.exponentialRampToValueAtTime(130, t + 1.0)
+  bg.gain.setValueAtTime(0.001, t)
+  bg.gain.linearRampToValueAtTime(0.55, t + 0.12)
+  bg.gain.setValueAtTime(0.45, t + 0.7)
+  bg.gain.exponentialRampToValueAtTime(0.0001, t + 1.2)
+  brass.connect(ds)
+  ds.connect(bg)
+  bg.connect(m)
+  brass.start(t)
+  brass.stop(t + 1.3)
+
+  /* Mid harmony — perfect fifth above */
+  osc(c, m, 294, 1.0, 'sawtooth', 0.22, 0.05)
+  osc(c, m, 392, 0.9, 'triangle', 0.18, 0.1)
+
+  /* Impact / kick */
+  noise(c, m, 0.22, 0.55, 0)
+  osc(c, m, 70, 0.6, 'sine', 0.7, 0)
+
+  /* Sparkle on top */
+  ;([1046.5, 1318.5, 1568, 2093] as const).forEach((f, i) => {
+    osc(c, m, f, 0.5, 'sine', 0.16, 0.18 + i * 0.05)
+  })
+}

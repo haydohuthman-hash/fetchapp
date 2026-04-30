@@ -18,6 +18,10 @@ export type ServicesExploreHomePanelProps = {
   onOpenMarketplaceBrowse?: (filter: MarketplacePeerBrowseFilter) => void
   onOpenPeerListing: (listingId: string) => void
   onQuickBuyPeerListing: (listingId: string) => void
+  /** Hero floating card: opens backpack / cart (defaults to marketplace). */
+  onViewBackpack?: () => void
+  /** Opens the Bid Wars hub from the adventure promo. */
+  onJoinBidWar?: () => void
   intentOrbHintBubble: boolean
   intentOrbHintCopy: string
   fetchDogEarsActive: boolean
@@ -58,6 +62,8 @@ export function ServicesExploreHomePanel({
   onOpenMarketplaceBrowse,
   onOpenPeerListing,
   onQuickBuyPeerListing,
+  onViewBackpack,
+  onJoinBidWar,
   intentOrbHintBubble: _intentOrbHintBubble,
   intentOrbHintCopy: _intentOrbHintCopy,
   fetchDogEarsActive: _fetchDogEarsActive,
@@ -102,7 +108,7 @@ export function ServicesExploreHomePanel({
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-violet-50/40">
       <div
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-violet-50/40 [-webkit-overflow-scrolling:touch] pr-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-violet-50/40 pb-[max(3.5rem,env(safe-area-inset-bottom,0px)+5.25rem)] [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         onScroll={
           onExploreFeedScrollTop
             ? (e) => {
@@ -129,6 +135,8 @@ export function ServicesExploreHomePanel({
           onOpenMarketplaceBrowse={onOpenMarketplaceBrowse}
           onOpenPeerListing={onOpenPeerListing}
           onQuickBuyPeerListing={onQuickBuyPeerListing}
+          onViewBackpack={onViewBackpack}
+          onJoinBidWar={onJoinBidWar}
         />
       </div>
 

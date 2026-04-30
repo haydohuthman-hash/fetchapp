@@ -9,10 +9,6 @@ import {
   type SetStateAction,
 } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import {
-  setDropsCreatorReturnTarget,
-  needsDropsCreatorOnboarding,
-} from './lib/drops/fetchDropsCreatorOnboarding'
 import { computePostAuthAppPhase } from './lib/fetchPostAuthRouting'
 import { handlePostAuthUser } from './lib/fetchHandlePostAuth'
 import {
@@ -39,6 +35,7 @@ import { FetchVoiceProvider } from './voice/FetchVoiceContext'
 import { FetchAppShellSuspenseFallback } from './components/FetchAppShellSuspenseFallback'
 import { FetchAppBottomNav } from './components/FetchAppBottomNav'
 import { FetchBoomerangSplash } from './components/FetchBoomerangSplash'
+import { FetchPremiumPageSkeleton, useOneTimePageSkeleton } from './components/FetchPremiumPageSkeleton'
 
 const homeChunk = () => import('./views/HomeView')
 const HomeView = lazy(homeChunk)
@@ -48,9 +45,6 @@ const AuthScreen = lazy(authChunk)
 
 const driverChunk = () => import('./views/DriverDashboardView')
 const DriverDashboardView = lazy(driverChunk)
-
-const dropsCreatorSetupChunk = () => import('./views/DropsCreatorSetupView')
-const DropsCreatorSetupView = lazy(dropsCreatorSetupChunk)
 
 const fetchProfilePageChunk = () => import('./views/FetchProfilePage')
 const FetchProfilePage = lazy(fetchProfilePageChunk)
@@ -63,8 +57,7 @@ const FetchWalletPlaceholderView = lazy(fetchWalletPlaceholderChunk)
 const fetchGemsChunk = () => import('./views/FetchGemsView')
 const FetchGemsView = lazy(fetchGemsChunk)
 
-type AppPhase = 'splash' | 'home' | 'auth' | 'dropsSetup' | 'driver'
-type PostAuthTarget = 'auth' | 'home' | 'dropsSetup'
+type AppPhase = 'splash' | 'home' | 'auth' | 'driver'
 type PostAuthTrace = {
   source: 'auth-success' | 'auth-event'
   startedAtMs: number
@@ -98,30 +91,19 @@ function nowMs(): number {
   return Date.now()
 }
 
-function likelyPostAuthTargetFromHints(): PostAuthTarget {
-  const s = loadSession()
-  if (!s?.email?.trim()) return 'auth'
-  if (needsDropsCreatorOnboarding()) return 'dropsSetup'
-  return 'home'
-}
-
 function applyPostAuthRouteIfNeeded(
   navigate: (path: string, opts?: { replace?: boolean }) => void,
-  setDropsHome: () => void,
+  _setDropsHome: () => void,
   setPhase: Dispatch<SetStateAction<AppPhase>>,
 ): void {
   const target = computePostAuthAppPhase()
   console.log('[ROUTE] applyPostAuthRouteIfNeeded target:', target)
   if (!target) return
-  if (target === 'dropsSetup') setDropsHome()
-  if (target === 'dropsSetup') {
-    navigate(FETCH_APP_PATH, { replace: true })
-  } else if (target === 'home') {
+  if (target === 'home') {
     navigate(FETCH_PROFILE_PATH, { replace: true })
   }
   setPhase((cur) => {
     if (cur === 'driver') return cur
-    if (cur === 'dropsSetup') return cur
     if (cur === 'splash' || cur === 'home' || cur === 'auth') return target
     return cur
   })
@@ -225,7 +207,6 @@ function App() {
       sequence: seq,
       elapsedMs,
       authToHome: seq === 'auth -> home',
-      authToHomeToDropsSetup: seq === 'auth -> home -> dropsSetup',
     })
     postAuthTraceRef.current = null
   }, [])
@@ -258,7 +239,7 @@ function App() {
       phase,
       elapsedMs: Math.round(nowMs() - t.startedAtMs),
     })
-    const done = phase === 'home' || phase === 'dropsSetup'
+    const done = phase === 'home'
     if (done && t.sequence.length >= 2) finalizePostAuthTrace('terminal')
   }, [phase, finalizePostAuthTrace])
 
@@ -266,16 +247,11 @@ function App() {
     void homeChunk()
     void authChunk()
     void driverChunk()
-    void dropsCreatorSetupChunk()
   }, [])
 
   /** Warm home chunk while user is on sign-in so post-auth transition feels instant. */
   useEffect(() => {
     if (phase === 'auth') void homeChunk()
-    if (phase === 'auth') {
-      const hinted = likelyPostAuthTargetFromHints()
-      if (hinted === 'dropsSetup') void dropsCreatorSetupChunk()
-    }
   }, [phase])
 
   useEffect(
@@ -344,7 +320,7 @@ function App() {
 
         const reconcile = () => {
           void refreshSessionFromSupabase().then(() => {
-            applyPostAuthRouteIfNeeded(navigate, () => setDropsCreatorReturnTarget('home'), setPhase)
+            applyPostAuthRouteIfNeeded(navigate, () => undefined, setPhase)
           })
         }
         console.log('[AUTH] profile reconcile (cold start follow-up)')
@@ -414,7 +390,7 @@ function App() {
 
       if (event === 'TOKEN_REFRESHED' && session?.user && shellHydrateDoneRef.current) {
         void refreshSessionFromSupabase().then(() => {
-          applyPostAuthRouteIfNeeded(navigate, () => setDropsCreatorReturnTarget('home'), setPhase)
+          applyPostAuthRouteIfNeeded(navigate, () => undefined, setPhase)
         })
       }
     })
@@ -426,12 +402,6 @@ function App() {
       console.log('[ROUTE] open auth (no session cache)')
       navigate(FETCH_AUTH_PATH, { replace: true })
       setPhase('auth')
-      return
-    }
-    if (needsDropsCreatorOnboarding()) {
-      setDropsCreatorReturnTarget('account')
-      navigate(FETCH_APP_PATH, { replace: true })
-      setPhase('dropsSetup')
       return
     }
     navigate(FETCH_PROFILE_PATH, { replace: true })
@@ -496,11 +466,6 @@ function App() {
                   <FetchProfilePage
                     onOpenApp={() => navigate(FETCH_APP_PATH)}
                     onOpenDrops={() => {
-                      try {
-                        sessionStorage.setItem('fetch.pendingHomeShellTab', 'reels')
-                      } catch {
-                        /* ignore */
-                      }
                       navigate(FETCH_APP_PATH)
                     }}
                     onEditProfile={() => navigate(FETCH_PROFILE_EDIT_PATH)}
@@ -556,25 +521,6 @@ function App() {
         </Suspense>
       )
     }
-    if (phase === 'dropsSetup') {
-      return (
-        <Suspense
-          fallback={
-            <FetchAppShellSuspenseFallback
-              title="Opening creator setup…"
-              subtitle="Preparing your public profile tools."
-            />
-          }
-        >
-          <DropsCreatorSetupView
-            onDone={() => {
-              navigate(FETCH_PROFILE_PATH, { replace: true })
-              setPhase('home')
-            }}
-          />
-        </Suspense>
-      )
-    }
     console.log('[AUTH] blank-screen guard triggered', { phase })
     return (
       <FetchAppShellSuspenseFallback
@@ -585,6 +531,8 @@ function App() {
   })()
 
   const homeLightShell = phase === 'home' && !isHomeProfileSurface
+  const pageSkeletonKey = `${phase}:${pathname}`
+  const showPageSkeleton = useOneTimePageSkeleton(pageSkeletonKey, entrySplashDone)
 
   return (
     <FetchVoiceProvider>
@@ -611,6 +559,7 @@ function App() {
           {phaseBody}
         </div>
       </div>
+      <FetchPremiumPageSkeleton visible={showPageSkeleton} />
     </FetchVoiceProvider>
   )
 }

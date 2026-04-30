@@ -25,35 +25,45 @@ function SearchNavGlyph({ className = '' }: { className?: string }) {
   )
 }
 
-/**
- * Game controller glyph — gamepad silhouette used in the header to launch
- * the Pokies / arcade overlay. Replaces the older slot-machine glyph.
- */
-function GameControllerGlyph({ className = '' }: { className?: string }) {
+/** Purple gem — launches the Pokies / arcade overlay. */
+function PurpleGemGlyph({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg className={className} width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M6.2 6.5h11.6c2.2 0 3.7 1.6 3.7 3.9v3.1c0 1.7-1.1 3.2-2.7 3.2-1.1 0-2-.6-2.6-1.7l-.7-1.3H8.5l-.7 1.3c-.6 1.1-1.5 1.7-2.6 1.7-1.6 0-2.7-1.5-2.7-3.2v-3.1c0-2.3 1.5-3.9 3.7-3.9z"
-        fill="#4c1d95"
+        d="M7.15 4.75h9.7l3.35 5.1L12 20.1 3.8 9.85l3.35-5.1z"
+        fill="rgba(76,29,149,0.08)"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
       />
-      {/* D-pad */}
-      <rect x="6.2" y="10.5" width="3.4" height="1.4" rx="0.35" fill="#fff" />
-      <rect x="7.4" y="9.3" width="1.4" height="3.4" rx="0.35" fill="#fff" />
-      {/* Action buttons */}
-      <circle cx="14.5" cy="9.6" r="0.95" fill="#fde047" />
-      <circle cx="16.6" cy="11.2" r="0.95" fill="#22c55e" />
-      <circle cx="14.5" cy="12.8" r="0.95" fill="#fb7185" />
-      <circle cx="12.4" cy="11.2" r="0.95" fill="#fff" />
+      <path
+        d="M3.8 9.85h16.4M7.15 4.75l2.25 5.1L12 20.1m4.85-15.35-2.25 5.1L12 20.1M9.4 9.85h5.2"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.72"
+      />
     </svg>
   )
 }
 
-function CartGlyph({ className = '' }: { className?: string }) {
+function BackpackGlyph({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M3 4h2l2.1 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="10" cy="19" r="1.4" fill="currentColor" />
-      <circle cx="17" cy="19" r="1.4" fill="currentColor" />
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M9 7V5.5a3 3 0 016 0V7M8.2 7h7.6A3.8 3.8 0 0119.8 10.8V18a2.2 2.2 0 01-2.2 2.2H6.4A2.2 2.2 0 014.2 18v-7.2A3.8 3.8 0 018.2 7z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 11.5V16M7.5 12h-1M17.5 12h-1"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -108,12 +118,12 @@ export function FetchItWordmark({
   )
 }
 
-/** Round header controls (account, chat, gems, cart) — shared chrome. */
+/** Round header controls (account, chat, gems, backpack) — shared chrome. */
 const headerChromeIconBtn =
-  'fetch-apple-warp-btn flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100/60 text-[#4c1d95]/70 transition-colors hover:bg-violet-100 hover:text-[#4c1d95] active:scale-[0.98]'
+  'fetch-apple-warp-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-transparent text-[#1c1528] transition-colors hover:text-[#4c1d95] active:scale-[0.98]'
 
 const brandMinimalIconBtn =
-  'fetch-apple-warp-btn flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-zinc-900 transition-colors hover:bg-zinc-100/90 active:scale-[0.97]'
+  'fetch-apple-warp-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-transparent text-[#1c1528] transition-colors hover:text-[#4c1d95] active:scale-[0.97]'
 
 const headerEase =
   'duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:duration-150 motion-reduce:ease-out'
@@ -166,7 +176,7 @@ function HeaderWalletChip({ onOpen }: { onOpen: () => void }) {
 }
 
 /**
- * Home top bar: wallet, account & chat shortcuts, gems, cart.
+ * Home top bar: wallet, account & chat shortcuts, gems, backpack.
  * Fixed under the safe area.
  */
 export function FetchHomeAppAddressHeader({
@@ -193,7 +203,7 @@ export function FetchHomeAppAddressHeader({
   /** Visible coin count next to the coin icon. */
   coinBalance?: number
   /**
-   * `wallet` — wallet chip + account, chat, gems, cart (map / default home).
+   * `wallet` — wallet chip + account, chat, gems, backpack (map / default home).
    * `brand-minimal` — wordmark “fetch” + “it” and search + bell (Explore full page).
    */
   variant?: 'wallet' | 'brand-minimal'
@@ -206,7 +216,7 @@ export function FetchHomeAppAddressHeader({
     return (
       <header
         className={[
-          'fetch-app-address-header pointer-events-auto fixed left-0 right-0 top-0 z-[56] bg-white shadow-[0_1px_0_rgba(76,29,149,0.06)]',
+          'fetch-app-address-header pointer-events-auto fixed left-0 right-0 top-0 z-[56] bg-transparent shadow-none',
           chromeShellSlide,
           'translate-y-0',
         ].join(' ')}
@@ -224,11 +234,11 @@ export function FetchHomeAppAddressHeader({
             <button
               type="button"
               onClick={onOpenSearch}
-              className="fetch-apple-warp-btn flex min-w-0 flex-1 items-center gap-2 rounded-full bg-violet-50/80 px-3.5 py-2 text-left ring-1 ring-violet-200/80 transition-[background-color,transform] hover:bg-violet-100/80 active:scale-[0.99]"
+              className="fetch-apple-warp-btn fetch-home-search-chip-bar flex min-w-0 flex-1 items-center gap-2 rounded-full border border-violet-200/80 bg-white/60 px-3 py-2 text-left shadow-[0_1px_0_rgba(76,29,149,0.06)] backdrop-blur-[2px] transition-[color,transform,border-color,background-color] hover:border-violet-300/90 hover:text-[#4c1d95] active:scale-[0.99]"
               aria-label="Search Fetchit"
             >
-              <SearchNavGlyph className="block h-[18px] w-[18px] shrink-0 text-[#4c1d95]/80" />
-              <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold leading-none text-[#4c1d95]/70">
+              <SearchNavGlyph className="block h-[24px] w-[24px] shrink-0 text-[#1c1528]" />
+              <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold leading-none text-[#1c1528]">
                 Search categories, sellers, drops…
               </span>
             </button>
@@ -237,10 +247,10 @@ export function FetchHomeAppAddressHeader({
                 <button
                   type="button"
                   onClick={onOpenPokies}
-                  className={`${brandMinimalIconBtn} fetch-pokies-icon-btn`}
+                  className={`${brandMinimalIconBtn} fetch-pokies-icon-btn fetch-purple-gem-pulse`}
                   aria-label="Open arcade"
                 >
-                  <GameControllerGlyph />
+                  <PurpleGemGlyph />
                 </button>
               ) : null}
               <button
@@ -249,7 +259,7 @@ export function FetchHomeAppAddressHeader({
                 className={brandMinimalIconBtn}
                 aria-label="Notifications"
               >
-                <NotificationsNavIconFilled className="block h-[22px] w-[22px]" active={false} />
+                <NotificationsNavIconFilled className="block h-[26px] w-[26px]" active={false} />
               </button>
             </div>
           </div>
@@ -259,33 +269,41 @@ export function FetchHomeAppAddressHeader({
   }
 
   const controlsRight = (
-    <div className="flex shrink-0 items-center gap-2 self-center">
+    <div className="-mt-1 flex shrink-0 items-center gap-2 self-start sm:-mt-0.5">
       {onOpenPokies ? (
         <button
           type="button"
           onClick={onOpenPokies}
-          className={`${headerChromeIconBtn} fetch-pokies-icon-btn`}
+          className={`${headerChromeIconBtn} fetch-pokies-icon-btn fetch-purple-gem-pulse`}
           aria-label="Open arcade"
         >
-          <GameControllerGlyph />
+          <PurpleGemGlyph />
         </button>
       ) : null}
       <button type="button" onClick={onOpenAccount} className={headerChromeIconBtn} aria-label="Account">
-        <AccountNavIconFilled className="block h-[18px] w-[18px]" active={false} />
+        <AccountNavIconFilled className="block h-[25px] w-[25px]" active={false} />
       </button>
       <button type="button" onClick={onOpenChat} className={headerChromeIconBtn} aria-label="Chat">
-        <NotificationsNavIconFilled className="block h-[18px] w-[18px]" active={false} />
+        <NotificationsNavIconFilled className="block h-[25px] w-[25px]" active={false} />
       </button>
       <button type="button" onClick={onOpenGems} className={`${headerChromeIconBtn} relative`} aria-label="Open gems" data-fetch-gems-icon>
-        <GemsGoldCoinGlyph className="h-[1.125rem] w-[1.125rem] shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]" />
+        <GemsGoldCoinGlyph className="h-[1.45rem] w-[1.45rem] shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]" />
         {coinBalance > 0 ? (
           <span className="absolute -right-1 -top-1 z-[2] min-w-[1.15rem] rounded-full bg-white px-1 py-[1px] text-center text-[9px] font-black leading-tight tabular-nums text-black shadow-[0_1px_4px_rgba(0,0,0,0.3)]">
             {coinBalance}
           </span>
         ) : null}
       </button>
-      <button type="button" onClick={onOpenCart} className={headerChromeIconBtn} aria-label="Open cart">
-        <CartGlyph className="h-4 w-4" />
+      <button
+        type="button"
+        onClick={onOpenCart}
+        className="fetch-apple-warp-btn flex max-w-[min(42vw,9.5rem)] shrink-0 items-center gap-1.5 rounded-full border border-violet-200/80 bg-violet-50/60 py-1.5 pl-2 pr-2.5 transition-[background-color,transform] hover:bg-violet-100/80 active:scale-[0.98] sm:py-2 sm:pl-2.5 sm:pr-3"
+        aria-label="View backpack"
+      >
+        <BackpackGlyph className="h-[22px] w-[22px] shrink-0 text-[#1c1528]" />
+        <span className="min-w-0 truncate text-left text-[11px] font-semibold leading-none text-[#1c1528] sm:text-[12px]">
+          View backpack
+        </span>
       </button>
     </div>
   )
@@ -293,7 +311,7 @@ export function FetchHomeAppAddressHeader({
   return (
     <header
       className={[
-        'fetch-app-address-header pointer-events-auto fixed left-0 right-0 top-0 z-[56] bg-white shadow-[0_1px_0_rgba(76,29,149,0.06)]',
+        'fetch-app-address-header pointer-events-auto fixed left-0 right-0 top-0 z-[56] bg-transparent shadow-none',
         chromeShellSlide,
         'translate-y-0',
       ].join(' ')}
@@ -307,7 +325,7 @@ export function FetchHomeAppAddressHeader({
         ].join(' ')}
         style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
       >
-        <div className="flex w-full min-w-0 items-center gap-2">
+        <div className="flex w-full min-w-0 items-start gap-2">
           <div className="relative flex min-w-0 flex-1 items-center gap-2">
             <HeaderWalletChip onOpen={openWallet} />
           </div>
