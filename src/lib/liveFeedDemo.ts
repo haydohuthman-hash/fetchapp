@@ -1,4 +1,5 @@
 import { CURATED_DROP_REELS } from './drops/constants'
+import type { DropReel } from './drops/types'
 import { liveStreamViewerCountSeed, formatLiveViewerShort } from './marketplaceAuctionUi'
 
 export type LiveFeedTag = 'live' | 'ending_soon' | 'hot' | 'just_started'
@@ -43,39 +44,42 @@ const CATEGORIES: LiveFeedCategory[] = [
 
 const LOCATIONS = ['Brisbane', 'Sydney', 'Melbourne', 'Gold Coast', 'Perth', 'Adelaide']
 
+/** Map any drops reel (Explore “live now” tiles included) into the Live floor stream model. */
+export function dropReelToLiveFeedStream(r: DropReel, i: number): LiveFeedStream {
+  const h = hash(r.id)
+  const priceCents = Math.max(500, Number.parseInt(r.priceLabel.replace(/[^0-9]/g, ''), 10) * 100 || 9900)
+  const watchers = liveStreamViewerCountSeed(r.id)
+  const minutesAgo = 1 + (h % 18)
+
+  let tag: LiveFeedTag = 'live'
+  if (h % 7 === 0) tag = 'ending_soon'
+  else if (h % 5 === 0) tag = 'hot'
+  else if (minutesAgo <= 3) tag = 'just_started'
+
+  const endsInSec = 45 + (h % 220)
+  const listingId = r.commerce?.kind === 'buy_sell_listing' ? r.commerce.listingId : ''
+
+  return {
+    id: r.id,
+    listingId,
+    imageUrl: r.imageUrls?.[0]?.trim() ?? r.poster?.trim() ?? '',
+    title: r.title,
+    streamTitle: STREAM_TITLES[i % STREAM_TITLES.length]!,
+    seller: r.seller,
+    priceCents,
+    watchers,
+    watchersLabel: formatLiveViewerShort(watchers),
+    tag,
+    category: CATEGORIES[i % CATEGORIES.length]!,
+    location: LOCATIONS[h % LOCATIONS.length]!,
+    minutesAgo,
+    endsInSec,
+  }
+}
+
 export function buildLiveFeedStreams(): LiveFeedStream[] {
   const reels = CURATED_DROP_REELS.filter((r) => r.commerce?.kind === 'buy_sell_listing')
-
-  return reels.map((r, i) => {
-    const h = hash(r.id)
-    const priceCents = Math.max(500, Number.parseInt(r.priceLabel.replace(/[^0-9]/g, ''), 10) * 100 || 9900)
-    const watchers = liveStreamViewerCountSeed(r.id)
-    const minutesAgo = 1 + (h % 18)
-
-    let tag: LiveFeedTag = 'live'
-    if (h % 7 === 0) tag = 'ending_soon'
-    else if (h % 5 === 0) tag = 'hot'
-    else if (minutesAgo <= 3) tag = 'just_started'
-
-    const endsInSec = 45 + (h % 220)
-
-    return {
-      id: r.id,
-      listingId: r.commerce?.kind === 'buy_sell_listing' ? r.commerce.listingId : '',
-      imageUrl: r.imageUrls?.[0]?.trim() ?? '',
-      title: r.title,
-      streamTitle: STREAM_TITLES[i % STREAM_TITLES.length]!,
-      seller: r.seller,
-      priceCents,
-      watchers,
-      watchersLabel: formatLiveViewerShort(watchers),
-      tag,
-      category: CATEGORIES[i % CATEGORIES.length]!,
-      location: LOCATIONS[h % LOCATIONS.length]!,
-      minutesAgo,
-      endsInSec,
-    }
-  })
+  return reels.map((r, i) => dropReelToLiveFeedStream(r, i))
 }
 
 export function formatAud(cents: number): string {

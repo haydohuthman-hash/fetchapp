@@ -1,4 +1,5 @@
-import { memo, useEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { createPortal } from 'react-dom'
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react'
 import { loadSession } from '../lib/fetchUserSession'
 import {
   addBackpackItem,
@@ -28,15 +29,17 @@ import { ExploreCategoryBrowse } from './ExploreCategoryBrowse'
 import { LiveNowGrid } from './FeedTabViews'
 import type { DropReel } from '../lib/drops/types'
 import fetchitAdventuringBannerUrl from '../assets/fetchit-adventuring-banner.png'
+import fetchitAdventuringHour1BannerUrl from '../assets/fetchit-adventuring-banner-hour-1.png'
 import fetchitFundedHighBannerUrl from '../assets/fetchit-funded-high-banner.png'
 import fetchitFundedLowBannerUrl from '../assets/fetchit-funded-low-banner.png'
 import fetchitFundedMidBannerUrl from '../assets/fetchit-funded-mid-banner.png'
 import fetchitFundedWhaleBannerUrl from '../assets/fetchit-funded-whale-banner.png'
-import fetchitNoFundsBannerUrl from '../assets/fetchit-no-funds-banner.png'
+import fetchitHomeDefaultBannerUrl from '../assets/fetchit-home-default-banner.png'
 import fetchitBackpack3dUrl from '../assets/fetchit-backpack-3d.png'
 import fetchitBackpackLevel1To4Url from '../assets/fetchit-backpack-level-1-4.png'
 import fetchitBidWarsBannerUrl from '../assets/fetchit-bid-wars-banner.png'
 import heroWalletCashUrl from '../assets/hero-wallet-cash.png'
+import purpleGemIconUrl from '../assets/pokies-icons/gem.png'
 import searchRealSneakersShoesUrl from '../assets/search-categories-real/sneakers-shoes.png'
 import searchRealTradingCardGamesUrl from '../assets/search-categories-real/trading-card-games.png'
 import searchRealJewelleryWatchesUrl from '../assets/search-categories-real/jewellery-watches.png'
@@ -45,12 +48,7 @@ import searchRealElectronicsUrl from '../assets/search-categories-real/electroni
 import { ambientRegisterAdventure } from '../lib/audio/fetchAmbientMusic'
 import { playConfettiPops, playWinFanfare } from '../lib/fetchBattleSounds'
 import { depositWallet, useWalletBalanceCents } from '../lib/data'
-
-function hashSessionSeed(seed: string): number {
-  let h = 0
-  for (let i = 0; i < seed.length; i += 1) h = (h * 33 + seed.charCodeAt(i)) >>> 0
-  return h
-}
+import { playUiFeedback } from '../voice/fetchFeedback'
 
 function formatBackInClock(seconds: number): string {
   const safe = Math.max(0, Math.floor(seconds))
@@ -61,6 +59,90 @@ function formatBackInClock(seconds: number): string {
 }
 
 const EARLY_ADVENTURE_END_COST_CENTS = 99
+const DAILY_REWARD_GEMS = 100
+const DAILY_REWARD_STORAGE_KEY = 'fetch.home.dailyRewardTasks.v2'
+const DEMO_GEMS_STORAGE_KEY = 'fetch.home.demoGems.v1'
+
+type DailyRewardTaskId = 'bid_today' | 'watch_live_10'
+
+type DailyRewardState = {
+  date: string
+  completed: DailyRewardTaskId[]
+}
+
+type DailyGemFxState = {
+  key: number
+  amount: number
+  source: { x: number; y: number }
+  target: { x: number; y: number }
+  particleCount?: number
+}
+
+const DAILY_REWARD_TASKS: ReadonlyArray<{
+  id: DailyRewardTaskId
+  title: string
+  detail: string
+}> = [
+  {
+    id: 'bid_today',
+    title: 'Make 1 bid today',
+    detail: 'Place any live bid and claim your daily gems.',
+  },
+  {
+    id: 'watch_live_10',
+    title: 'Watch a live for 10 mins',
+    detail: 'Spend 10 minutes in a live stream today.',
+  },
+]
+
+function todayKey(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function loadDemoGems(): number {
+  try {
+    const raw = window.localStorage.getItem(DEMO_GEMS_STORAGE_KEY)
+    const n = raw ? Number.parseInt(raw, 10) : 0
+    return Number.isFinite(n) ? Math.max(0, n) : 0
+  } catch {
+    return 0
+  }
+}
+
+function saveDemoGems(next: number) {
+  try {
+    window.localStorage.setItem(DEMO_GEMS_STORAGE_KEY, String(Math.max(0, next)))
+  } catch {
+    /* ignore */
+  }
+}
+
+function loadDailyRewardState(): DailyRewardState {
+  const date = todayKey()
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(DAILY_REWARD_STORAGE_KEY) || 'null') as Partial<DailyRewardState> | null
+    if (parsed?.date === date && Array.isArray(parsed.completed)) {
+      return {
+        date,
+        completed: parsed.completed.filter((id): id is DailyRewardTaskId =>
+          id === 'bid_today' || id === 'watch_live_10',
+        ),
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return { date, completed: [] }
+}
+
+function saveDailyRewardState(next: DailyRewardState) {
+  try {
+    window.localStorage.setItem(DAILY_REWARD_STORAGE_KEY, JSON.stringify(next))
+  } catch {
+    /* ignore */
+  }
+}
 
 function backpackImageForLevel(level: number): string {
   return level >= 1 && level <= 4 ? fetchitBackpackLevel1To4Url : fetchitBackpack3dUrl
@@ -134,6 +216,7 @@ const FETCH_HOME_TOUR_STEPS: FetchHomeTourStep[] = [
 function FetchitWelcomeHero({
   displayName,
   isAdventuring,
+  isAdventureHourOneDone,
   adventureLevel,
   fundsCents,
   fundsLabel,
@@ -141,9 +224,11 @@ function FetchitWelcomeHero({
   notificationsCount,
   onAddDemoFunds,
   onViewBackpack,
+  onOpenGemGames,
 }: {
   displayName: string
   isAdventuring: boolean
+  isAdventureHourOneDone: boolean
   adventureLevel: number
   fundsCents: number
   fundsLabel: string
@@ -151,12 +236,15 @@ function FetchitWelcomeHero({
   notificationsCount: number
   onAddDemoFunds: () => void
   onViewBackpack: () => void
+  onOpenGemGames: () => void
 }) {
   const firstName = firstNameFromDisplay(displayName).toUpperCase()
   const bannerUrl = isAdventuring
-    ? fetchitAdventuringBannerUrl
+    ? isAdventureHourOneDone
+      ? fetchitAdventuringHour1BannerUrl
+      : fetchitAdventuringBannerUrl
     : fundsCents <= 0
-      ? fetchitNoFundsBannerUrl
+      ? fetchitHomeDefaultBannerUrl
       : fundsCents <= 10000
         ? fetchitFundedLowBannerUrl
         : fundsCents <= 30000
@@ -164,6 +252,12 @@ function FetchitWelcomeHero({
           : fundsCents <= 50000
             ? fetchitFundedHighBannerUrl
             : fetchitFundedWhaleBannerUrl
+  const useDefaultBannerSizing =
+    bannerUrl === fetchitHomeDefaultBannerUrl ||
+    bannerUrl === fetchitAdventuringBannerUrl ||
+    bannerUrl === fetchitAdventuringHour1BannerUrl
+  const bannerAspectClass = useDefaultBannerSizing ? 'aspect-[682/768]' : 'aspect-[3/2]'
+  const bannerObjectClass = useDefaultBannerSizing ? 'object-cover object-top' : 'object-cover object-center'
   const welcomeNameSize =
     firstName.length > 12
       ? 'text-[18px] sm:text-[20px]'
@@ -211,18 +305,20 @@ function FetchitWelcomeHero({
         </button>
         <button
           type="button"
+          onClick={onOpenGemGames}
           className={[feed2dHeaderChip, 'min-w-[3.2rem]'].join(' ')}
-          aria-label={`${gemsCount} gems`}
+          aria-label={`Open gem games, ${gemsCount} gems`}
+          data-fetch-home-gems-chip
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0">
-            <path
-              d="M7 4h10l4 5-9 11L3 9l4-5Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinejoin="round"
-            />
-            <path d="M3 9h18M8 4l4 16 4-16" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-          </svg>
+          <img
+            src={purpleGemIconUrl}
+            alt=""
+            aria-hidden
+            className="h-[15px] w-[15px] shrink-0 object-contain"
+            draggable={false}
+            loading="lazy"
+            data-fetch-home-gems-icon
+          />
           <span className="text-[10px] font-black tabular-nums text-[#1c1340]">{gemsCount}</span>
         </button>
         <button
@@ -242,31 +338,27 @@ function FetchitWelcomeHero({
           <span className="text-[10px] font-black tabular-nums text-[#1c1340]">{notificationsCount}</span>
         </button>
       </div>
-      <div className="relative aspect-[3/2] w-full overflow-hidden rounded-t-xl bg-gradient-to-b from-[#cdb7ff] via-[#a78bfa] to-[#7c3aed] shadow-[0_22px_48px_-22px_rgba(76,29,149,0.6)]">
+      <div className={`relative ${bannerAspectClass} w-full overflow-hidden rounded-t-xl bg-gradient-to-b from-[#cdb7ff] via-[#a78bfa] to-[#7c3aed] shadow-[0_22px_48px_-22px_rgba(76,29,149,0.6)]`}>
         <img
           src={bannerUrl}
           alt=""
           aria-hidden
           draggable={false}
-          className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover object-center"
+          className={`pointer-events-none absolute inset-0 h-full w-full select-none ${bannerObjectClass}`}
         />
-        <div
-          className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_115%_85%_at_0%_100%,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.4)_42%,transparent_72%)]"
-          aria-hidden
-        />
-        <div className="pointer-events-none absolute bottom-[11%] left-3 z-[3] max-w-[min(100%,16rem)] text-left sm:bottom-[10%] sm:left-4">
-          <p className="text-[11px] font-bold leading-none text-white">
+        <div className="pointer-events-none absolute bottom-[8%] left-3 z-[3] max-w-[min(100%,16rem)] text-left sm:bottom-[7%] sm:left-4">
+          <p className="text-[11px] font-bold leading-none text-black">
             Welcome back,
           </p>
           <h2
             className={[
-              'mt-1 truncate font-black leading-[0.95] tracking-[-0.02em] text-white',
+              'mt-1 truncate font-black leading-[0.95] tracking-[-0.02em] text-[#7c3aed]',
               welcomeNameSize,
             ].join(' ')}
           >
             {firstName}!
           </h2>
-          <p className="mt-1 text-[11px] font-semibold leading-snug text-white">
+          <p className="mt-1 text-[11px] font-semibold leading-snug text-black">
             Ready to bid. Win. Fetch it.
           </p>
         </div>
@@ -305,24 +397,15 @@ function AdventureReturnBar({
   canEndEarly,
   onEndEarly,
   onComplete,
+  onElapsedSeconds,
 }: {
   canEndEarly: boolean
   onEndEarly: () => void
   onComplete: () => void
+  onElapsedSeconds?: (elapsedSeconds: number) => void
 }) {
-  const session = loadSession()
-  const seed = useMemo(
-    () => hashSessionSeed(`${session?.email || 'guest'}|${session?.displayName || ''}`),
-    [session?.email, session?.displayName],
-  )
   const totalSeconds = 12 * 60 * 60
-  const [remainingSeconds, setRemainingSeconds] = useState(
-    () => 30 * 60 + (seed % (10 * 60 * 60)),
-  )
-
-  useEffect(() => {
-    setRemainingSeconds(30 * 60 + (seed % (10 * 60 * 60)))
-  }, [seed])
+  const [remainingSeconds, setRemainingSeconds] = useState(totalSeconds)
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -334,6 +417,10 @@ function AdventureReturnBar({
   useEffect(() => {
     if (remainingSeconds === 0) onComplete()
   }, [remainingSeconds, onComplete])
+
+  useEffect(() => {
+    onElapsedSeconds?.(Math.max(0, totalSeconds - remainingSeconds))
+  }, [remainingSeconds, totalSeconds, onElapsedSeconds])
 
   const progress = Math.max(0, Math.min(1, 1 - remainingSeconds / totalSeconds))
   const backIn = formatBackInClock(remainingSeconds)
@@ -549,6 +636,306 @@ function BidWarsAdventurePromo({ onJoin }: { onJoin?: () => void }) {
         </div>
       </div>
     </section>
+  )
+}
+
+type DailyGemClaimFxProps = {
+  amount: number
+  source: { x: number; y: number }
+  target: { x: number; y: number }
+  particleCount?: number
+  onImpact: () => void
+  onDone: () => void
+}
+
+function DailyGemClaimFx({ amount, source, target, particleCount = 14, onImpact, onDone }: DailyGemClaimFxProps) {
+  const impactRef = useRef(onImpact)
+  const doneRef = useRef(onDone)
+  const particles = useMemo(() => {
+    return Array.from({ length: particleCount }).map((_, i) => {
+      const h = ((i * 2654435761) >>> 0) / 4294967296
+      const h2 = (((i + 17) * 2246822519) >>> 0) / 4294967296
+      const sx = source.x + (h - 0.5) * 18
+      const sy = source.y + h2 * 16
+      const tx = target.x - sx + (h2 - 0.5) * 16
+      const ty = target.y - sy + (h - 0.5) * 18
+      return {
+        sx,
+        sy,
+        tx,
+        ty,
+        delay: h2 * 0.2 + 0.35,
+        dur: 0.65 + h * 0.24,
+      }
+    })
+  }, [particleCount, source.x, source.y, target.x, target.y])
+
+  useEffect(() => {
+    impactRef.current = onImpact
+    doneRef.current = onDone
+  }, [onImpact, onDone])
+
+  useEffect(() => {
+    playUiFeedback('gems_collect')
+    const sparkle1 = window.setTimeout(() => playUiFeedback('coin_hit'), 360)
+    const sparkle2 = window.setTimeout(() => playUiFeedback('coin_hit'), 560)
+    const hit = window.setTimeout(() => {
+      playUiFeedback('coin_hit')
+      impactRef.current()
+    }, 920)
+    const sparkle3 = window.setTimeout(() => playUiFeedback('coin_hit'), 1040)
+    const done = window.setTimeout(() => doneRef.current(), 1400)
+    return () => {
+      window.clearTimeout(sparkle1)
+      window.clearTimeout(sparkle2)
+      window.clearTimeout(hit)
+      window.clearTimeout(sparkle3)
+      window.clearTimeout(done)
+    }
+  }, [])
+
+  return createPortal(
+    <>
+      <div className="fetch-daily-gem-drop">
+        <img src={purpleGemIconUrl} alt="" aria-hidden className="h-8 w-8 object-contain" draggable={false} />
+        <span className="flex flex-col leading-none">
+          <span className="text-[1.05rem] font-black tabular-nums">+{amount}</span>
+          <span className="mt-0.5 text-[0.55rem] font-black uppercase tracking-[0.14em] text-[#7c3aed]/70">
+            Gems added
+          </span>
+        </span>
+      </div>
+      <div
+        className="fetch-daily-gem-target-burst"
+        style={{ left: `${target.x}px`, top: `${target.y}px` }}
+        aria-hidden
+      >
+        <img src={purpleGemIconUrl} alt="" className="h-6 w-6 object-contain" draggable={false} />
+      </div>
+      {particles.map((p, i) => (
+        <img
+          key={i}
+          src={purpleGemIconUrl}
+          alt=""
+          aria-hidden
+          className="fetch-daily-gem-fly"
+          draggable={false}
+          style={
+            {
+              left: `${p.sx}px`,
+              top: `${p.sy}px`,
+              '--fx-tx': `${p.tx}px`,
+              '--fx-ty': `${p.ty}px`,
+              '--fx-delay': `${p.delay}s`,
+              '--fx-dur': `${p.dur}s`,
+            } as CSSProperties
+          }
+        />
+      ))}
+    </>,
+    document.body,
+  )
+}
+
+function DailyRewardTaskCards({
+  completed,
+  onClaim,
+}: {
+  completed: readonly DailyRewardTaskId[]
+  onClaim: (id: DailyRewardTaskId, sourceEl?: HTMLElement | null) => void
+}) {
+  return (
+    <section className="px-2" aria-label="Daily gem tasks">
+      <div className="grid grid-cols-1 gap-1.5">
+        {DAILY_REWARD_TASKS.map((task) => {
+          const done = completed.includes(task.id)
+          return (
+            <div
+              key={task.id}
+              data-daily-task-card
+              className={[
+                'flex min-h-[3.75rem] w-full items-center gap-2 rounded-xl border bg-white px-2 py-1.5 text-left shadow-none transition-colors duration-150',
+                done
+                  ? 'border-emerald-200 bg-emerald-50'
+                  : 'border-violet-200/80 active:bg-violet-50',
+              ].join(' ')}
+              aria-label={`${task.title}. Reward ${DAILY_REWARD_GEMS} gems. ${done ? 'Completed today' : 'Claim once per day'}`}
+            >
+              <span
+                className={[
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#4c1d95] ring-1',
+                  done ? 'bg-emerald-100 ring-emerald-200' : 'bg-violet-100 ring-violet-200',
+                ].join(' ')}
+                aria-hidden
+              >
+                {done ? (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12.5l4.2 4.2L19 7" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                    <path d="M7 4h10l4 5-9 11L3 9l4-5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                    <path d="M3 9h18M8 4l4 16 4-16" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-[11px] font-black leading-none tracking-[-0.02em] text-[#1c1340]">
+                  {task.title}
+              </span>
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-black text-[#4c1d95]">
+                <img
+                  src={purpleGemIconUrl}
+                  alt=""
+                  aria-hidden
+                  className="h-3 w-3 object-contain"
+                  draggable={false}
+                  loading="lazy"
+                />
+                <span>{DAILY_REWARD_GEMS}</span>
+              </span>
+              {done ? (
+                <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-emerald-700">
+                  Done
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={(e) => onClaim(task.id, e.currentTarget.closest('[data-daily-task-card]') as HTMLElement | null)}
+                  className="shrink-0 rounded-full bg-[#7c3aed] px-2 py-1 text-[9px] font-black uppercase tracking-[0.06em] leading-none text-white"
+                >
+                  Claim
+                </button>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function GemGameSelectionSheet({
+  open,
+  onClose,
+  onOpenSpinWheel,
+  onOpenMysteryFlip,
+}: {
+  open: boolean
+  onClose: () => void
+  onOpenSpinWheel?: () => void
+  onOpenMysteryFlip?: () => void
+}) {
+  useEffect(() => {
+    if (!open) return undefined
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose, open])
+
+  if (!open) return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-[#140b2f]/48 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-8 backdrop-blur-sm">
+      <button
+        type="button"
+        aria-label="Close gem games"
+        className="absolute inset-0 cursor-default"
+        onClick={onClose}
+      />
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="fetch-gem-games-title"
+        className="relative w-full max-w-[26rem] overflow-hidden rounded-[1.7rem] border border-violet-200/80 bg-white p-3 text-[#1c1340] shadow-[0_24px_80px_rgba(28,19,64,0.38)]"
+      >
+        <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full bg-violet-200/70 blur-2xl" aria-hidden />
+        <div className="relative flex items-start gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 ring-1 ring-violet-200">
+            <img src={purpleGemIconUrl} alt="" aria-hidden className="h-8 w-8 object-contain" draggable={false} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#7c3aed]">Gem games</p>
+            <h2 id="fetch-gem-games-title" className="mt-0.5 text-[1.25rem] font-black leading-none tracking-[-0.05em]">
+              Pick a game
+            </h2>
+            <p className="mt-1 text-[11px] font-bold leading-snug text-[#6b5a8f]">
+              Spend or win gems in quick Fetch mini games.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-50 text-[#4c1d95] active:bg-violet-100"
+            aria-label="Close"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="relative mt-3 grid grid-cols-1 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              playUiFeedback('gems_collect')
+              onClose()
+              onOpenSpinWheel?.()
+            }}
+            className="flex items-center gap-3 rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 to-white p-3 text-left shadow-none active:bg-violet-100"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#7c3aed] text-white">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                <circle cx="12" cy="12" r="7.5" stroke="currentColor" strokeWidth="2.2" />
+                <circle cx="12" cy="12" r="2" fill="currentColor" />
+              </svg>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-black leading-none tracking-[-0.03em]">Spin the wheel</span>
+              <span className="mt-1 block text-[11px] font-bold leading-snug text-[#6b5a8f]">
+                Open Prize Spin and try for gems, boosts, and bonuses.
+              </span>
+            </span>
+            <span className="text-[#7c3aed]" aria-hidden>&rsaquo;</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              playUiFeedback('gems_collect')
+              onClose()
+              onOpenMysteryFlip?.()
+            }}
+            className="flex items-center gap-3 rounded-2xl border border-violet-200 bg-gradient-to-r from-[#fff7ed] to-white p-3 text-left shadow-none active:bg-amber-50"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-b from-amber-300 to-orange-500 text-white">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <rect x="4" y="3" width="13" height="18" rx="2.6" stroke="currentColor" strokeWidth="2.2" />
+                <rect x="7" y="6" width="13" height="18" rx="2.6" stroke="currentColor" strokeWidth="2.2" fill="rgba(255,255,255,0.2)" />
+                <path d="M11 13l1.5 1.5L16 11" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-black leading-none tracking-[-0.03em]">
+                Reveal what&rsquo;s behind
+              </span>
+              <span className="mt-1 block text-[11px] font-bold leading-snug text-[#6b5a8f]">
+                Mystery Flip &mdash; flip cards, grab gifts, avoid the bombs.
+              </span>
+            </span>
+            <span className="rounded-full bg-violet-100 px-2 py-1 text-[10px] font-black text-[#4c1d95]">
+              Play
+            </span>
+          </button>
+        </div>
+      </section>
+    </div>,
+    document.body,
   )
 }
 
@@ -1120,6 +1507,8 @@ function HomeCategoryChips({
 
 export type HomeShellForYouFeedProps = {
   onOpenDrops: () => void
+  /** Live tiles on Explore — opens the Live tab + that stream (preferred over generic drops). */
+  onOpenLiveStream?: (reel: DropReel) => void
   onOpenMarketplace: () => void
   /** Explore premium tabs: open main shell Search (categories / search UI). */
   onOpenSearch?: () => void
@@ -1133,6 +1522,10 @@ export type HomeShellForYouFeedProps = {
   onViewBackpack?: () => void
   /** Opens the Bid Wars hub from the adventure promo. */
   onJoinBidWar?: () => void
+  /** Opens the full Prize Spin game from the gem games picker. */
+  onOpenSpinWheel?: () => void
+  /** Opens the Mystery Flip card game from the gem games picker. */
+  onOpenMysteryFlip?: () => void
   className?: string
   /** Omit top title block when a parent supplies the headline (e.g. Explore). */
   embedded?: boolean
@@ -1399,11 +1792,14 @@ function filterListingsForCategory(
 
 function HomeShellForYouFeedInner({
   onOpenDrops,
+  onOpenLiveStream,
   onOpenMarketplace,
   onOpenSearch: _onOpenSearch,
   onOpenPeerListing,
   onQuickBuyPeerListing,
   onJoinBidWar,
+  onOpenSpinWheel,
+  onOpenMysteryFlip,
   className = '',
   embedded = false,
   explorePromoBleed: _explorePromoBleed = 'page',
@@ -1451,6 +1847,15 @@ function HomeShellForYouFeedInner({
   const [adventureProgress, setAdventureProgress] = useState<AdventureProgress>(() =>
     loadAdventureProgress(),
   )
+  const [demoGems, setDemoGems] = useState(() => loadDemoGems())
+  const [dailyRewardState, setDailyRewardState] = useState<DailyRewardState>(() => loadDailyRewardState())
+  const [dailyGemFx, setDailyGemFx] = useState<DailyGemFxState | null>(null)
+  const [gemGamesOpen, setGemGamesOpen] = useState(false)
+  const [adventureRunSeq, setAdventureRunSeq] = useState(0)
+  const [adventureElapsedSeconds, setAdventureElapsedSeconds] = useState(0)
+  const demoGemsRef = useRef(demoGems)
+  const adventureGemMinuteRef = useRef(0)
+  const gemsAnimRef = useRef<number | null>(null)
   const [firstGiftOpen, setFirstGiftOpen] = useState(false)
   const [levelUpOpen, setLevelUpOpen] = useState(false)
   const tourRootRef = useRef<HTMLDivElement | null>(null)
@@ -1464,7 +1869,21 @@ function HomeShellForYouFeedInner({
     return () => ambientRegisterAdventure(-1)
   }, [embedded, isAdventuring])
 
+  useEffect(
+    () => () => {
+      if (gemsAnimRef.current != null) cancelAnimationFrame(gemsAnimRef.current)
+    },
+    [],
+  )
+
+  useEffect(() => {
+    demoGemsRef.current = demoGems
+  }, [demoGems])
+
   function handleStartAdventure() {
+    setAdventureElapsedSeconds(0)
+    adventureGemMinuteRef.current = 0
+    setAdventureRunSeq((s) => s + 1)
     setIsAdventuring(true)
     if (!hasClaimedFirstAdventureGift()) {
       setFirstGiftOpen(true)
@@ -1483,6 +1902,84 @@ function HomeShellForYouFeedInner({
     setFirstGiftOpen(false)
     setLevelUpOpen(true)
   }
+
+  const animateGemCountTo = useCallback((target: number) => {
+    const from = demoGemsRef.current
+    const to = Math.max(from, target)
+    if (to <= from) return
+    if (gemsAnimRef.current != null) cancelAnimationFrame(gemsAnimRef.current)
+    const start = performance.now()
+    const dur = 920
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / dur)
+      const eased = 1 - (1 - t) ** 3
+      const next = Math.round(from + (to - from) * eased)
+      setDemoGems(next)
+      if (t < 1) gemsAnimRef.current = requestAnimationFrame(tick)
+      else {
+        gemsAnimRef.current = null
+        demoGemsRef.current = to
+        setDemoGems(to)
+        saveDemoGems(to)
+      }
+    }
+    gemsAnimRef.current = requestAnimationFrame(tick)
+  }, [])
+
+  const pulseHomeGemIcon = useCallback(() => {
+    const el = document.querySelector<HTMLElement>('[data-fetch-home-gems-icon]')
+    if (!el) return
+    el.classList.add('fetch-gems-impact-pulse')
+    el.addEventListener('animationend', () => el.classList.remove('fetch-gems-impact-pulse'), { once: true })
+  }, [])
+
+  const spawnGemRewardFx = useCallback((amount: number, sourceEl?: HTMLElement | null, particleCount?: number) => {
+    const chipRect = document.querySelector<HTMLElement>('[data-fetch-home-gems-chip]')?.getBoundingClientRect()
+    const adventureRect = document
+      .querySelector<HTMLElement>('[data-fetch-tour-target="adventure"]')
+      ?.getBoundingClientRect()
+    const srcRect = sourceEl?.getBoundingClientRect() ?? adventureRect
+    setDailyGemFx({
+      key: Date.now() + Math.floor(Math.random() * 1000),
+      amount,
+      particleCount,
+      source: {
+        x: srcRect ? srcRect.left + srcRect.width / 2 : window.innerWidth * 0.5,
+        y: srcRect ? srcRect.top + srcRect.height / 2 : window.innerHeight * 0.62,
+      },
+      target: {
+        x: chipRect ? chipRect.left + chipRect.width / 2 : window.innerWidth - 46,
+        y: chipRect ? chipRect.top + chipRect.height / 2 : 34,
+      },
+    })
+  }, [])
+
+  function handleCompleteDailyRewardTask(id: DailyRewardTaskId, sourceEl?: HTMLElement | null) {
+    if (dailyRewardState.completed.includes(id)) return
+    const nextDaily: DailyRewardState = {
+      date: todayKey(),
+      completed: [...dailyRewardState.completed, id],
+    }
+    setDailyRewardState(nextDaily)
+    saveDailyRewardState(nextDaily)
+    spawnGemRewardFx(DAILY_REWARD_GEMS, sourceEl)
+  }
+
+  const isAdventureHourOneDone = isAdventuring && adventureElapsedSeconds >= 60 * 60
+
+  useEffect(() => {
+    if (!embedded || !isAdventuring) return
+    const completedMinute = Math.floor(adventureElapsedSeconds / 60)
+    if (completedMinute <= 0 || completedMinute <= adventureGemMinuteRef.current) return
+    adventureGemMinuteRef.current = completedMinute
+    const adventureEl = document.querySelector<HTMLElement>('[data-fetch-tour-target="adventure"]')
+      spawnGemRewardFx(1, adventureEl, 1)
+  }, [adventureElapsedSeconds, embedded, isAdventuring, spawnGemRewardFx])
+
+  useEffect(() => {
+    if (isAdventuring) return
+    adventureGemMinuteRef.current = 0
+  }, [isAdventuring])
 
   function getBackpackRect(): DOMRect | null {
     const root = heroRef.current
@@ -1506,25 +2003,33 @@ function HomeShellForYouFeedInner({
           <FetchitWelcomeHero
             displayName={heroDisplayName}
             isAdventuring={isAdventuring}
+            isAdventureHourOneDone={isAdventureHourOneDone}
             adventureLevel={adventureProgress.level}
             fundsCents={demoFundsCents}
             fundsLabel={demoFundsLabel}
-            gemsCount={0}
+            gemsCount={demoGems}
             notificationsCount={1}
             onAddDemoFunds={() => setDemoFundsCents((cents) => cents + 1000)}
             onViewBackpack={() => setBackpackStorageOpen(true)}
+            onOpenGemGames={() => setGemGamesOpen(true)}
           />
           <div className="pointer-events-none absolute inset-x-2 bottom-0 z-[2] translate-y-[72%] sm:inset-x-3 sm:translate-y-[68%]">
             <div className="pointer-events-auto">
               {isAdventuring ? (
                 <AdventureReturnBar
+                  key={adventureRunSeq}
                   canEndEarly={demoFundsCents >= EARLY_ADVENTURE_END_COST_CENTS}
+                  onElapsedSeconds={setAdventureElapsedSeconds}
                   onEndEarly={() => {
                     if (demoFundsCents < EARLY_ADVENTURE_END_COST_CENTS) return
                     setDemoFundsCents((cents) => Math.max(0, cents - EARLY_ADVENTURE_END_COST_CENTS))
+                    setAdventureElapsedSeconds(0)
                     setIsAdventuring(false)
                   }}
-                  onComplete={() => setIsAdventuring(false)}
+                  onComplete={() => {
+                    setAdventureElapsedSeconds(0)
+                    setIsAdventuring(false)
+                  }}
                 />
               ) : (
                 <StartAdventureBar onStart={handleStartAdventure} />
@@ -1533,13 +2038,20 @@ function HomeShellForYouFeedInner({
           </div>
         </div>
         <div className="mt-[4.5rem] sm:mt-20">
+          <DailyRewardTaskCards completed={dailyRewardState.completed} onClaim={handleCompleteDailyRewardTask} />
+        </div>
+        <div className="mt-2">
           <BidWarsAdventurePromo onJoin={onJoinBidWar ?? onOpenMarketplace} />
         </div>
         <div className="mt-3 flex flex-col gap-3 px-2 pt-1">
           <div className="h-px w-full bg-violet-200/70" aria-hidden />
           <HomeCategoryChips value={homeCategoryFilter} onChange={setHomeCategoryFilter} />
           <section className="flex flex-col gap-2" aria-label="Live now" data-fetch-tour-target="liveStreams">
-            <LiveNowGrid reels={homeLiveNowReels} onOpenDrops={onOpenDrops} />
+            <LiveNowGrid
+              reels={homeLiveNowReels}
+              onOpenDrops={onOpenDrops}
+              onOpenLive={onOpenLiveStream}
+            />
           </section>
           <div className="h-px w-full bg-violet-200/70" aria-hidden />
           <section className="min-w-0" aria-labelledby="fetch-home-live-listings-heading">
@@ -1608,6 +2120,27 @@ function HomeShellForYouFeedInner({
           onDone={() => setLevelUpOpen(false)}
         />
         <FetchHomeFirstEntryTour rootRef={tourRootRef} />
+        <GemGameSelectionSheet
+          open={gemGamesOpen}
+          onClose={() => setGemGamesOpen(false)}
+          onOpenSpinWheel={onOpenSpinWheel}
+          onOpenMysteryFlip={onOpenMysteryFlip}
+        />
+        {dailyGemFx ? (
+          <DailyGemClaimFx
+            key={dailyGemFx.key}
+            amount={dailyGemFx.amount}
+            source={dailyGemFx.source}
+            target={dailyGemFx.target}
+            particleCount={dailyGemFx.particleCount}
+            onImpact={() => {
+              playUiFeedback('coin_hit')
+              pulseHomeGemIcon()
+              animateGemCountTo(demoGemsRef.current + dailyGemFx.amount)
+            }}
+            onDone={() => setDailyGemFx(null)}
+          />
+        ) : null}
       </div>
     )
   }

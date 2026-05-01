@@ -55,6 +55,7 @@ import {
 import { FETCH_GEMS_PATH, FETCH_MARKETPLACE_LIST_PATH } from '../lib/fetchRoutes'
 import { ambientRegisterHome, ambientSetPokiesDuck } from '../lib/audio/fetchAmbientMusic'
 import { PokiesGame } from '../components/bidwars/PokiesGame'
+import { MysteryFlipPage } from '../components/games/MysteryFlipPage'
 import { SellOptionsSheet } from '../components/bidwars/SellOptionsSheet'
 import { ServicesExploreHomePanel } from '../components/ServicesExploreHomePanel'
 import { HomeShellChatHubPage } from '../components/HomeShellChatHubPage'
@@ -65,6 +66,8 @@ import type {
   MarketplaceDropsProductHandoff,
   MarketplaceSellerHubHandoff,
 } from '../components/HomeShellMarketplacePage'
+import type { DropReel } from '../lib/drops/types'
+import { dropReelToLiveFeedStream, type LiveFeedStream } from '../lib/liveFeedDemo'
 import type { MarketplacePeerBrowseFilter } from '../components/ExploreBrowseBanner'
 import type { ExploreCategoryRowPromoDef } from '../lib/exploreCategoryRowPromos'
 import searchRealBabyKidsUrl from '../assets/search-categories-real/baby-kids.png'
@@ -828,6 +831,7 @@ export default function HomeView({
   const [bidwarsMatchmakingOpen, setBidwarsMatchmakingOpen] = useState(false)
   const [sellSheetOpen, setSellSheetOpen] = useState(false)
   const [pokiesOpen, setPokiesOpen] = useState(false)
+  const [mysteryFlipOpen, setMysteryFlipOpen] = useState(false)
   const showHomeTabSkeleton = useOneTimePageSkeleton(`home-tab:${homeShellTab}`)
 
   useEffect(() => {
@@ -893,6 +897,7 @@ export default function HomeView({
   )
   /** Global FAB → seller overlay (post listing) on marketplace tab. */
   const [sellerHubHandoff, setSellerHubHandoff] = useState<MarketplaceSellerHubHandoff | null>(null)
+  const [liveJoinStreamHandoff, setLiveJoinStreamHandoff] = useState<LiveFeedStream | null>(null)
   const shellShopOrChat =
     homeShellTab === 'marketplace' ||
     homeShellTab === 'chat' ||
@@ -3327,6 +3332,7 @@ export default function HomeView({
       if (tab !== 'marketplace') {
         setDropsProductHandoff(null)
         setDropsListingHandoff(null)
+        setLiveJoinStreamHandoff(null)
       }
       if (tab === 'marketplace' || tab === 'chat') {
         if (!chatNavRoute) setHomeMapExploreMode(false)
@@ -3337,6 +3343,15 @@ export default function HomeView({
       }
     },
     [bumpInteraction, chatNavRoute],
+  )
+
+  const openExploreLiveStream = useCallback(
+    (reel: DropReel) => {
+      bumpInteraction()
+      setLiveJoinStreamHandoff(dropReelToLiveFeedStream(reel, 0))
+      onHomeShellTabChange('marketplace')
+    },
+    [bumpInteraction, onHomeShellTabChange],
   )
 
   const clearMarketplaceBrowseHandoff = useCallback(() => {
@@ -3387,6 +3402,7 @@ export default function HomeView({
 
   const clearDropsProductHandoff = useCallback(() => setDropsProductHandoff(null), [])
   const clearDropsListingHandoff = useCallback(() => setDropsListingHandoff(null), [])
+  const clearLiveJoinStreamHandoff = useCallback(() => setLiveJoinStreamHandoff(null), [])
 
   useMessagesUnreadPolling(Boolean(loadSession()?.email?.trim()), 12_000, setMessagesUnread)
 
@@ -5696,7 +5712,7 @@ export default function HomeView({
         homeBrainFlow === 'tunnel' ? 'tunnel' : homeBrainFlow ? 'brain' : 'idle'
       }
     >
-      {showAppAddressHeader && !servicesExploreFullPage ? (
+      {showAppAddressHeader && !servicesExploreFullPage && homeShellTab !== 'search' ? (
         <FetchHomeAppAddressHeader
           onSearchSubmit={onAppTopSearchSubmit}
           onOpenAccount={onAppTopAccount}
@@ -5761,6 +5777,8 @@ export default function HomeView({
           // 'streak' / 'invite' just dismiss for now — there's no dedicated route yet.
         }}
       />
+
+      <MysteryFlipPage open={mysteryFlipOpen} onClose={() => setMysteryFlipOpen(false)} />
 
       {homeBrainFlow === 'tunnel' ? (
         <>
@@ -5873,6 +5891,7 @@ export default function HomeView({
                   servicesExploreFullPage ? onExploreFullPageFeedScroll : undefined
                 }
                 onOpenDrops={() => onHomeShellTabChange('marketplace')}
+                onOpenLiveStream={openExploreLiveStream}
                 onOpenMarketplace={() => onHomeShellTabChange('marketplace')}
                 onOpenSearch={() => {
                   bumpInteraction()
@@ -5892,6 +5911,14 @@ export default function HomeView({
                 onJoinBidWar={() => {
                   bumpInteraction()
                   setBidwarsMatchmakingOpen(true)
+                }}
+                onOpenSpinWheel={() => {
+                  bumpInteraction()
+                  setPokiesOpen(true)
+                }}
+                onOpenMysteryFlip={() => {
+                  bumpInteraction()
+                  setMysteryFlipOpen(true)
                 }}
                 intentOrbHintBubble={intentOrbHintBubble}
                 intentOrbHintCopy={HOME_INTENT_ORB_BUBBLE_HINT}
@@ -6311,6 +6338,7 @@ export default function HomeView({
                     furniturePromoBleed="tight"
                     scanning={scanning}
                     onOpenDrops={() => onHomeShellTabChange('marketplace')}
+                    onOpenLiveStream={openExploreLiveStream}
                     onOpenMarketplace={() => onHomeShellTabChange('marketplace')}
                     onOpenSearch={() => {
                       bumpInteraction()
@@ -6330,6 +6358,14 @@ export default function HomeView({
                     onJoinBidWar={() => {
                       bumpInteraction()
                       setBidwarsMatchmakingOpen(true)
+                    }}
+                    onOpenSpinWheel={() => {
+                      bumpInteraction()
+                      setPokiesOpen(true)
+                    }}
+                    onOpenMysteryFlip={() => {
+                      bumpInteraction()
+                      setMysteryFlipOpen(true)
                     }}
                     intentOrbHintBubble={intentOrbHintBubble}
                     intentOrbHintCopy={HOME_INTENT_ORB_BUBBLE_HINT}
@@ -7866,6 +7902,8 @@ export default function HomeView({
             onBrowseHandoffConsumed={clearMarketplaceBrowseHandoff}
             sellerHubHandoff={sellerHubHandoff}
             onSellerHubHandoffConsumed={clearSellerHubHandoff}
+            liveJoinStreamHandoff={liveJoinStreamHandoff}
+            onLiveJoinStreamHandoffConsumed={clearLiveJoinStreamHandoff}
           />
         </div>
       ) : null}
@@ -7899,15 +7937,15 @@ export default function HomeView({
           ].join(' ')}
         >
           <main
-            className="fetch-home-search-categories mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f8f6fd] px-3 pb-2 pt-[calc(max(0.5rem,env(safe-area-inset-top,0px))+5.1rem)]"
+            className="fetch-home-search-categories mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f8f6fd] px-3 pb-2 pt-[max(0.35rem,env(safe-area-inset-top,0px))]"
             role="main"
             aria-label="Search"
           >
-            {/* Search header: just the search bar */}
+            {/* Search header: pinned to top (no wallet chrome on this tab) */}
             <form
               role="search"
               aria-label="Search fetchit"
-              className="fetch-home-search-hero sticky top-0 z-[2] -mx-3 mb-3 px-3 pb-3 pt-1"
+              className="fetch-home-search-hero sticky top-0 z-[2] -mx-3 mb-3 bg-[#f8f6fd] px-3 pb-3 pt-1"
               onSubmit={(e) => {
                 e.preventDefault()
                 bumpInteraction()

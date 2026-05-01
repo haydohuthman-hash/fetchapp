@@ -35,6 +35,7 @@ import type { BuySellDropsListingHandoff } from './HomeShellBuySellPage'
 import { HomeShellBuySellPage } from './HomeShellBuySellPage'
 import type { HomeShellTab } from './FetchHomeBookingSheet'
 import { FetchStripePaymentElement } from './FetchStripePaymentElement'
+import type { LiveFeedStream } from '../lib/liveFeedDemo'
 import { LiveFeedPage } from './LiveFeedPage'
 
 export type MarketplaceDropsProductHandoff = {
@@ -77,6 +78,9 @@ export type HomeShellMarketplacePageProps = {
   /** Open seller tools overlay (e.g. global FAB → post listing). */
   sellerHubHandoff?: MarketplaceSellerHubHandoff | null
   onSellerHubHandoffConsumed?: () => void
+  /** Explore / feed: jump into Live viewer for this stream. */
+  liveJoinStreamHandoff?: LiveFeedStream | null
+  onLiveJoinStreamHandoffConsumed?: () => void
 }
 
 function formatAud(n: number): string {
@@ -256,6 +260,8 @@ function HomeShellMarketplacePageInner({
   onBrowseHandoffConsumed,
   sellerHubHandoff = null,
   onSellerHubHandoffConsumed,
+  liveJoinStreamHandoff = null,
+  onLiveJoinStreamHandoffConsumed,
 }: HomeShellMarketplacePageProps) {
   const { loading: productsApiLoading, products: apiProductList } = useFetchProducts()
   const [subView, setSubView] = useState<MarketplaceSubView>('browse')
@@ -780,6 +786,8 @@ function HomeShellMarketplacePageInner({
                 <div className="mx-auto flex w-full max-w-[min(100%,430px)] min-h-0 flex-1 flex-col">
                   <LiveFeedPage
                     onOpenListing={openBuySellListingFromRail}
+                    joinStreamHandoff={liveJoinStreamHandoff}
+                    onJoinStreamHandoffConsumed={onLiveJoinStreamHandoffConsumed}
                     onGoLive={() => {
                       setSellerOverlayLanding('feed')
                       setSellerOverlayMountKey((k) => k + 1)

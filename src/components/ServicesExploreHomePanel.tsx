@@ -7,12 +7,15 @@ import type {
 import type { MarketplacePeerBrowseFilter } from './ExploreBrowseBanner'
 import { ExploreAskFetchSheet } from './ExploreAskFetchSheet'
 import { HomeShellForYouFeed } from './HomeShellForYouFeed'
+import type { DropReel } from '../lib/drops/types'
 
 type OrbChatTurn = { id: string; role: 'user' | 'assistant'; text: string }
 
 export type ServicesExploreHomePanelProps = {
   scanning: boolean
   onOpenDrops: () => void
+  /** User tapped a “live now” tile — open the Live floor + player for that stream. */
+  onOpenLiveStream?: (reel: DropReel) => void
   onOpenMarketplace: () => void
   onOpenSearch?: () => void
   onOpenMarketplaceBrowse?: (filter: MarketplacePeerBrowseFilter) => void
@@ -22,6 +25,10 @@ export type ServicesExploreHomePanelProps = {
   onViewBackpack?: () => void
   /** Opens the Bid Wars hub from the adventure promo. */
   onJoinBidWar?: () => void
+  /** Opens Prize Spin from the home gem games picker. */
+  onOpenSpinWheel?: () => void
+  /** Opens Mystery Flip from the home gem games picker. */
+  onOpenMysteryFlip?: () => void
   intentOrbHintBubble: boolean
   intentOrbHintCopy: string
   fetchDogEarsActive: boolean
@@ -57,6 +64,7 @@ export type ServicesExploreHomePanelProps = {
 export function ServicesExploreHomePanel({
   scanning: _scanning,
   onOpenDrops,
+  onOpenLiveStream,
   onOpenMarketplace,
   onOpenSearch,
   onOpenMarketplaceBrowse,
@@ -64,6 +72,8 @@ export function ServicesExploreHomePanel({
   onQuickBuyPeerListing,
   onViewBackpack,
   onJoinBidWar,
+  onOpenSpinWheel,
+  onOpenMysteryFlip,
   intentOrbHintBubble: _intentOrbHintBubble,
   intentOrbHintCopy: _intentOrbHintCopy,
   fetchDogEarsActive: _fetchDogEarsActive,
@@ -130,6 +140,7 @@ export function ServicesExploreHomePanel({
           embedded
           explorePromoBleed={furniturePromoBleed}
           onOpenDrops={onOpenDrops}
+          onOpenLiveStream={onOpenLiveStream}
           onOpenMarketplace={onOpenMarketplace}
           onOpenSearch={onOpenSearch}
           onOpenMarketplaceBrowse={onOpenMarketplaceBrowse}
@@ -137,6 +148,8 @@ export function ServicesExploreHomePanel({
           onQuickBuyPeerListing={onQuickBuyPeerListing}
           onViewBackpack={onViewBackpack}
           onJoinBidWar={onJoinBidWar}
+          onOpenSpinWheel={onOpenSpinWheel}
+          onOpenMysteryFlip={onOpenMysteryFlip}
         />
       </div>
 

@@ -12860,7 +12860,7 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   12% { opacity: 0; transform: rotate(var(--tw-rotate, -32deg)) translateX(180px); }
 }
 
-/* Coin suction animation — coins fly from random bottom positions toward a
+/* Gem suction animation — particles fly from random bottom positions toward a
    target point (gems icon) at top-right, accelerating like a black hole pull.
    --coin-tx / --coin-ty are the target offset set by JS from getBoundingClientRect. */
 .fetch-entry-coin {
@@ -12868,8 +12868,8 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   width: 0.85rem;
   height: 0.85rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, #fde68a 0%, #fbbf24 35%, #d97706 72%, #b45309 100%);
-  box-shadow: inset 0 -1px 2px rgba(120, 53, 15, 0.4), 0 0 6px rgba(251, 191, 36, 0.35);
+  background: linear-gradient(135deg, #e9d5ff 0%, #a78bfa 38%, #7c3aed 72%, #4c1d95 100%);
+  box-shadow: inset 0 -1px 2px rgba(76, 29, 149, 0.35), 0 0 8px rgba(167, 139, 250, 0.45);
   opacity: 0;
   pointer-events: none;
   z-index: 80;
@@ -12950,6 +12950,135 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
 
 .fetch-gems-impact-pulse {
   animation: fetch-gems-coin-impact 0.22s ease-out;
+}
+
+.fetch-daily-gem-drop {
+  position: fixed;
+  right: 0.75rem;
+  top: max(0.75rem, env(safe-area-inset-top, 0px));
+  z-index: 96;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 1.2rem;
+  background: #ffffff;
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  color: #4c1d95;
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  padding: 0.55rem 0.75rem 0.55rem 0.55rem;
+  box-shadow:
+    0 18px 38px -18px rgba(76, 29, 149, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.85) inset,
+    0 0 24px rgba(167, 139, 250, 0.28);
+  transform-origin: top right;
+  animation: fetch-daily-gem-drop 1.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fetch-daily-gem-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-1.25rem) scale(0.72) rotate(4deg);
+  }
+  24% {
+    opacity: 1;
+    transform: translateY(0.25rem) scale(1.08) rotate(-1deg);
+  }
+  42% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  82% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-0.45rem) scale(0.96);
+  }
+}
+
+.fetch-daily-gem-fly {
+  position: fixed;
+  width: 1.25rem;
+  height: 1.25rem;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.85));
+  pointer-events: none;
+  opacity: 0;
+  z-index: 95;
+  animation: fetch-daily-gem-fly var(--fx-dur, 0.92s) cubic-bezier(0.17, 0.9, 0.16, 1) var(--fx-delay, 0s) forwards;
+}
+
+@keyframes fetch-daily-gem-fly {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.65) rotate(-8deg);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(calc(var(--fx-tx, 0px) * 0.2), calc(var(--fx-ty, 0px) * 0.16 - 18px)) scale(1.35) rotate(8deg);
+  }
+  65% {
+    opacity: 1;
+    transform: translate(calc(var(--fx-tx, 0px) * 0.78), calc(var(--fx-ty, 0px) * 0.76 - 10px)) scale(1.08) rotate(24deg);
+  }
+  88% {
+    opacity: 1;
+    transform: translate(calc(var(--fx-tx, 0px) * 0.96), calc(var(--fx-ty, 0px) * 0.96)) scale(0.85) rotate(34deg);
+  }
+  100% {
+    opacity: 0.9;
+    transform: translate(var(--fx-tx, 0px), var(--fx-ty, 0px)) scale(0.52) rotate(42deg);
+  }
+}
+
+.fetch-daily-gem-target-burst {
+  position: fixed;
+  z-index: 97;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.4);
+  animation: fetch-daily-gem-target-burst 0.62s cubic-bezier(0.18, 1, 0.26, 1) 0.82s both;
+}
+
+.fetch-daily-gem-target-burst::before,
+.fetch-daily-gem-target-burst::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 2px solid rgba(124, 58, 237, 0.55);
+  box-shadow: 0 0 18px rgba(167, 139, 250, 0.55);
+}
+
+.fetch-daily-gem-target-burst::after {
+  inset: -0.45rem;
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
+@keyframes fetch-daily-gem-target-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.35);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  72% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.55);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.85);
+  }
 }
 
 /* Coin counter pulse */
@@ -14852,6 +14981,174 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
     animation: none !important;
   }
   .fetch-pokies-reel-strip {
+    transition: none !important;
+  }
+}
+
+/* ─────────────────────────── Mystery Flip game ─────────────────────────── */
+.fetch-mflip-overlay {
+  animation: fetch-mflip-overlay-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fetch-mflip-overlay-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fetch-mflip-mascot {
+  animation: fetch-mflip-mascot-bob 3.4s ease-in-out infinite;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 6px 14px rgba(124, 58, 237, 0.25));
+}
+
+@keyframes fetch-mflip-mascot-bob {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50%      { transform: translateY(-4px) rotate(3deg); }
+}
+
+/* Card flip — wrapper has perspective; inner rotates on Y. */
+.fetch-mflip-card {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.fetch-mflip-card:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+.fetch-mflip-card-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fetch-mflip-card--flipped .fetch-mflip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.fetch-mflip-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+
+.fetch-mflip-card-back {
+  background: linear-gradient(160deg, #ede9fe 0%, #f5f3ff 100%);
+}
+
+.fetch-mflip-card-front {
+  transform: rotateY(180deg);
+  box-shadow: 0 8px 18px -14px rgba(28, 19, 64, 0.4);
+}
+
+/* Reward pop — small punch when the front face is shown. */
+.fetch-mflip-card--reward .fetch-mflip-card-front {
+  animation: fetch-mflip-reward-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.32s both;
+}
+
+@keyframes fetch-mflip-reward-pop {
+  0%   { transform: rotateY(180deg) scale(0.9); }
+  60%  { transform: rotateY(180deg) scale(1.07); }
+  100% { transform: rotateY(180deg) scale(1); }
+}
+
+/* Bomb shake + flash. */
+.fetch-mflip-card--bomb .fetch-mflip-card-front {
+  animation: fetch-mflip-bomb-shake 0.5s ease 0.34s both,
+    fetch-mflip-bomb-flash 0.7s ease 0.34s both;
+}
+
+@keyframes fetch-mflip-bomb-shake {
+  0%, 100% { transform: rotateY(180deg) translateX(0); }
+  20%      { transform: rotateY(180deg) translateX(-4px); }
+  40%      { transform: rotateY(180deg) translateX(4px); }
+  60%      { transform: rotateY(180deg) translateX(-3px); }
+  80%      { transform: rotateY(180deg) translateX(3px); }
+}
+
+@keyframes fetch-mflip-bomb-flash {
+  0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.0); }
+  20%  { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0.45); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+.fetch-mflip-bomb {
+  animation: fetch-mflip-bomb-spin 0.6s ease 0.32s both;
+  transform-origin: 50% 60%;
+}
+
+@keyframes fetch-mflip-bomb-spin {
+  0%   { transform: rotate(-30deg) scale(0.7); }
+  60%  { transform: rotate(15deg) scale(1.1); }
+  100% { transform: rotate(0) scale(1); }
+}
+
+.fetch-mflip-chest-pop {
+  animation: fetch-mflip-chest-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes fetch-mflip-chest-pop {
+  0%   { transform: scale(0.85); }
+  60%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.fetch-mflip-gifts-pop {
+  animation: fetch-mflip-gifts-pop 0.5s ease both;
+}
+
+@keyframes fetch-mflip-gifts-pop {
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+  40%  { transform: scale(1.012); box-shadow: 0 0 0 6px rgba(124, 58, 237, 0.18); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+}
+
+.fetch-mflip-warning-pulse {
+  animation: fetch-mflip-warning-pulse 0.5s ease both;
+}
+
+@keyframes fetch-mflip-warning-pulse {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-3px); }
+  40%  { transform: translateX(3px); }
+  60%  { transform: translateX(-2px); }
+  80%  { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+.fetch-mflip-toast {
+  animation: fetch-mflip-toast-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fetch-mflip-toast-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fetch-mflip-overlay,
+  .fetch-mflip-mascot,
+  .fetch-mflip-card-inner,
+  .fetch-mflip-card--reward .fetch-mflip-card-front,
+  .fetch-mflip-card--bomb .fetch-mflip-card-front,
+  .fetch-mflip-bomb,
+  .fetch-mflip-chest-pop,
+  .fetch-mflip-gifts-pop,
+  .fetch-mflip-warning-pulse,
+  .fetch-mflip-toast {
+    animation: none !important;
     transition: none !important;
   }
 }

@@ -6,18 +6,17 @@ import {
   type ResolvedPlace,
 } from './FetchHomeStepOne/PlacesAddressAutocomplete'
 import { playUiFeedback } from '../voice/fetchFeedback'
-import addressSheetFlagMascotUrl from '../assets/fetchit-address-sheet-flag-transparent.png'
 
 const GOOGLE_MAP_LIBRARIES: ('places' | 'geometry')[] = ['places', 'geometry']
 
 const brandedInputClass =
   'w-full rounded-2xl border border-[#4c1d95]/25 bg-white px-3.5 py-3.5 text-[15px] font-semibold leading-snug text-zinc-900 shadow-[0_10px_24px_-18px_rgba(76,29,149,0.45)] outline-none ring-0 placeholder:text-zinc-400 focus:border-[#4c1d95] focus:ring-2 focus:ring-[#c4b5fd]/80'
 
-const COIN_COUNT = 100
+const GEM_REWARD_COUNT = 100
 const CONFETTI_COUNT = 60
 const CONFETTI_COLORS = ['#fbbf24', '#f59e0b', '#ffffff', '#a78bfa', '#34d399', '#f472b6', '#60a5fa', '#fde68a']
 
-type Phase = 'address' | 'coins' | 'gift' | 'confetti' | 'signin'
+type Phase = 'address' | 'gems' | 'gift' | 'confetti' | 'signin'
 
 function placeFromGeocodeResult(r: google.maps.GeocoderResult): ResolvedPlace | null {
   const loc = r.geometry?.location
@@ -32,17 +31,17 @@ function placeFromGeocodeResult(r: google.maps.GeocoderResult): ResolvedPlace | 
   return { formattedAddress, placeId, coords: { lat: loc.lat(), lng: loc.lng() }, suburb }
 }
 
-/* ── Coin helpers ──────────────────────────────────────────────── */
+/* ── Gem celebration particles (fly to header gems icon) ───────── */
 
-type CoinSeed = { sx: string; sy: string; tx: string; ty: string; delay: number; dur: number; impactMs: number }
+type GemParticleSeed = { sx: string; sy: string; tx: string; ty: string; delay: number; dur: number; impactMs: number }
 
-function buildCoinSeeds(gemsRect: DOMRect | null): CoinSeed[] {
-  const seeds: CoinSeed[] = []
+function buildGemSeeds(gemsRect: DOMRect | null): GemParticleSeed[] {
+  const seeds: GemParticleSeed[] = []
   const vw = window.innerWidth
   const vh = window.innerHeight
   const targetCx = gemsRect ? gemsRect.left + gemsRect.width / 2 : vw * 0.85
   const targetCy = gemsRect ? gemsRect.top + gemsRect.height / 2 : 20
-  for (let i = 0; i < COIN_COUNT; i++) {
+  for (let i = 0; i < GEM_REWARD_COUNT; i++) {
     const h1 = ((i * 2654435761) >>> 0) / 4294967296
     const h2 = (((i + 37) * 2246822519) >>> 0) / 4294967296
     const startX = vw * 0.15 + h1 * vw * 0.7
@@ -63,9 +62,9 @@ function pulseGemsIcon() {
 function addVortex() { document.querySelector('[data-fetch-gems-icon]')?.classList.add('fetch-gems-vortex') }
 function removeVortex() { document.querySelector('[data-fetch-gems-icon]')?.classList.remove('fetch-gems-vortex') }
 
-function CoinCelebration({ onDone, onCoinTick }: { onDone: () => void; onCoinTick?: (n: number) => void }) {
+function GemCelebration({ onDone, onCoinTick }: { onDone: () => void; onCoinTick?: (n: number) => void }) {
   const gemsRect = document.querySelector('[data-fetch-gems-icon]')?.getBoundingClientRect() ?? null
-  const seeds = useMemo(() => buildCoinSeeds(gemsRect), [])  // eslint-disable-line react-hooks/exhaustive-deps
+  const seeds = useMemo(() => buildGemSeeds(gemsRect), [])  // eslint-disable-line react-hooks/exhaustive-deps
   const rafRef = useRef(0)
   const startRef = useRef(0)
   const hitTimersRef = useRef<number[]>([])
@@ -76,7 +75,7 @@ function CoinCelebration({ onDone, onCoinTick }: { onDone: () => void; onCoinTic
     startRef.current = performance.now()
     const tick = (now: number) => {
       const pct = Math.min((now - startRef.current) / 2400, 1)
-      onCoinTick?.(Math.round(pct * COIN_COUNT))
+      onCoinTick?.(Math.round(pct * GEM_REWARD_COUNT))
       if (pct < 1) rafRef.current = requestAnimationFrame(tick)
     }
     rafRef.current = requestAnimationFrame(tick)
@@ -159,7 +158,7 @@ function GiftChoiceScreen({ onChoose }: { onChoose: (gift: string) => void }) {
   return (
     <div className="relative z-[5] flex min-h-0 flex-1 flex-col items-center justify-center gap-6 px-5 py-6 animate-[fetch-phase-fade-in_0.5s_ease_both]">
       <div className="text-center">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-400/70">You earned 100 coins</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-violet-300/80">You earned 100 gems</p>
         <h2 className="mt-2 text-[1.6rem] font-black leading-tight tracking-tight text-white">
           Choose your gift
         </h2>
@@ -213,18 +212,23 @@ function SignInPrompt({ gift, onSignIn, onSkip }: { gift: string; onSignIn: () =
   const giftLabel = gift === 'free_travel' ? '$0 Travel Fee' : 'Seller Boost'
   return (
     <div className="relative z-[5] flex min-h-0 flex-1 flex-col items-center justify-center gap-5 px-5 py-6 animate-[fetch-phase-fade-in_0.5s_ease_both]">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-400/20 to-amber-600/10">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-400/25 to-[#4c1d95]/20">
         <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden>
-          <defs>
-            <linearGradient id="si-coin" x1="5" y1="4" x2="19" y2="20" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#fde68a" />
-              <stop offset="0.35" stopColor="#fbbf24" />
-              <stop offset="0.72" stopColor="#d97706" />
-              <stop offset="1" stopColor="#b45309" />
-            </linearGradient>
-          </defs>
-          <circle cx="12" cy="12" r="10" fill="url(#si-coin)" stroke="#78350f" strokeWidth="0.85" />
-          <circle cx="12" cy="12" r="7.75" fill="none" stroke="#92400e" strokeWidth="0.55" opacity="0.7" />
+          <path
+            d="M7.15 4.75h9.7l3.35 5.1L12 20.1 3.8 9.85l3.35-5.1z"
+            fill="rgba(167,139,250,0.35)"
+            stroke="#c4b5fd"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M3.8 9.85h16.4M7.15 4.75l2.25 5.1L12 20.1m4.85-15.35-2.25 5.1L12 20.1M9.4 9.85h5.2"
+            stroke="#7c3aed"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.85"
+          />
         </svg>
       </div>
 
@@ -233,7 +237,7 @@ function SignInPrompt({ gift, onSignIn, onSkip }: { gift: string; onSignIn: () =
           Sign in to claim
         </h2>
         <p className="mt-2 text-[13px] leading-snug text-white/50">
-          Your <span className="font-bold text-amber-400">100 coins</span> and <span className="font-bold text-white/80">{giftLabel}</span> are waiting.
+          Your <span className="font-bold text-violet-300">100 gems</span> and <span className="font-bold text-white/80">{giftLabel}</span> are waiting.
           <br />Sign in to lock them to your account.
         </p>
       </div>
@@ -302,10 +306,10 @@ function FetchEntryAddressSheetShell({
 
   const startCelebration = useCallback((place: ResolvedPlace) => {
     confirmedPlaceRef.current = place
-    setPhase('coins')
+    setPhase('gems')
   }, [])
 
-  const onCoinsDone = useCallback(() => setPhase('gift'), [])
+  const onGemsDone = useCallback(() => setPhase('gift'), [])
 
   const onGiftChosen = useCallback((gift: string) => {
     setChosenGift(gift)
@@ -354,14 +358,14 @@ function FetchEntryAddressSheetShell({
     )
   }, [hasMapsKey, mapsReady, startCelebration])
 
-  const isCoinPhase = phase === 'coins'
+  const isGemPhase = phase === 'gems'
   const isFullScreen = phase === 'gift' || phase === 'confetti' || phase === 'signin'
 
   return (
     <div
       className={`fixed inset-0 z-[70] flex flex-col transition-[background-color,backdrop-filter] duration-500 ${
         isFullScreen ? 'justify-center bg-black/90 backdrop-blur-0'
-        : isCoinPhase ? 'justify-end bg-transparent backdrop-blur-0'
+        : isGemPhase ? 'justify-end bg-transparent backdrop-blur-0'
         : 'justify-end bg-[#2e1065]/35 backdrop-blur-[4px]'
       }`}
       role="dialog"
@@ -377,16 +381,6 @@ function FetchEntryAddressSheetShell({
         ].join(' ')}
         style={isFullScreen ? undefined : { paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        {phase === 'address' ? (
-          <img
-            src={addressSheetFlagMascotUrl}
-            alt=""
-            className="pointer-events-none absolute left-1/2 top-0 z-[6] w-[112%] max-w-none -translate-x-1/2 -translate-y-[63%] select-none object-contain drop-shadow-[0_18px_30px_rgba(46,16,101,0.24)]"
-            draggable={false}
-            aria-hidden
-          />
-        ) : null}
-
         {/* Shooting stars stay only on the reward fullscreen phases. */}
         {isFullScreen ? (
           <>
@@ -396,25 +390,25 @@ function FetchEntryAddressSheetShell({
           </>
         ) : null}
 
-        {/* Phase: coins */}
-        {isCoinPhase ? <CoinCelebration onDone={onCoinsDone} onCoinTick={onCoinTick} /> : null}
+        {/* Phase: gems fly to header icon */}
+        {isGemPhase ? <GemCelebration onDone={onGemsDone} onCoinTick={onCoinTick} /> : null}
 
         {/* Phase: confetti */}
         {phase === 'confetti' ? <ConfettiBurst onDone={onConfettiDone} /> : null}
 
-        {/* Phase: address input */}
-        {phase === 'address' || isCoinPhase ? (
+        {/* Phase: address input — body sits under mascot paw; mascot layer is last so paw paints on top */}
+        {phase === 'address' || isGemPhase ? (
           <>
-            <div className="relative z-[5] flex shrink-0 justify-center pt-3 pb-2" aria-hidden>
+            <div className="relative z-[10] flex shrink-0 justify-center pt-3 pb-2" aria-hidden>
               <span className="h-1 w-10 rounded-full bg-[#4c1d95]/18" />
         </div>
-            <div className={`relative z-[5] flex min-h-0 flex-1 flex-col gap-4 px-5 pb-5 pt-2 transition-[filter,opacity] duration-500 ${isCoinPhase ? 'pointer-events-none blur-[6px] opacity-60' : 'blur-0 opacity-100'}`}>
+            <div className={`relative z-[10] flex min-h-0 flex-1 flex-col gap-4 px-5 pb-5 pt-2 transition-[filter,opacity] duration-500 ${isGemPhase ? 'pointer-events-none blur-[6px] opacity-60' : 'blur-0 opacity-100'}`}>
               <div className="space-y-2">
                 <h2 id="fetch-entry-address-heading" className="text-[1.45rem] font-black leading-tight tracking-tight text-zinc-950">
                   Where should we deliver?
             </h2>
                 <p className="text-[13px] font-medium leading-snug text-zinc-500">
-                  Enter your address to <span className="font-extrabold text-[#4c1d95]">collect 100 coins</span>.
+                  Enter your address to <span className="font-extrabold text-[#4c1d95]">collect 100 gems</span>.
             </p>
           </div>
 
@@ -469,7 +463,7 @@ function FetchEntryAddressSheetShell({
                     <path d="M20 8h-3.6a3.4 3.4 0 1 0-4.4-4.4A3.4 3.4 0 1 0 7.6 8H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7h1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
                     <path d="M12 8v13" stroke="currentColor" strokeWidth="1.8" />
                   </svg>
-                  Collect coins
+                  Collect gems
             </button>
 
                 <button type="button" onClick={onDismiss} className="w-full py-1.5 text-center text-[12px] font-bold text-zinc-400 transition-colors hover:text-[#4c1d95]/75">

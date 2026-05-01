@@ -8,7 +8,7 @@ import {
   type PointerEvent as RPointerEvent,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { formatAud, type LiveFeedStream } from '../lib/liveFeedDemo'
+import { buildLiveFeedStreams, formatAud, type LiveFeedStream } from '../lib/liveFeedDemo'
 import { loadSession } from '../lib/fetchUserSession'
 
 function SearchIcon({ className }: { className?: string }) {
@@ -596,7 +596,8 @@ function LiveVideoAuction({
     if (hasDetails) {
       setBidCents((c) => c + incrementCents)
     }
-    onOpenListing(stream.listingId)
+    const id = stream.listingId.trim()
+    if (id) onOpenListing(id)
   }, [onOpenListing, stream.listingId, hasDetails, incrementCents])
 
   const m = Math.floor(sec / 60)
@@ -908,12 +909,35 @@ function LiveWelcomeSheet({ onDismiss }: { onDismiss: () => void }) {
 type Props = {
   onOpenListing: (listingId: string) => void
   onGoLive?: () => void
+  /** Opens the live viewer for this stream (e.g. user tapped a live tile on Explore). */
+  joinStreamHandoff?: LiveFeedStream | null
+  onJoinStreamHandoffConsumed?: () => void
 }
 
-export const LiveFeedPage = memo(function LiveFeedPage({ onOpenListing, onGoLive }: Props) {
-  const streams = useMemo<LiveFeedStream[]>(() => [], [])
+export const LiveFeedPage = memo(function LiveFeedPage({
+  onOpenListing,
+  onGoLive,
+  joinStreamHandoff = null,
+  onJoinStreamHandoffConsumed,
+}: Props) {
+  const baseStreams = useMemo(() => buildLiveFeedStreams(), [])
+  const [extraStreams, setExtraStreams] = useState<LiveFeedStream[]>([])
+  const streams = useMemo(() => {
+    const byId = new Map(baseStreams.map((s) => [s.id, s]))
+    for (const s of extraStreams) byId.set(s.id, s)
+    return Array.from(byId.values())
+  }, [baseStreams, extraStreams])
   const [activeStream, setActiveStream] = useState<LiveFeedStream | null>(null)
   const [showWelcome, setShowWelcome] = useState(true)
+
+  useEffect(() => {
+    if (!joinStreamHandoff) return
+    setExtraStreams((prev) =>
+      prev.some((s) => s.id === joinStreamHandoff.id) ? prev : [joinStreamHandoff, ...prev],
+    )
+    setActiveStream(joinStreamHandoff)
+    onJoinStreamHandoffConsumed?.()
+  }, [joinStreamHandoff, onJoinStreamHandoffConsumed])
 
   const filtered = streams
 
