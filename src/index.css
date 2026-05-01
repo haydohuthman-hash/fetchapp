@@ -183,47 +183,43 @@ html[data-fetch-theme='light'] .fetch-home-phone-stage {
   animation-delay: 630ms;
 }
 
-/* Bid Wars CTA — slow premium sheen */
-@keyframes fetch-bid-war-sheen {
-  0% {
-    transform: translateX(-120%) skewX(-14deg);
-    opacity: 0;
+/* Bid Wars CTA — quick rumble nudge every 5s (no sheen sweep). */
+@keyframes fetch-bid-war-rumble {
+  0%,
+  90% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
-  12% {
-    opacity: 0.65;
+  91% {
+    transform: translate3d(-2px, 1px, 0) rotate(-1.25deg);
   }
-  40% {
-    opacity: 0.85;
+  92% {
+    transform: translate3d(2px, -1px, 0) rotate(1.05deg);
   }
+  93% {
+    transform: translate3d(-2px, -1px, 0) rotate(-0.85deg);
+  }
+  94% {
+    transform: translate3d(2px, 1px, 0) rotate(0.75deg);
+  }
+  95% {
+    transform: translate3d(-1px, 0, 0) rotate(-0.35deg);
+  }
+  96%,
   100% {
-    transform: translateX(220%) skewX(-14deg);
-    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
 }
 
-.fetch-bid-war-btn-sheen {
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: inherit;
+.fetch-bid-war-btn-rumble {
+  animation: fetch-bid-war-rumble 5s linear infinite;
+  will-change: transform;
 }
 
-.fetch-bid-war-btn-sheen__bar {
-  position: absolute;
-  top: -40%;
-  left: 0;
-  width: 38%;
-  height: 180%;
-  background: linear-gradient(
-    105deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.06) 35%,
-    rgba(255, 255, 255, 0.42) 50%,
-    rgba(255, 255, 255, 0.08) 65%,
-    transparent 100%
-  );
-  animation: fetch-bid-war-sheen 2.85s ease-in-out infinite;
+@media (prefers-reduced-motion: reduce) {
+  .fetch-bid-war-btn-rumble {
+    animation: none;
+    will-change: auto;
+  }
 }
 
 /* Marketplace header: Fetch eyes â€” slow, soft blinks + gentle drifting pupils (loops). */
@@ -7712,7 +7708,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   min-width: 2.75rem;
   padding: 0;
   margin: 0;
@@ -7730,7 +7726,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   width: 100%;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 0.15rem;
 }
 
@@ -7770,9 +7766,10 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   }
 }
 
-/* Show “Sell” label via shared __label rules; no inline text in orb */
+/* Sell caption shares __label typography; tighten vertical offset vs side tabs — FAB orb is taller in flow but visually lifted. */
 .fetch-home-phone-stage .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__fab .fetch-home-intent-bottom-nav__label {
-  display: none !important;
+  display: block;
+  margin-top: -0.7rem;
 }
 
 /* Apple-like "warp" press behavior: elastic squish + recover. */
@@ -13921,6 +13918,63 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
 
 .fetch-bidwar-premium-cta-shimmer {
   animation: fetch-bidwar-premium-cta-shimmer 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+/* Backpack hero chip — violet-tinted light sweep across the premium card shell. */
+@keyframes fetch-backpack-premium-card-shimmer {
+  0% {
+    transform: translateX(-5%) skewX(-15deg);
+    opacity: 0;
+  }
+  14% {
+    opacity: 0.92;
+  }
+  48% {
+    opacity: 0.65;
+  }
+  100% {
+    transform: translateX(240%) skewX(-15deg);
+    opacity: 0;
+  }
+}
+
+.fetch-backpack-premium-card {
+  isolation: isolate;
+}
+
+.fetch-backpack-premium-card__flash {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.fetch-backpack-premium-card__shimmer {
+  position: absolute;
+  top: -12%;
+  left: -80%;
+  width: 88%;
+  height: 128%;
+  background: linear-gradient(
+    94deg,
+    transparent 12%,
+    rgba(255, 255, 255, 0.04) 28%,
+    rgba(255, 255, 255, 0.55) 48%,
+    rgba(244, 240, 255, 0.38) 58%,
+    transparent 82%
+  );
+  mix-blend-mode: soft-light;
+  opacity: 0;
+  animation: fetch-backpack-premium-card-shimmer 3.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fetch-backpack-premium-card__shimmer {
+    animation: none;
+    opacity: 0 !important;
+  }
 }
 
 /* Live auction screen — pulses, glow, chat slide-in, confetti fall */

@@ -43,6 +43,11 @@ function sellerLine(r: DropReel): string {
   return s.length > 0 ? s : 'Creator'
 }
 
+function sellerInitial(seller: string): string {
+  const cleaned = seller.replace(/^@/, '').trim()
+  return (cleaned[0] || 'F').toUpperCase()
+}
+
 function viewerCount(id: string): string {
   let h = 0
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
@@ -57,6 +62,7 @@ const LIVE_NOW_DEFAULT_EMPTY_REELS: readonly DropReel[] = []
 function LiveNowCard({ reel, onOpen }: { reel: DropReel; onOpen: (reel: DropReel) => void }) {
   const poster = reelPoster(reel)
   const seller = sellerLine(reel)
+  const initial = sellerInitial(seller)
   const viewers = viewerCount(reel.id)
   const title = reel.title?.trim() || 'Live'
 
@@ -67,6 +73,17 @@ function LiveNowCard({ reel, onOpen }: { reel: DropReel; onOpen: (reel: DropReel
       className="flex flex-col bg-transparent p-0 text-left transition-transform active:scale-[0.98]"
       aria-label={`Live from ${seller}. ${reel.priceLabel}, ${viewers} viewers`}
     >
+      <div className="mb-1.5 flex min-w-0 items-center gap-1.5 px-0.5">
+        <span
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#9f67ff] to-[#4c1d95] text-[11px] font-black text-white ring-2 ring-white"
+          aria-hidden
+        >
+          {initial}
+        </span>
+        <span className="min-w-0 truncate text-[12px] font-black leading-none tracking-[-0.01em] text-[#1c1340]">
+          {seller}
+        </span>
+      </div>
       <div className="relative aspect-[9/16] w-full overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
         {poster ? (
           <img
@@ -105,9 +122,6 @@ function LiveNowCard({ reel, onOpen }: { reel: DropReel; onOpen: (reel: DropReel
             {viewers}
           </span>
         </div>
-        <p className="pointer-events-none absolute bottom-0 left-0 z-[4] max-w-full truncate px-2 pb-2 pt-8 text-left text-[13px] font-semibold leading-tight text-white [text-shadow:0_1px_12px_rgba(0,0,0,0.9)]">
-          {seller}
-        </p>
       </div>
       <p className="mt-1.5 line-clamp-2 min-h-[2.15em] text-[12px] font-extrabold leading-tight tracking-[-0.01em] text-zinc-900">
         {title}

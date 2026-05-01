@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { loadSession } from '../lib/fetchUserSession'
 import {
   addBackpackItem,
@@ -26,6 +26,7 @@ import { MyFetchRewardsBanner } from './MyFetchRewardsBanner'
 import { ListingQuickAddPlusCircleIcon } from './icons/HomeShellNavIcons'
 import { ExploreCategoryBrowse } from './ExploreCategoryBrowse'
 import { LiveNowGrid } from './FeedTabViews'
+import type { DropReel } from '../lib/drops/types'
 import fetchitAdventuringBannerUrl from '../assets/fetchit-adventuring-banner.png'
 import fetchitFundedHighBannerUrl from '../assets/fetchit-funded-high-banner.png'
 import fetchitFundedLowBannerUrl from '../assets/fetchit-funded-low-banner.png'
@@ -35,6 +36,7 @@ import fetchitNoFundsBannerUrl from '../assets/fetchit-no-funds-banner.png'
 import fetchitBackpack3dUrl from '../assets/fetchit-backpack-3d.png'
 import fetchitBackpackLevel1To4Url from '../assets/fetchit-backpack-level-1-4.png'
 import fetchitBidWarsBannerUrl from '../assets/fetchit-bid-wars-banner.png'
+import heroWalletCashUrl from '../assets/hero-wallet-cash.png'
 import searchRealSneakersShoesUrl from '../assets/search-categories-real/sneakers-shoes.png'
 import searchRealTradingCardGamesUrl from '../assets/search-categories-real/trading-card-games.png'
 import searchRealJewelleryWatchesUrl from '../assets/search-categories-real/jewellery-watches.png'
@@ -42,6 +44,7 @@ import searchRealToysHobbiesUrl from '../assets/search-categories-real/toys-hobb
 import searchRealElectronicsUrl from '../assets/search-categories-real/electronics.png'
 import { ambientRegisterAdventure } from '../lib/audio/fetchAmbientMusic'
 import { playConfettiPops, playWinFanfare } from '../lib/fetchBattleSounds'
+import { depositWallet, useWalletBalanceCents } from '../lib/data'
 
 function hashSessionSeed(seed: string): number {
   let h = 0
@@ -67,6 +70,66 @@ function firstNameFromDisplay(name: string): string {
   const t = name.trim().split(/\s+/)[0] ?? ''
   return t.length > 0 ? t : 'there'
 }
+
+/** 2D header chips keep the hero status row compact and flat. */
+const feed2dHeaderChip =
+  'flex h-8 items-center justify-center gap-1 rounded-xl bg-violet-50 px-2 text-[#7c3aed] shadow-none transition-colors active:bg-violet-100'
+
+const feed3dPurpleCta =
+  'border-b-[4px] border-[#4c1d95] bg-gradient-to-b from-[#9f67ff] to-[#7c3aed] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2'
+
+const feed3dDarkCta =
+  'border-b-[4px] border-[#090514] bg-gradient-to-b from-[#33225f] to-[#1c1340] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2'
+
+type FetchHomeTourTarget = 'addFunds' | 'backpack' | 'adventure' | 'bidWar' | 'liveStreams'
+
+type FetchHomeTourStep = {
+  id: FetchHomeTourTarget
+  eyebrow: string
+  title: string
+  body: string
+  placement: 'below' | 'left' | 'above'
+}
+
+const FETCH_HOME_TOUR_STORAGE_KEY = 'fetch.homeForYouTour.v1'
+
+const FETCH_HOME_TOUR_STEPS: FetchHomeTourStep[] = [
+  {
+    id: 'addFunds',
+    eyebrow: 'Step 1 of 5',
+    title: 'Add funds',
+    body: 'Top up your wallet first. Funds power adventures, quick actions, and anything Fetch needs to run for you.',
+    placement: 'below',
+  },
+  {
+    id: 'backpack',
+    eyebrow: 'Step 2 of 5',
+    title: 'Backpack',
+    body: 'Your backpack stores rewards, passes, boosts, map cards, and the progress you earn while using Fetch.',
+    placement: 'left',
+  },
+  {
+    id: 'adventure',
+    eyebrow: 'Step 3 of 5',
+    title: 'Adventure card',
+    body: 'Start an adventure to send Fetch out. The timer tracks the run, and first-time rewards unlock as you play.',
+    placement: 'above',
+  },
+  {
+    id: 'bidWar',
+    eyebrow: 'Step 4 of 5',
+    title: 'Bid War',
+    body: 'Jump into Bid Wars to compete, bid, and win. This is where the high-energy auction game begins.',
+    placement: 'below',
+  },
+  {
+    id: 'liveStreams',
+    eyebrow: 'Step 5 of 5',
+    title: 'Live streams',
+    body: 'Watch live drops and auctions here. Tap into streams to see items move in real time.',
+    placement: 'above',
+  },
+]
 
 function FetchitWelcomeHero({
   displayName,
@@ -109,8 +172,77 @@ function FetchitWelcomeHero({
         : 'text-[24px] sm:text-[26px]'
   const backpackImageUrl = backpackImageForLevel(adventureLevel)
   return (
-    <section className="relative w-full" aria-label="Welcome and backpack">
-      <div className="relative aspect-[3/2] w-full overflow-hidden bg-gradient-to-b from-[#cdb7ff] via-[#a78bfa] to-[#7c3aed] shadow-[0_22px_48px_-22px_rgba(76,29,149,0.6)]">
+    <section
+      className="relative w-full overflow-hidden rounded-t-xl"
+      aria-label="Welcome and backpack"
+    >
+      <div className="flex items-center gap-1.5 bg-white px-2 py-2 text-[#1c1340] shadow-[0_10px_24px_-20px_rgba(30,15,80,0.35)]">
+        <div className="flex h-8 shrink-0 items-center gap-1.5 rounded-xl bg-violet-50 px-2 text-[#4c1d95] shadow-none">
+          <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-[#7c3aed] text-[10px] font-black text-white">
+            {adventureLevel}
+          </span>
+          <span className="text-[10px] font-black uppercase tracking-[0.06em]">
+            Level {adventureLevel}
+          </span>
+        </div>
+        <div
+          className={[feed2dHeaderChip, 'min-w-0 flex-1'].join(' ')}
+          role="group"
+          aria-label={`Wallet balance ${fundsLabel}`}
+        >
+          <img
+            src={heroWalletCashUrl}
+            alt=""
+            width={40}
+            height={40}
+            draggable={false}
+            className="pointer-events-none h-5 w-5 shrink-0 select-none object-contain"
+          />
+          <span className="truncate text-[10px] font-black tabular-nums text-[#1c1340]">{fundsLabel}</span>
+        </div>
+        <button
+          type="button"
+          onClick={onAddDemoFunds}
+          data-fetch-tour-target="addFunds"
+          className="flex h-8 shrink-0 items-center justify-center rounded-xl bg-[#7c3aed] px-2.5 py-0 text-[8px] font-black uppercase leading-none tracking-[0.08em] text-white shadow-none transition-colors active:bg-[#6d28d9]"
+          aria-label="Add funds"
+        >
+          Add funds
+        </button>
+        <button
+          type="button"
+          className={[feed2dHeaderChip, 'min-w-[3.2rem]'].join(' ')}
+          aria-label={`${gemsCount} gems`}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0">
+            <path
+              d="M7 4h10l4 5-9 11L3 9l4-5Z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+            <path d="M3 9h18M8 4l4 16 4-16" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+          </svg>
+          <span className="text-[10px] font-black tabular-nums text-[#1c1340]">{gemsCount}</span>
+        </button>
+        <button
+          type="button"
+          className={[feed2dHeaderChip, 'min-w-[3.2rem]'].join(' ')}
+          aria-label={`${notificationsCount} notifications`}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0">
+            <path
+              d="M18 10a6 6 0 1 0-12 0c0 7-2.5 7-2.5 8h17S18 17 18 10Z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+            <path d="M9.5 20a2.8 2.8 0 0 0 5 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          <span className="text-[10px] font-black tabular-nums text-[#1c1340]">{notificationsCount}</span>
+        </button>
+      </div>
+      <div className="relative aspect-[3/2] w-full overflow-hidden rounded-t-xl bg-gradient-to-b from-[#cdb7ff] via-[#a78bfa] to-[#7c3aed] shadow-[0_22px_48px_-22px_rgba(76,29,149,0.6)]">
         <img
           src={bannerUrl}
           alt=""
@@ -122,71 +254,6 @@ function FetchitWelcomeHero({
           className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_115%_85%_at_0%_100%,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.4)_42%,transparent_72%)]"
           aria-hidden
         />
-        <div className="absolute left-3 top-3 z-[4] flex items-center gap-2 rounded-lg bg-white px-2.5 py-1.5 text-[#1c1340] shadow-[0_10px_24px_-16px_rgba(30,15,80,0.55)] ring-1 ring-white sm:left-4 sm:top-4">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#7c3aed] text-[11px] font-black text-white">
-            {adventureLevel}
-          </span>
-          <span className="text-[11px] font-black uppercase tracking-[0.08em]">
-            Level {adventureLevel}
-          </span>
-        </div>
-        <div className="absolute right-3 top-3 z-[4] flex items-center gap-2 sm:right-4 sm:top-4">
-          <button
-            type="button"
-            onClick={onAddDemoFunds}
-            className="fetch-apple-warp-btn flex h-9 items-center gap-1.5 rounded-lg border-b-[3px] border-violet-200 bg-gradient-to-b from-white to-violet-50 px-2 text-[#7c3aed] shadow-[0_10px_18px_-12px_rgba(30,15,80,0.6)] ring-1 ring-white transition-transform active:translate-y-0.5 active:border-b"
-            aria-label={`Add demo funds, current balance ${fundsLabel}`}
-          >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0">
-              <path
-                d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6.5A2.5 2.5 0 0 1 4 16.5v-9Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-              <path d="M16 12h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <path d="M7 5v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            <span className="text-[11px] font-black tabular-nums text-[#1c1340]">{fundsLabel}</span>
-            <span className="flex h-4 w-4 items-center justify-center rounded-md bg-[#7c3aed] text-white">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-              </svg>
-            </span>
-          </button>
-          <button
-            type="button"
-            className="fetch-apple-warp-btn flex h-9 items-center gap-1.5 rounded-lg border-b-[3px] border-violet-200 bg-gradient-to-b from-white to-violet-50 px-2 text-[#7c3aed] shadow-[0_10px_18px_-12px_rgba(30,15,80,0.6)] ring-1 ring-white transition-transform active:translate-y-0.5 active:border-b"
-            aria-label={`${gemsCount} gems`}
-          >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0">
-              <path
-                d="M7 4h10l4 5-9 11L3 9l4-5Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-              <path d="M3 9h18M8 4l4 16 4-16" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-            </svg>
-            <span className="text-[11px] font-black tabular-nums text-[#1c1340]">{gemsCount}</span>
-          </button>
-          <button
-            type="button"
-            className="fetch-apple-warp-btn flex h-9 items-center gap-1.5 rounded-lg border-b-[3px] border-violet-200 bg-gradient-to-b from-white to-violet-50 px-2 text-[#7c3aed] shadow-[0_10px_18px_-12px_rgba(30,15,80,0.6)] ring-1 ring-white transition-transform active:translate-y-0.5 active:border-b"
-            aria-label={`${notificationsCount} notifications`}
-          >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0">
-              <path
-                d="M18 10a6 6 0 1 0-12 0c0 7-2.5 7-2.5 8h17S18 17 18 10Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-              <path d="M9.5 20a2.8 2.8 0 0 0 5 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            <span className="text-[11px] font-black tabular-nums text-[#1c1340]">{notificationsCount}</span>
-          </button>
-        </div>
         <div className="pointer-events-none absolute bottom-[11%] left-3 z-[3] max-w-[min(100%,16rem)] text-left sm:bottom-[10%] sm:left-4">
           <p className="text-[11px] font-bold leading-none text-white">
             Welcome back,
@@ -207,19 +274,27 @@ function FetchitWelcomeHero({
           type="button"
           onClick={onViewBackpack}
           data-fetch-backpack-target
-          className="fetch-apple-warp-btn absolute right-2.5 top-[24%] z-[2] flex w-[34%] max-w-[9.5rem] flex-col items-center gap-1.5 rounded-2xl bg-white p-2 text-[#1c1340] shadow-[0_12px_28px_-14px_rgba(30,15,80,0.55)] ring-1 ring-violet-200/60 transition-transform active:scale-[0.98] sm:right-3 sm:top-[28%]"
+          data-fetch-tour-target="backpack"
+          className="group absolute top-2.5 right-2.5 z-[2] transition-transform active:scale-[0.98] sm:top-3 sm:right-3"
           aria-label="View backpack"
         >
-          <img
-            src={backpackImageUrl}
-            alt=""
-            aria-hidden
-            draggable={false}
-            className="pointer-events-none block h-[6.75rem] w-[6.75rem] shrink-0 select-none object-contain"
-          />
-          <span className="flex w-full items-center justify-center gap-1 rounded-full bg-[#7c3aed] px-1.5 py-1 text-[10px] font-black uppercase tracking-[0.05em] text-white shadow-[0_6px_16px_-8px_rgba(76,29,149,0.7)]">
-            View Backpack
-          </span>
+          <div className="fetch-backpack-premium-card relative flex w-[6.85rem] flex-col gap-1.5 overflow-hidden rounded-xl bg-white px-1 py-1.5 shadow-none ring-1 ring-violet-200/60 sm:w-[7.25rem]">
+            <div className="relative z-0 flex flex-col gap-1.5">
+              <span className="flex w-full shrink-0 items-center justify-center px-1 py-0.5 text-[13px] font-black uppercase tracking-[0.04em] text-[#1c1340]">
+                Open
+              </span>
+              <img
+                src={backpackImageUrl}
+                alt=""
+                aria-hidden
+                draggable={false}
+                className="pointer-events-none block h-auto w-full max-h-[5.65rem] min-h-[3.85rem] shrink-0 select-none object-contain object-center sm:max-h-[6.1rem]"
+              />
+            </div>
+            <div className="fetch-backpack-premium-card__flash" aria-hidden>
+              <span className="fetch-backpack-premium-card__shimmer" />
+            </div>
+          </div>
         </button>
       </div>
     </section>
@@ -264,7 +339,11 @@ function AdventureReturnBar({
   const backIn = formatBackInClock(remainingSeconds)
 
   return (
-    <section className="-mx-0.5 px-0.5" aria-label={`Adventure in progress. Back in ${backIn}.`}>
+    <section
+      className="-mx-0.5 px-0.5"
+      aria-label={`Adventure in progress. Back in ${backIn}.`}
+      data-fetch-tour-target="adventure"
+    >
       <div className="overflow-visible rounded-3xl bg-white p-2.5 shadow-[0_12px_28px_-18px_rgba(76,29,149,0.45)] ring-1 ring-violet-200/70">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center text-[#7c3aed]">
@@ -309,12 +388,14 @@ function AdventureReturnBar({
             type="button"
             onClick={onEndEarly}
             disabled={!canEndEarly}
-            className={[
-              'fetch-apple-warp-btn shrink-0 rounded-2xl border-b-[4px] px-3 py-1.5 text-center text-[10px] font-black uppercase leading-none tracking-[0.06em] text-white shadow-[0_12px_18px_-10px_rgba(28,19,64,0.75)] transition-transform active:translate-y-0.5 active:border-b-2',
-              canEndEarly
-                ? 'border-[#090514] bg-gradient-to-b from-[#33225f] to-[#1c1340]'
-                : 'cursor-not-allowed border-zinc-300 bg-gradient-to-b from-zinc-300 to-zinc-400 text-white/80 shadow-none',
-            ].join(' ')}
+            className={
+              [
+                'shrink-0 rounded-2xl border-b-[4px] px-3 py-1.5 text-center text-[10px] font-black uppercase leading-none tracking-[0.06em] text-white shadow-none transition-[transform,border-bottom-width] duration-150 disabled:opacity-65',
+                canEndEarly
+                  ? 'border-[#090514] bg-gradient-to-b from-[#33225f] to-[#1c1340] active:translate-y-0.5 active:border-b-2'
+                  : 'cursor-not-allowed border-zinc-400 bg-gradient-to-b from-zinc-300 to-zinc-400 text-white/85',
+              ].join(' ')
+            }
             aria-label={canEndEarly ? 'End adventure early for 99 cents' : 'Add funds to end adventure early'}
           >
             <span className="block">End</span>
@@ -328,7 +409,7 @@ function AdventureReturnBar({
 
 function StartAdventureBar({ onStart }: { onStart: () => void }) {
   return (
-    <section className="-mx-0.5 px-0.5" aria-label="Start adventure">
+    <section className="-mx-0.5 px-0.5" aria-label="Start adventure" data-fetch-tour-target="adventure">
       <div className="overflow-visible rounded-3xl bg-white p-2.5 shadow-[0_12px_28px_-18px_rgba(76,29,149,0.45)] ring-1 ring-violet-200/70">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center text-[#7c3aed]">
@@ -355,7 +436,9 @@ function StartAdventureBar({ onStart }: { onStart: () => void }) {
           <button
             type="button"
             onClick={onStart}
-            className="fetch-apple-warp-btn shrink-0 rounded-2xl border-b-[4px] border-[#4c1d95] bg-gradient-to-b from-[#9f67ff] to-[#7c3aed] px-3 py-2 text-[11px] font-black uppercase tracking-[0.06em] text-white shadow-[0_14px_20px_-10px_rgba(76,29,149,0.85)] transition-transform active:translate-y-0.5 active:border-b-2"
+            className={[feed3dPurpleCta, 'shrink-0 rounded-2xl px-3 py-2 text-[11px] font-black uppercase tracking-[0.06em]'].join(
+              ' ',
+            )}
             aria-label="Start adventure"
           >
             Start
@@ -446,17 +529,14 @@ function AdventureLevelUpCelebration({
 
 function BidWarsAdventurePromo({ onJoin }: { onJoin?: () => void }) {
   return (
-    <section className="px-2" aria-label="Bid Wars">
+    <section className="px-2" aria-label="Bid Wars" data-fetch-tour-target="bidWar">
       <div className="flex items-center gap-2.5 rounded-3xl bg-white p-2.5">
         <button
           type="button"
           onClick={onJoin}
-          className="fetch-apple-warp-btn relative flex h-[2.85rem] min-w-[9.5rem] shrink-0 items-center justify-center overflow-hidden whitespace-nowrap rounded-2xl border border-white/12 bg-gradient-to-b from-[#4a2f8f] via-[#2d1b55] to-[#151028] px-4 text-center text-[13px] font-black uppercase leading-none tracking-[0.04em] text-white shadow-[0_12px_32px_-14px_rgba(21,16,40,0.92),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-black/25 transition-[transform,box-shadow] active:scale-[0.98] sm:h-[3rem] sm:min-w-[10.25rem] sm:text-[14px]"
+          className="fetch-bid-war-btn-rumble relative flex h-[2.85rem] min-w-[9.5rem] shrink-0 items-center justify-center whitespace-nowrap rounded-2xl border border-violet-200/25 border-b-[4px] border-b-[#4c1d95] bg-gradient-to-b from-[#a78bfa] via-[#7c3aed] to-[#5b21b6] px-4 text-center text-[13px] font-black uppercase leading-none tracking-[0.04em] text-white shadow-none ring-1 ring-[#4c1d95]/50 transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-[2px] active:brightness-[1.08] sm:h-[3rem] sm:min-w-[10.25rem] sm:text-[14px]"
           aria-label="Join a Bid War"
         >
-          <span className="fetch-bid-war-btn-sheen" aria-hidden>
-            <span className="fetch-bid-war-btn-sheen__bar" />
-          </span>
           <span className="relative z-[1]">Join a Bid War</span>
         </button>
         <div className="min-w-0 flex-1 overflow-hidden rounded-2xl bg-white">
@@ -469,6 +549,175 @@ function BidWarsAdventurePromo({ onJoin }: { onJoin?: () => void }) {
         </div>
       </div>
     </section>
+  )
+}
+
+function safeHasSeenFetchHomeTour(): boolean {
+  try {
+    return window.localStorage.getItem(FETCH_HOME_TOUR_STORAGE_KEY) === '1'
+  } catch {
+    return true
+  }
+}
+
+function safeMarkFetchHomeTourSeen() {
+  try {
+    window.localStorage.setItem(FETCH_HOME_TOUR_STORAGE_KEY, '1')
+  } catch {
+    /* ignore */
+  }
+}
+
+function FetchHomeFirstEntryTour({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> }) {
+  const [open, setOpen] = useState(false)
+  const [index, setIndex] = useState(0)
+  const [rect, setRect] = useState<DOMRect | null>(null)
+  const step = FETCH_HOME_TOUR_STEPS[index]
+
+  useEffect(() => {
+    if (safeHasSeenFetchHomeTour()) return undefined
+    const id = window.setTimeout(() => setOpen(true), 500)
+    return () => window.clearTimeout(id)
+  }, [])
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    let frame = 0
+
+    function updateRect() {
+      const root = rootRef.current
+      const target = root?.querySelector<HTMLElement>(`[data-fetch-tour-target="${step.id}"]`)
+      if (!target) {
+        setRect(null)
+        return
+      }
+      setRect(target.getBoundingClientRect())
+    }
+
+    const root = rootRef.current
+    const target = root?.querySelector<HTMLElement>(`[data-fetch-tour-target="${step.id}"]`)
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+
+    frame = window.setTimeout(updateRect, 360)
+    window.addEventListener('resize', updateRect)
+    window.addEventListener('scroll', updateRect, true)
+
+    return () => {
+      window.clearTimeout(frame)
+      window.removeEventListener('resize', updateRect)
+      window.removeEventListener('scroll', updateRect, true)
+    }
+  }, [index, open, rootRef, step.id])
+
+  if (!open || !step || !rect) return null
+
+  const pad = 10
+  const top = Math.max(6, rect.top - pad)
+  const left = Math.max(6, rect.left - pad)
+  const width = Math.min(window.innerWidth - left - 6, rect.width + pad * 2)
+  const height = Math.min(window.innerHeight - top - 6, rect.height + pad * 2)
+  const bubbleWidth = Math.min(320, window.innerWidth - 28)
+  const bubbleLeft =
+    step.placement === 'left'
+      ? Math.max(14, Math.min(window.innerWidth - bubbleWidth - 14, left - bubbleWidth - 12))
+      : Math.max(14, Math.min(window.innerWidth - bubbleWidth - 14, left + width / 2 - bubbleWidth / 2))
+  const belowTop = top + height + 12
+  const aboveTop = top - 12
+  const bubbleTop =
+    step.placement === 'above'
+      ? Math.max(14, aboveTop - 176)
+      : Math.min(window.innerHeight - 202, Math.max(14, belowTop))
+  const isLast = index === FETCH_HOME_TOUR_STEPS.length - 1
+
+  function finish() {
+    safeMarkFetchHomeTourSeen()
+    setOpen(false)
+  }
+
+  function next() {
+    if (isLast) {
+      finish()
+      return
+    }
+    setIndex((current) => Math.min(FETCH_HOME_TOUR_STEPS.length - 1, current + 1))
+  }
+
+  return (
+    <div className="fixed inset-0 z-[9997]" role="dialog" aria-modal="true" aria-label="Fetch app tutorial">
+      <div
+        className="fixed left-0 right-0 top-0 bg-[#13091f]/62 backdrop-blur-[5px]"
+        style={{ height: top }}
+        aria-hidden
+      />
+      <div
+        className="fixed left-0 bg-[#13091f]/62 backdrop-blur-[5px]"
+        style={{ top, width: left, height }}
+        aria-hidden
+      />
+      <div
+        className="fixed bg-[#13091f]/62 backdrop-blur-[5px]"
+        style={{ top, left: left + width, right: 0, height }}
+        aria-hidden
+      />
+      <div
+        className="fixed bottom-0 left-0 right-0 bg-[#13091f]/62 backdrop-blur-[5px]"
+        style={{ top: top + height }}
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none fixed rounded-[1.35rem] ring-2 ring-white/95"
+        style={{
+          top,
+          left,
+          width,
+          height,
+          boxShadow: '0 0 0 1px rgba(124,58,237,0.8), 0 0 34px rgba(255,255,255,0.45)',
+        }}
+        aria-hidden
+      />
+      <div
+        className="fixed rounded-[1.4rem] border border-white/20 bg-white p-4 text-[#1c1340] shadow-[0_28px_70px_-28px_rgba(15,23,42,0.75)]"
+        style={{ top: bubbleTop, left: bubbleLeft, width: bubbleWidth }}
+      >
+        <span
+          className={[
+            'absolute h-4 w-4 rotate-45 border-white/20 bg-white',
+            step.placement === 'above' ? '-bottom-2 border-b border-r' : '-top-2 border-l border-t',
+          ].join(' ')}
+          style={{
+            left: Math.max(22, Math.min(bubbleWidth - 36, left + width / 2 - bubbleLeft - 8)),
+          }}
+          aria-hidden
+        />
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#7c3aed]">{step.eyebrow}</p>
+        <h3 className="mt-1 text-[18px] font-black leading-tight tracking-[-0.04em]">{step.title}</h3>
+        <p className="mt-2 text-[12.5px] font-semibold leading-snug text-zinc-600">{step.body}</p>
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <div className="flex gap-1.5" aria-hidden>
+            {FETCH_HOME_TOUR_STEPS.map((s, i) => (
+              <span
+                key={s.id}
+                className={[
+                  'h-1.5 rounded-full transition-[width,background-color]',
+                  i === index ? 'w-5 bg-[#7c3aed]' : 'w-1.5 bg-violet-200',
+                ].join(' ')}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={next}
+            className={[
+              feed3dPurpleCta,
+              'rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-[0.1em]',
+            ].join(' ')}
+          >
+            {isLast ? 'Done' : 'Next'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -511,7 +760,7 @@ function BackpackStoragePage({
             <button
               type="button"
               onClick={onClose}
-              className="fetch-apple-warp-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-[#4c1d95] ring-1 ring-violet-100 transition-transform active:scale-95"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-b-[3px] border-violet-400/80 bg-gradient-to-b from-violet-50 to-violet-100/95 text-[#4c1d95] shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
               aria-label="Close backpack storage"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -613,7 +862,7 @@ function BackpackStoragePage({
                 <button
                   key={slot}
                   type="button"
-                  className="fetch-apple-warp-btn rounded-2xl bg-violet-50 px-2 py-3 text-center text-[11px] font-black text-[#4c1d95] ring-1 ring-violet-100 transition-transform active:scale-[0.97]"
+                  className="rounded-2xl border-b-[3px] border-violet-400/85 bg-gradient-to-b from-violet-50 to-violet-100/95 px-2 py-3 text-center text-[11px] font-black text-[#4c1d95] shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
                 >
                   {slot}
                 </button>
@@ -624,13 +873,17 @@ function BackpackStoragePage({
           <div className="mt-4 grid grid-cols-2 gap-3">
             <button
               type="button"
-              className="fetch-apple-warp-btn rounded-3xl border-b-[5px] border-[#4c1d95] bg-gradient-to-b from-[#9f67ff] to-[#7c3aed] px-4 py-3 text-[12px] font-black uppercase tracking-[0.08em] text-white shadow-[0_18px_26px_-14px_rgba(76,29,149,0.8)] transition-transform active:translate-y-0.5 active:border-b-2"
+              className={[feed3dPurpleCta, 'rounded-3xl px-4 py-3 text-[12px] font-black uppercase tracking-[0.08em]'].join(
+                ' ',
+              )}
             >
               Add item
             </button>
             <button
               type="button"
-              className="fetch-apple-warp-btn rounded-3xl border-b-[5px] border-[#090514] bg-gradient-to-b from-[#33225f] to-[#1c1340] px-4 py-3 text-[12px] font-black uppercase tracking-[0.08em] text-white shadow-[0_18px_26px_-14px_rgba(28,19,64,0.78)] transition-transform active:translate-y-0.5 active:border-b-2"
+              className={[feed3dDarkCta, 'rounded-3xl px-4 py-3 text-[12px] font-black uppercase tracking-[0.08em]'].join(
+                ' ',
+              )}
             >
               Upgrade
             </button>
@@ -678,6 +931,72 @@ const HOME_CATEGORY_CHIPS = [
   { id: 'watches', label: 'Watches', icon: 'watch', image: searchRealJewelleryWatchesUrl },
 ] as const
 type HomeCategoryChipId = (typeof HOME_CATEGORY_CHIPS)[number]['id']
+type HomeLiveNowReel = DropReel & { homeCategoryId: HomeCategoryChipId }
+
+const HOME_LIVE_NOW_REELS: readonly HomeLiveNowReel[] = [
+  {
+    id: 'live-sneaker-seller-001',
+    homeCategoryId: 'sneakers',
+    imageUrls: [searchRealSneakersShoesUrl],
+    mediaKind: 'images',
+    poster: searchRealSneakersShoesUrl,
+    title: 'Live sneaker deals',
+    seller: '@SneakerScout',
+    authorId: 'demo_sneaker_scout',
+    priceLabel: 'From $89',
+    blurb: 'A live seller walking through clean sneaker finds, quick sizing notes, and pickup-ready pairs.',
+    likes: 128,
+    growthVelocityScore: 1.35,
+    watchTimeMsSeed: 186_000,
+    categories: ['local_pickup', 'promo'],
+    region: 'AU_WIDE',
+  },
+]
+
+const HOME_SQUARE_LISTINGS = [
+  {
+    id: 'home-square-sneakers',
+    homeCategoryId: 'sneakers',
+    title: 'Fresh sneaker drops',
+    priceLabel: 'From $89',
+    imageUrl: searchRealSneakersShoesUrl,
+  },
+  {
+    id: 'home-square-cards',
+    homeCategoryId: 'cards',
+    title: 'Trading card packs',
+    priceLabel: 'From $12',
+    imageUrl: searchRealTradingCardGamesUrl,
+  },
+  {
+    id: 'home-square-jewellery',
+    homeCategoryId: 'luxury',
+    title: 'Jewellery finds',
+    priceLabel: 'From $45',
+    imageUrl: searchRealJewelleryWatchesUrl,
+  },
+  {
+    id: 'home-square-electronics',
+    homeCategoryId: 'tech',
+    title: 'Tech deals',
+    priceLabel: 'From $59',
+    imageUrl: searchRealElectronicsUrl,
+  },
+  {
+    id: 'home-square-watch',
+    homeCategoryId: 'watches',
+    title: 'Watch picks',
+    priceLabel: 'From $120',
+    imageUrl: searchRealJewelleryWatchesUrl,
+  },
+  {
+    id: 'home-square-collectibles',
+    homeCategoryId: 'collectibles',
+    title: 'Collectibles shelf',
+    priceLabel: 'From $18',
+    imageUrl: searchRealToysHobbiesUrl,
+  },
+] as const
 
 function CategoryChipIcon({ id, className = '' }: { id: string; className?: string }) {
   const stroke = 'currentColor'
@@ -773,10 +1092,10 @@ function HomeCategoryChips({
               aria-selected={active}
               onClick={() => onChange(c.id)}
               className={[
-                'fetch-apple-warp-btn flex min-w-[5rem] shrink-0 flex-col items-center gap-1 rounded-2xl border px-2.5 py-1.5 transition-[background-color,border-color,color]',
+                'flex min-w-[5rem] shrink-0 flex-col items-center gap-1 rounded-2xl border-x border-t border-b-[3px] px-2.5 py-1.5 shadow-none transition-[transform,border-bottom-width,background-color,border-color,color] duration-150 active:translate-y-0.5 active:border-b-2',
                 active
-                  ? 'border-violet-300/80 bg-violet-100 text-[#4c1d95]'
-                  : 'border-zinc-200 bg-white text-zinc-700 hover:text-[#4c1d95]',
+                  ? 'border-violet-300/90 border-b-violet-700/85 bg-gradient-to-b from-violet-100 to-violet-200/95 text-[#4c1d95]'
+                  : 'border-zinc-200 border-b-zinc-400/80 bg-gradient-to-b from-white to-zinc-50 text-zinc-700 hover:text-[#4c1d95]',
               ].join(' ')}
             >
               {c.image ? (
@@ -870,7 +1189,7 @@ function ExplorePeerListingCard({
       : 'Quick buy — open checkout'
 
   return (
-    <div className="fetch-apple-warp-btn flex min-w-0 flex-col overflow-hidden rounded-2xl bg-white text-left text-[#1c1528] shadow-sm ring-1 ring-violet-200/50 transition-[transform,box-shadow] active:scale-[0.98]">
+    <div className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-b-[4px] border-violet-200/55 border-b-violet-300/70 bg-white text-left text-[#1c1528] shadow-none ring-1 ring-violet-200/50 transition-[transform,border-bottom-width] duration-150 active:translate-y-[1px] active:border-b-[2px]">
       <div className="relative aspect-[9/14] w-full overflow-hidden bg-violet-100">
         {img ? (
           <img
@@ -904,8 +1223,8 @@ function ExplorePeerListingCard({
             title={quickTitle}
             aria-disabled={!canQuickAdd}
             className={[
-              'absolute right-1.5 top-1.5 z-[3] flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-white text-[#4c1d95] shadow-sm transition-transform',
-              canQuickAdd ? 'active:scale-95' : 'cursor-default opacity-45',
+              'absolute right-1.5 top-1.5 z-[3] flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-b-[3px] border-zinc-200/95 border-b-zinc-400/90 bg-gradient-to-b from-white to-zinc-100 text-[#4c1d95] shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2',
+              canQuickAdd ? '' : 'cursor-default opacity-45',
             ].join(' ')}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
@@ -942,6 +1261,106 @@ function ExplorePeerListingCard({
           </svg>
           <span>or fetch from {fetchFromPrice}</span>
         </p>
+      </button>
+    </div>
+  )
+}
+
+function HomeSquareListingCard({
+  title,
+  priceLabel,
+  imageUrl,
+  onOpen,
+}: {
+  title: string
+  priceLabel: string
+  imageUrl: string
+  onOpen: () => void
+}) {
+  const label = `${title}, ${priceLabel}`
+  const [notificationsOn, setNotificationsOn] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  return (
+    <div
+      className="flex min-w-0 flex-col overflow-hidden rounded-2xl border-x border-t border-violet-200/60 border-b-[4px] border-b-violet-400/55 bg-white text-left shadow-none transition-[transform,border-bottom-width,background-color] duration-150 active:translate-y-0.5 active:border-b-2 active:bg-violet-50"
+    >
+      <div className="relative aspect-square w-full overflow-hidden bg-violet-100">
+        <button
+          type="button"
+          aria-label={label}
+          onClick={onOpen}
+          className="absolute inset-0 z-[1] m-0 border-0 bg-transparent p-0"
+        />
+        <img
+          src={imageUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          loading="lazy"
+          draggable={false}
+        />
+        <div className="absolute right-1.5 top-1.5 z-[2] flex gap-1">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setNotificationsOn((v) => !v)
+            }}
+            className={[
+              'flex h-7 w-7 items-center justify-center rounded-full border border-b-[3px] shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2',
+              notificationsOn
+                ? 'border-amber-200 border-b-amber-500 bg-amber-100 text-amber-700'
+                : 'border-zinc-200 border-b-zinc-400 bg-white text-[#4c1d95]',
+            ].join(' ')}
+            aria-label={notificationsOn ? `Notifications on for ${title}` : `Turn on notifications for ${title}`}
+            aria-pressed={notificationsOn}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M18 10a6 6 0 1 0-12 0c0 7-2.5 7-2.5 8h17S18 17 18 10Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+              <path d="M9.5 20a2.8 2.8 0 0 0 5 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setSaved((v) => !v)
+            }}
+            className={[
+              'flex h-7 w-7 items-center justify-center rounded-full border border-b-[3px] shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2',
+              saved
+                ? 'border-violet-300 border-b-violet-700 bg-violet-100 text-[#4c1d95]'
+                : 'border-zinc-200 border-b-zinc-400 bg-white text-[#4c1d95]',
+            ].join(' ')}
+            aria-label={saved ? `Saved ${title}` : `Save ${title}`}
+            aria-pressed={saved}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} aria-hidden>
+              <path
+                d="M6 4.5A2.5 2.5 0 0 1 8.5 2h7A2.5 2.5 0 0 1 18 4.5V21l-6-3.5L6 21V4.5Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <button
+        type="button"
+        aria-label={label}
+        onClick={onOpen}
+        className="min-w-0 p-2 text-left"
+      >
+        <p className="line-clamp-2 text-[11.5px] font-black leading-tight tracking-[-0.02em] text-[#1c1528]">
+          {title}
+        </p>
+        <p className="mt-1 text-[11px] font-black tabular-nums text-violet-600">{priceLabel}</p>
       </button>
     </div>
   )
@@ -989,7 +1408,7 @@ function HomeShellForYouFeedInner({
   embedded = false,
   explorePromoBleed: _explorePromoBleed = 'page',
 }: HomeShellForYouFeedProps) {
-  const homeLiveNowReels = useMemo(() => [] as const, [])
+  const walletBalanceCents = useWalletBalanceCents()
   const peerItems = useMemo(() => [...MARKETPLACE_MOCK_PEER_LISTINGS].slice(0, 6), [])
   const storePicks = useMemo(() => [...SUPPLY_PRODUCTS].slice(0, 5), [])
   const allListings = useMemo(() => [...MARKETPLACE_MOCK_PEER_LISTINGS], [])
@@ -1007,6 +1426,23 @@ function HomeShellForYouFeedInner({
   }, [browseCategory, allListings])
 
   const [homeCategoryFilter, setHomeCategoryFilter] = useState<HomeCategoryChipId>('all')
+  const [homeListingsRefreshNonce, setHomeListingsRefreshNonce] = useState(0)
+  const homeLiveNowReels = useMemo<readonly DropReel[]>(
+    () => HOME_LIVE_NOW_REELS.filter((reel) => reel.homeCategoryId === homeCategoryFilter),
+    [homeCategoryFilter],
+  )
+  const homeSquareListings = useMemo(
+    () => {
+      const base =
+        homeCategoryFilter === 'all'
+          ? [...HOME_SQUARE_LISTINGS]
+          : HOME_SQUARE_LISTINGS.filter((listing) => listing.homeCategoryId === homeCategoryFilter)
+      if (base.length <= 1) return base
+      const offset = homeListingsRefreshNonce % base.length
+      return [...base.slice(offset), ...base.slice(0, offset)].slice(0, 4)
+    },
+    [homeCategoryFilter, homeListingsRefreshNonce],
+  )
   /** Default off so ambient stays chill until the user starts an adventure (see `ambientRegisterAdventure`). */
   const [isAdventuring, setIsAdventuring] = useState(false)
   const [demoFundsCents, setDemoFundsCents] = useState(0)
@@ -1017,6 +1453,7 @@ function HomeShellForYouFeedInner({
   )
   const [firstGiftOpen, setFirstGiftOpen] = useState(false)
   const [levelUpOpen, setLevelUpOpen] = useState(false)
+  const tourRootRef = useRef<HTMLDivElement | null>(null)
   const heroRef = useRef<HTMLDivElement | null>(null)
   const demoFundsLabel = `$${Math.floor(demoFundsCents / 100).toLocaleString('en-AU')}`
   const heroDisplayName = useMemo(() => loadSession()?.displayName?.trim() || 'Hayden', [])
@@ -1057,6 +1494,7 @@ function HomeShellForYouFeedInner({
   if (embedded) {
     return (
       <div
+        ref={tourRootRef}
         className={[
           'fetch-home-for-you flex min-h-0 w-full flex-col overflow-x-hidden pb-3',
           className,
@@ -1100,8 +1538,48 @@ function HomeShellForYouFeedInner({
         <div className="mt-3 flex flex-col gap-3 px-2 pt-1">
           <div className="h-px w-full bg-violet-200/70" aria-hidden />
           <HomeCategoryChips value={homeCategoryFilter} onChange={setHomeCategoryFilter} />
-          <section className="flex flex-col gap-2" aria-label="Live now">
+          <section className="flex flex-col gap-2" aria-label="Live now" data-fetch-tour-target="liveStreams">
             <LiveNowGrid reels={homeLiveNowReels} onOpenDrops={onOpenDrops} />
+          </section>
+          <div className="h-px w-full bg-violet-200/70" aria-hidden />
+          <section className="min-w-0" aria-labelledby="fetch-home-live-listings-heading">
+            <div className="mb-2 flex items-center justify-between gap-2 rounded-2xl bg-white px-3 py-2 ring-1 ring-violet-100">
+              <h3
+                id="fetch-home-live-listings-heading"
+                className="text-[15px] font-black leading-none tracking-[-0.04em] text-[#1c1340]"
+              >
+                {homeCategoryFilter === 'all'
+                  ? 'Featured listings'
+                  : `${HOME_CATEGORY_CHIPS.find((c) => c.id === homeCategoryFilter)?.label ?? 'Category'} listings`}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setHomeListingsRefreshNonce((n) => n + 1)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[#4c1d95] shadow-none transition-colors active:bg-violet-200"
+                aria-label="Refresh listings"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M20 6v5h-5M4 18v-5h5M18.2 9A7 7 0 0 0 6.4 6.4L4 8.8M5.8 15a7 7 0 0 0 11.8 2.6L20 15.2"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {homeSquareListings.map((listing) => (
+                <HomeSquareListingCard
+                  key={listing.id}
+                  title={listing.title}
+                  priceLabel={listing.priceLabel}
+                  imageUrl={listing.imageUrl}
+                  onOpen={onOpenMarketplace}
+                />
+              ))}
+            </div>
           </section>
           {browseCategory ? (
             <ExploreCategoryBrowse
@@ -1129,6 +1607,7 @@ function HomeShellForYouFeedInner({
           xpAwarded={FIRST_ADVENTURE_XP_REWARD}
           onDone={() => setLevelUpOpen(false)}
         />
+        <FetchHomeFirstEntryTour rootRef={tourRootRef} />
       </div>
     )
   }
@@ -1152,7 +1631,11 @@ function HomeShellForYouFeedInner({
       </header>
 
       <div className="shrink-0 px-0.5">
-        <MyFetchRewardsBanner layout="standalone" />
+        <MyFetchRewardsBanner
+          layout="standalone"
+          walletBalanceCents={walletBalanceCents}
+          onAddFunds={() => depositWallet(10_000, 'Added funds · quick top-up')}
+        />
       </div>
 
       <section aria-labelledby="fetch-for-you-items-heading" className="min-w-0">
@@ -1166,7 +1649,7 @@ function HomeShellForYouFeedInner({
           <button
             type="button"
             onClick={onOpenMarketplace}
-            className="shrink-0 text-[11px] font-bold text-[#00ff6a] underline decoration-[#00ff6a]/35 underline-offset-2 active:opacity-80 dark:text-[#00ff6a]"
+            className="shrink-0 rounded-lg border border-b-[3px] border-zinc-600/55 border-b-zinc-800/85 bg-gradient-to-b from-zinc-800 to-zinc-900 px-3 py-1 text-[11px] font-bold text-[#00ff6a] shadow-none transition-[transform,border-bottom-width] duration-150 hover:text-[#5cff9a] active:translate-y-0.5 active:border-b-2"
           >
             Marketplace
           </button>
@@ -1196,7 +1679,7 @@ function HomeShellForYouFeedInner({
               key={p.id}
               type="button"
               onClick={onOpenMarketplace}
-              className="flex w-[7.5rem] shrink-0 flex-col overflow-hidden rounded-2xl border border-violet-200/60 bg-white text-left shadow-sm active:bg-violet-50"
+              className="flex w-[7.5rem] shrink-0 flex-col overflow-hidden rounded-2xl border-x border-t border-violet-200/60 border-b-[4px] border-b-violet-400/55 bg-gradient-to-b from-white to-violet-50/70 text-left shadow-none transition-[transform,border-bottom-width,background-color] duration-150 active:translate-y-0.5 active:border-b-2 active:bg-violet-100/75"
             >
               <div className="relative aspect-square w-full bg-violet-50">
                 <img

@@ -222,7 +222,7 @@ async function playChillFile(): Promise<boolean> {
   if (desiredBed() !== 'chill' || currentBed !== 'chill') return ok
   const chill = fileBeds.chill.audio
   fadeOutOtherFiles('chill')
-  if (chill) fadeAudioElement(chill, 0.42, 800)
+  if (chill) fadeAudioElement(chill, 0.26, 1200)
   return true
 }
 
@@ -283,23 +283,23 @@ function startChillProcedural(): ProceduralBed {
   const ctx: AudioContext = ctxOrNull
   const dest: GainNode = masterGain
 
-  /** 4-bar progression — Am7 → Fmaj7 → Cmaj7 → G7 (lo-fi vibe, 4s/bar = 16s loop). */
+  /** 4-bar progression — Am7 → Fmaj7 → Cmaj7 → G7 (lo-fi vibe, 5.5s/bar = 22s loop). */
   const progression: number[][] = [
     /* Am7  */ [220.0, 261.63, 329.63, 392.0],
     /* Fmaj7*/ [174.61, 220.0, 261.63, 329.63],
     /* Cmaj7*/ [130.81, 196.0, 246.94, 329.63],
     /* G7   */ [196.0, 246.94, 293.66, 369.99],
   ]
-  const bar = 4 // seconds per bar
+  const bar = 5.5 // seconds per bar
 
   const bus = ctx.createGain()
-  bus.gain.value = 0.45
+  bus.gain.value = 0.28
 
   /** Soft low-pass + slight resonance so it sounds dreamy. */
   const lp = ctx.createBiquadFilter()
   lp.type = 'lowpass'
-  lp.frequency.value = 1700
-  lp.Q.value = 0.6
+  lp.frequency.value = 1050
+  lp.Q.value = 0.35
   bus.connect(lp)
 
   /** Stereo width via a tiny delay on one side. */
@@ -323,7 +323,8 @@ function startChillProcedural(): ProceduralBed {
   /** Schedule pad voices ahead of time. */
   function scheduleBars(startAtSec: number, count: number) {
     for (let i = 0; i < count; i++) {
-      const chord = progression[(Math.floor(startAtSec / bar) + i) % progression.length]
+      const chordIndex = Math.floor(startAtSec / bar) + i
+      const chord = progression[chordIndex % progression.length]
       const t0 = startAtSec + i * bar
       const t1 = t0 + bar
       for (const f of chord) {
@@ -333,8 +334,8 @@ function startChillProcedural(): ProceduralBed {
           o.frequency.value = f * (wave === 'triangle' ? 1.005 : 1) // slight detune
           const g = ctx.createGain()
           g.gain.setValueAtTime(0, t0)
-          g.gain.linearRampToValueAtTime(0.06, t0 + 0.6)
-          g.gain.setValueAtTime(0.06, t1 - 0.4)
+          g.gain.linearRampToValueAtTime(0.038, t0 + 1.1)
+          g.gain.setValueAtTime(0.038, t1 - 0.8)
           g.gain.linearRampToValueAtTime(0.0, t1 + 0.05)
           o.connect(g).connect(bus)
           o.start(t0)
@@ -343,21 +344,22 @@ function startChillProcedural(): ProceduralBed {
         }
       }
 
-      /** Bell motif — arpeggiate the chord top down. */
-      const top = [chord[3], chord[2], chord[1], chord[2]]
+      /** Sparse bell motif — one soft answer phrase every other bar. */
+      if (chordIndex % 2 !== 0) continue
+      const top = [chord[3], chord[2]]
       for (let n = 0; n < top.length; n++) {
-        const tn = t0 + 0.5 + n * 0.6
+        const tn = t0 + 1.15 + n * 1.15
         const o = ctx.createOscillator()
         o.type = 'sine'
         o.frequency.value = top[n] * 2
         const g = ctx.createGain()
         g.gain.setValueAtTime(0, tn)
-        g.gain.linearRampToValueAtTime(0.024, tn + 0.02)
-        g.gain.exponentialRampToValueAtTime(0.0008, tn + 0.55)
-        g.gain.setValueAtTime(0, tn + 0.6)
+        g.gain.linearRampToValueAtTime(0.011, tn + 0.04)
+        g.gain.exponentialRampToValueAtTime(0.0008, tn + 0.9)
+        g.gain.setValueAtTime(0, tn + 0.95)
         o.connect(g).connect(bus)
         o.start(tn)
-        o.stop(tn + 0.62)
+        o.stop(tn + 1)
         oscs.push(o)
       }
     }
@@ -772,7 +774,8 @@ function desiredBed(): Bed {
   if (pokiesDuck) return null
   if (bidwarsRef > 0) return 'war'
   if (adventureRef > 0) return 'adventure'
-  if (homeRef > 0) return 'chill'
+  /** Home stays silent; higher-priority adventure / Bid Wars beds can still play. */
+  if (homeRef > 0) return null
   return null
 }
 

@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react'
+import walletCashStack from '../../assets/wallet-cash-stack.png'
 import { AppHeader, EmptyState } from '../../components/bidwars'
 import { PokiesRewardsWalletMini } from '../../components/bidwars/PokiesRewardsWalletMini'
 import {
@@ -89,30 +90,54 @@ export default function WalletView({ onBack }: Props) {
       <AppHeader title="Wallet" subtitle="Funds, winnings, and gift cards" showBack onBack={onBack} />
       <main className="flex flex-1 flex-col gap-3 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] pt-3">
         <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-[#7c3aed] via-[#5b21b6] to-[#4c1d95] p-5 text-white shadow-[0_24px_48px_-22px_rgba(76,29,149,0.7)]">
-          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/75">Balance</p>
-          <p className="mt-1 text-[34px] font-black leading-none tabular-nums">
-            {formatAud(balance)}
-          </p>
-          <div className="mt-3 flex items-center justify-between gap-3 text-[12px] font-bold text-white/85">
-            <span>
-              <span className="text-[10px] font-black uppercase tracking-[0.14em] text-white/60">Winning balance</span>
-              <span className="block tabular-nums text-white">{formatAud(winning)}</span>
-            </span>
-            <button
-              type="button"
-              disabled={busy === 'instant'}
-              onClick={runInstantCash}
-              className="rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] ring-1 ring-white/25 transition-colors active:bg-white/25 disabled:opacity-60"
-            >
-              Instant cash
-            </button>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/75">Balance</p>
+              <p className="mt-1 text-[34px] font-black leading-none tabular-nums">
+                {formatAud(balance)}
+              </p>
+              <div className="mt-3 flex items-center justify-between gap-3 text-[12px] font-bold text-white/85">
+                <span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.14em] text-white/60">
+                    Winning balance
+                  </span>
+                  <span className="block tabular-nums text-white">{formatAud(winning)}</span>
+                </span>
+                <button
+                  type="button"
+                  disabled={busy === 'instant'}
+                  onClick={runInstantCash}
+                  className="rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] ring-1 ring-white/25 transition-colors active:bg-white/25 disabled:opacity-60"
+                >
+                  Instant cash
+                </button>
+              </div>
+            </div>
+            <div className="shrink-0 pt-0.5" aria-hidden>
+              <img
+                src={walletCashStack}
+                alt=""
+                width={120}
+                height={120}
+                draggable={false}
+                className="h-[4.25rem] w-[4.25rem] object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.2)]"
+              />
+            </div>
           </div>
+          <button
+            type="button"
+            disabled={busy === 'deposit'}
+            onClick={() => runDeposit(10_000)}
+            className="mt-4 w-full rounded-2xl bg-white py-3 text-[12px] font-black uppercase tracking-[0.1em] text-[#4c1d95] shadow-[0_10px_28px_-12px_rgba(0,0,0,0.35)] transition-colors active:bg-violet-50 disabled:opacity-60"
+          >
+            Add funds
+          </button>
         </section>
 
         <section className="grid grid-cols-2 gap-2">
           <ActionTile
             icon="＋"
-            label="Add money"
+            label="Top up again"
             onPress={() => runDeposit(10_000)}
             busy={busy === 'deposit'}
           />

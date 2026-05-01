@@ -10,7 +10,10 @@ type Props = {
   walletBalanceCents?: number
   /** Optional pending amount in cents. */
   pendingCents?: number
+  /** Opens full wallet surface. */
   onOpen?: () => void
+  /** Quick top-up (kept separate from wallet open tap target). */
+  onAddFunds?: () => void
 }
 
 const titleClass =
@@ -25,6 +28,7 @@ export function MyFetchRewardsBanner({
   walletBalanceCents = 0,
   pendingCents = 0,
   onOpen,
+  onAddFunds,
 }: Props) {
   const stack = layout !== 'standalone'
   const balance = new Intl.NumberFormat('en-AU', {
@@ -40,7 +44,7 @@ export function MyFetchRewardsBanner({
     maximumFractionDigits: 0,
   }).format(pendingCents / 100)
 
-  const title = onOpen ? (
+  const titleEl = onOpen ? (
     <span className={stack ? titleClassStack : titleClass}>My Fetch wallet</span>
   ) : (
     <h3 id="fetch-my-wallet-heading" className={stack ? titleClassStack : titleClass}>
@@ -48,22 +52,46 @@ export function MyFetchRewardsBanner({
     </h3>
   )
 
-  const body = (
+  const addFundsBtn =
+    onAddFunds != null ? (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          onAddFunds()
+        }}
+        className={
+          stack
+            ? 'mt-1.5 w-full rounded-xl bg-[#7c3aed] px-3 py-2 text-[10px] font-black uppercase tracking-[0.09em] text-white shadow-[0_4px_14px_-8px_rgba(76,29,149,0.45)] transition-transform active:scale-[0.99]'
+            : 'mt-2 w-full rounded-xl bg-[#7c3aed] px-3 py-2.5 text-[11px] font-black uppercase tracking-[0.08em] text-white shadow-[0_4px_14px_-8px_rgba(76,29,149,0.45)] transition-transform active:scale-[0.99]'
+        }
+      >
+        Add funds
+      </button>
+    ) : null
+
+  const main = (
     <>
-      {title}
+      {titleEl}
       <div className={stack ? 'mt-1.5 flex items-center gap-2' : 'mt-1.5 flex items-center gap-2.5'}>
         <div
           className={
             stack
               ? 'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-transparent'
-              : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-transparent'
+              : 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-transparent'
           }
           aria-hidden
         >
           <img
             src={walletCashStack}
             alt=""
-            className={stack ? 'h-8 w-8 object-cover' : 'h-9 w-9 object-cover'}
+            width={176}
+            height={176}
+            className={
+              stack
+                ? 'h-9 w-9 object-contain'
+                : 'h-11 w-11 object-contain [filter:drop-shadow(0_4px_8px_rgba(28,35,54,0.12))]'
+            }
             loading="lazy"
             draggable={false}
           />
@@ -74,9 +102,7 @@ export function MyFetchRewardsBanner({
           </p>
           <div className="mt-0.5 flex items-baseline justify-between gap-2 text-[10px] font-semibold leading-tight text-[#6b6256]">
             <span>Available balance</span>
-            <span className="shrink-0">
-              {pendingCents > 0 ? `${pending} pending` : 'No pending'}
-            </span>
+            <span className="shrink-0">{pendingCents > 0 ? `${pending} pending` : 'No pending'}</span>
           </div>
         </div>
         {onOpen ? (
@@ -84,7 +110,7 @@ export function MyFetchRewardsBanner({
             className={
               stack
                 ? 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#e8dfd2] text-[#6b6256] ring-1 ring-[#d9cbb5]/90'
-                  : 'flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e8dfd2] text-[#5c5348] ring-1 ring-[#d9cbb5]/95'
+                : 'flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e8dfd2] text-[#5c5348] ring-1 ring-[#d9cbb5]/95'
             }
             aria-hidden
           >
@@ -100,7 +126,6 @@ export function MyFetchRewardsBanner({
           </span>
         ) : null}
       </div>
-      {/* Standalone wallet card intentionally shows summary only (no CTA buttons). */}
     </>
   )
 
@@ -112,28 +137,28 @@ export function MyFetchRewardsBanner({
 
   const shell = layout === 'standalone' ? shellStandalone : shellStack
 
+  const outerClass = ['min-w-0', shell, className].filter(Boolean).join(' ')
+
   if (onOpen) {
     return (
-      <button
-        type="button"
-        onClick={onOpen}
-        className={['min-w-0 w-full', shell, 'transition-transform active:scale-[0.99]', className]
-          .filter(Boolean)
-          .join(' ')}
-        aria-label="Open My Fetch wallet"
-      >
-        {body}
-      </button>
+      <section className={outerClass}>
+        <button
+          type="button"
+          onClick={onOpen}
+          className="w-full text-left transition-transform active:scale-[0.99]"
+          aria-label="Open My Fetch wallet"
+        >
+          {main}
+        </button>
+        {addFundsBtn}
+      </section>
     )
   }
 
   return (
-    <section
-      className={['min-w-0', shell, className].filter(Boolean).join(' ')}
-      aria-labelledby="fetch-my-wallet-heading"
-    >
-      {body}
+    <section className={outerClass} aria-labelledby="fetch-my-wallet-heading">
+      {main}
+      {addFundsBtn}
     </section>
   )
 }
-
