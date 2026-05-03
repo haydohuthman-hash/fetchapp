@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react'
-import { loadSession } from '../lib/fetchUserSession'
+import { loadSession, updateUserProfile } from '../lib/fetchUserSession'
 import {
   addBackpackItem,
   awardFirstAdventureXp,
@@ -30,14 +30,20 @@ import { LiveNowGrid } from './FeedTabViews'
 import type { DropReel } from '../lib/drops/types'
 import fetchitAdventuringBannerUrl from '../assets/fetchit-adventuring-banner.png'
 import fetchitAdventuringHour1BannerUrl from '../assets/fetchit-adventuring-banner-hour-1.png'
-import fetchitFundedHighBannerUrl from '../assets/fetchit-funded-high-banner.png'
-import fetchitFundedLowBannerUrl from '../assets/fetchit-funded-low-banner.png'
-import fetchitFundedMidBannerUrl from '../assets/fetchit-funded-mid-banner.png'
-import fetchitFundedWhaleBannerUrl from '../assets/fetchit-funded-whale-banner.png'
-import fetchitHomeDefaultBannerUrl from '../assets/fetchit-home-default-banner.png'
+import fetchitAdventuringMaleTigerBannerUrl from '../assets/fetchit-adventuring-banner-male-tiger.png'
+import fetchitAdventuringMaleTigerHungryBannerUrl from '../assets/fetchit-adventuring-banner-male-tiger-hungry.png'
+import fetchitPetAvatarUrl from '../assets/fetchit-pet-avatar.png'
+import fetchitPetFedBannerUrl from '../assets/fetchit-pet-fed-banner.png'
+import fetchitPetHungryBannerUrl from '../assets/fetchit-pet-hungry-banner.png'
+import fetchitPetTigerAvatarUrl from '../assets/fetchit-pet-tiger-avatar.png'
+import fetchitPetTigerFedBannerUrl from '../assets/fetchit-pet-tiger-fed-banner.png'
+import fetchitPetTigerHungryBannerUrl from '../assets/fetchit-pet-tiger-hungry-banner.png'
 import fetchitBackpack3dUrl from '../assets/fetchit-backpack-3d.png'
 import fetchitBackpackLevel1To4Url from '../assets/fetchit-backpack-level-1-4.png'
 import fetchitBidWarsBannerUrl from '../assets/fetchit-bid-wars-banner.png'
+import fetchitBidWarsBannerFemaleUrl from '../assets/fetchit-bid-wars-banner-female.png'
+import fetchitHomeWomenBannerUrl from '../assets/fetchit-home-women-banner.png'
+import fetchitHomeWomenHungryBannerUrl from '../assets/fetchit-home-women-hungry-banner.png'
 import heroWalletCashUrl from '../assets/hero-wallet-cash.png'
 import purpleGemIconUrl from '../assets/pokies-icons/gem.png'
 import searchRealSneakersShoesUrl from '../assets/search-categories-real/sneakers-shoes.png'
@@ -46,7 +52,7 @@ import searchRealJewelleryWatchesUrl from '../assets/search-categories-real/jewe
 import searchRealToysHobbiesUrl from '../assets/search-categories-real/toys-hobbies.png'
 import searchRealElectronicsUrl from '../assets/search-categories-real/electronics.png'
 import { ambientRegisterAdventure } from '../lib/audio/fetchAmbientMusic'
-import { playConfettiPops, playWinFanfare } from '../lib/fetchBattleSounds'
+import { playAdventureTrumpets, playConfettiPops, playWinFanfare } from '../lib/fetchBattleSounds'
 import { depositWallet, useWalletBalanceCents } from '../lib/data'
 import { playUiFeedback } from '../voice/fetchFeedback'
 
@@ -59,9 +65,19 @@ function formatBackInClock(seconds: number): string {
 }
 
 const EARLY_ADVENTURE_END_COST_CENTS = 99
+/** Demo mission length — countdown pauses while the pet is hungry. */
+const ADVENTURE_MISSION_DURATION_SEC = 7 * 60 * 60
 const DAILY_REWARD_GEMS = 100
 const DAILY_REWARD_STORAGE_KEY = 'fetch.home.dailyRewardTasks.v2'
 const DEMO_GEMS_STORAGE_KEY = 'fetch.home.demoGems.v1'
+const PET_PROFILE_STORAGE_KEY = 'fetch.home.petProfile.v1'
+const HOME_HERO_DISPLAY_NAME_KEY = 'fetch.home.heroDisplayName.v1'
+const HOME_HERO_GENDER_KEY = 'fetch.home.heroGender.v1'
+const ADVENTURE_THEME_TITLE = 'Jungle'
+
+type HeroGender = 'male' | 'female'
+const PET_FEED_COOLDOWN_MS = 3 * 60 * 60 * 1000
+const PET_STARVATION_RISK_AFTER_MS = 15 * 60 * 1000
 
 type DailyRewardTaskId = 'bid_today' | 'watch_live_10'
 
@@ -76,6 +92,86 @@ type DailyGemFxState = {
   source: { x: number; y: number }
   target: { x: number; y: number }
   particleCount?: number
+}
+
+const PET_CELEBRATION_PARTICLES: ReadonlyArray<{
+  emoji: string
+  tx: number
+  ty: number
+  rot: number
+  scale: number
+  delay: number
+}> = [
+  { emoji: '🎉', tx: -58, ty: -94, rot: -24, scale: 1.05, delay: 0 },
+  { emoji: '🥳', tx: -26, ty: -118, rot: 18, scale: 1.15, delay: 0.04 },
+  { emoji: '💜', tx: 18, ty: -106, rot: -12, scale: 1.05, delay: 0.02 },
+  { emoji: '✨', tx: 54, ty: -84, rot: 28, scale: 1.18, delay: 0.07 },
+  { emoji: '😄', tx: -76, ty: -38, rot: 12, scale: 1, delay: 0.08 },
+  { emoji: '🎊', tx: 78, ty: -34, rot: -22, scale: 1.1, delay: 0.05 },
+  { emoji: '⭐', tx: -38, ty: -68, rot: 34, scale: 0.92, delay: 0.1 },
+  { emoji: '💎', tx: 42, ty: -58, rot: -36, scale: 0.95, delay: 0.11 },
+  { emoji: '💥', tx: 0, ty: -132, rot: 0, scale: 1.08, delay: 0.13 },
+]
+
+type FetchPetId = 'fetch' | 'tiger'
+
+type FetchHomePet = {
+  id: FetchPetId
+  label: string
+  defaultName: string
+  avatarUrl: string
+  fedBannerUrl: string
+  hungryBannerUrl: string
+}
+
+type PetProfileState = {
+  selectedPetId: FetchPetId
+  names: Record<FetchPetId, string>
+  ranks: Record<FetchPetId, number>
+  fedUntil: number
+  lastFedAt: number
+}
+
+const FETCH_HOME_PETS: ReadonlyArray<FetchHomePet> = [
+  {
+    id: 'fetch',
+    label: 'Fetch pup',
+    defaultName: 'Fetch',
+    avatarUrl: fetchitPetAvatarUrl,
+    fedBannerUrl: fetchitPetFedBannerUrl,
+    hungryBannerUrl: fetchitPetHungryBannerUrl,
+  },
+  {
+    id: 'tiger',
+    label: 'Tiger guardian',
+    defaultName: 'Tiger',
+    avatarUrl: fetchitPetTigerAvatarUrl,
+    fedBannerUrl: fetchitPetTigerFedBannerUrl,
+    hungryBannerUrl: fetchitPetTigerHungryBannerUrl,
+  },
+]
+
+const DEFAULT_PET_NAMES: Record<FetchPetId, string> = {
+  fetch: 'Fetch',
+  tiger: 'Tiger',
+}
+
+const PET_RANK_MAX = 50
+
+const DEFAULT_PET_RANKS: Record<FetchPetId, number> = {
+  fetch: 1,
+  tiger: 1,
+}
+
+function normalizePetRank(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number.parseInt(String(value ?? ''), 10)
+  if (!Number.isFinite(n)) return 1
+  return Math.min(PET_RANK_MAX, Math.max(1, Math.floor(n)))
+}
+
+/** Gems to rank up from `currentRank` → currentRank + 1 */
+function petRankUpGemCost(currentRank: number): number {
+  return 40 + currentRank * 12
 }
 
 const DAILY_REWARD_TASKS: ReadonlyArray<{
@@ -144,6 +240,94 @@ function saveDailyRewardState(next: DailyRewardState) {
   }
 }
 
+function loadPetProfile(): PetProfileState {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(PET_PROFILE_STORAGE_KEY) || 'null') as Partial<PetProfileState> | null
+    const legacyName = typeof (parsed as { name?: unknown } | null)?.name === 'string'
+      ? String((parsed as { name?: string }).name).trim().slice(0, 16)
+      : ''
+    const selectedPetId: FetchPetId = parsed?.selectedPetId === 'tiger' ? 'tiger' : 'fetch'
+    const parsedNames = parsed?.names
+    const names: Record<FetchPetId, string> = {
+      fetch: typeof parsedNames?.fetch === 'string' && parsedNames.fetch.trim()
+        ? parsedNames.fetch.trim().slice(0, 16)
+        : legacyName || DEFAULT_PET_NAMES.fetch,
+      tiger: typeof parsedNames?.tiger === 'string' && parsedNames.tiger.trim()
+        ? parsedNames.tiger.trim().slice(0, 16)
+        : DEFAULT_PET_NAMES.tiger,
+    }
+    const pr = parsed?.ranks as Partial<Record<FetchPetId, unknown>> | undefined
+    const ranks: Record<FetchPetId, number> = {
+      fetch: normalizePetRank(pr?.fetch ?? DEFAULT_PET_RANKS.fetch),
+      tiger: normalizePetRank(pr?.tiger ?? DEFAULT_PET_RANKS.tiger),
+    }
+    return {
+      selectedPetId,
+      names,
+      ranks,
+      fedUntil: typeof parsed?.fedUntil === 'number' && Number.isFinite(parsed.fedUntil) ? parsed.fedUntil : 0,
+      lastFedAt: typeof parsed?.lastFedAt === 'number' && Number.isFinite(parsed.lastFedAt) ? parsed.lastFedAt : 0,
+    }
+  } catch {
+    return { selectedPetId: 'fetch', names: DEFAULT_PET_NAMES, ranks: DEFAULT_PET_RANKS, fedUntil: 0, lastFedAt: 0 }
+  }
+}
+
+function savePetProfile(next: PetProfileState) {
+  try {
+    window.localStorage.setItem(PET_PROFILE_STORAGE_KEY, JSON.stringify(next))
+  } catch {
+    /* ignore */
+  }
+}
+
+function loadStoredHeroDisplayName(): string | null {
+  try {
+    const raw = window.localStorage.getItem(HOME_HERO_DISPLAY_NAME_KEY)?.trim()
+    return raw && raw.length >= 2 ? raw.slice(0, 48) : null
+  } catch {
+    return null
+  }
+}
+
+function persistHeroDisplayName(name: string) {
+  const n = name.trim().slice(0, 48)
+  if (n.length < 2) return
+  try {
+    window.localStorage.setItem(HOME_HERO_DISPLAY_NAME_KEY, n)
+  } catch {
+    /* ignore */
+  }
+  const cur = loadSession()
+  if (cur) updateUserProfile({ displayName: n })
+}
+
+function loadStoredHeroGender(): HeroGender {
+  try {
+    const raw = window.localStorage.getItem(HOME_HERO_GENDER_KEY)
+    if (raw === 'female' || raw === 'male') return raw
+  } catch {
+    /* ignore */
+  }
+  return 'male'
+}
+
+function persistHeroGender(next: HeroGender) {
+  try {
+    window.localStorage.setItem(HOME_HERO_GENDER_KEY, next)
+  } catch {
+    /* ignore */
+  }
+}
+
+function formatTimerLabel(ms: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000))
+  const h = Math.floor(totalSeconds / 3600)
+  const m = Math.floor((totalSeconds % 3600) / 60)
+  const s = totalSeconds % 60
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
 function backpackImageForLevel(level: number): string {
   return level >= 1 && level <= 4 ? fetchitBackpackLevel1To4Url : fetchitBackpack3dUrl
 }
@@ -153,15 +337,77 @@ function firstNameFromDisplay(name: string): string {
   return t.length > 0 ? t : 'there'
 }
 
-/** 2D header chips keep the hero status row compact and flat. */
-const feed2dHeaderChip =
-  'flex h-8 items-center justify-center gap-1 rounded-xl bg-violet-50 px-2 text-[#7c3aed] shadow-none transition-colors active:bg-violet-100'
+/** Cumulative-style XP for the header bar (matches hero mock: e.g. 650 / 900 at level 7). */
+function heroXpBarNumbers(level: number, xpIntoLevel: number) {
+  const safeLevel = Math.max(1, Math.floor(level))
+  const xp = Math.min(100, Math.max(0, Math.floor(xpIntoLevel)))
+  const current = (safeLevel - 1) * 100 + xp
+  const next = (safeLevel + 2) * 100
+  const pct = next > 0 ? Math.min(100, Math.round((current / next) * 1000) / 10) : 0
+  return { current, next, pct }
+}
 
 const feed3dPurpleCta =
   'border-b-[4px] border-[#4c1d95] bg-gradient-to-b from-[#9f67ff] to-[#7c3aed] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2'
 
 const feed3dDarkCta =
   'border-b-[4px] border-[#090514] bg-gradient-to-b from-[#33225f] to-[#1c1340] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2'
+
+/** Purple square + control — matches reference top header currency chips. */
+function HeaderSquarePlusIcon({ className = '' }: { className?: string }) {
+  return (
+    <span
+      className={[
+        'flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#7c3aed] text-white shadow-[0_4px_12px_-6px_rgba(76,29,149,0.65)]',
+        className,
+      ].join(' ')}
+      aria-hidden
+    >
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      </svg>
+    </span>
+  )
+}
+
+/** Pet portrait: gradient rounded frame; head overlaps top border, lower body clips inside. */
+function FetchPetHeroPortrait({
+  petAvatarUrl,
+  petName,
+  onEdit,
+}: {
+  petAvatarUrl: string
+  petName: string
+  onEdit: () => void
+}) {
+  return (
+    <div className="relative mx-auto mt-1 w-[min(100%,5.95rem)] shrink-0 px-0.5">
+      <div className="rounded-2xl bg-gradient-to-br from-[#c4b5fd] via-[#a78bfa] to-[#7c3aed] p-[2.5px] shadow-[0_10px_26px_-18px_rgba(76,29,149,0.48)]">
+        <div className="relative overflow-hidden rounded-[13px] bg-gradient-to-b from-violet-50 to-white">
+          <div className="relative h-[5rem] overflow-hidden sm:h-[5.35rem]">
+            <img
+              src={petAvatarUrl}
+              alt={`${petName} portrait`}
+              draggable={false}
+              className="absolute left-1/2 top-0 z-[1] h-[7.25rem] w-[7.25rem] max-w-none -translate-x-1/2 -translate-y-[26%] select-none object-cover object-top sm:h-[7.5rem] sm:w-[7.5rem] sm:-translate-y-[28%]"
+            />
+          </div>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onEdit}
+        className="absolute bottom-1 right-1 z-[3] flex h-6 w-6 items-center justify-center rounded-full bg-white text-zinc-800 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.25)] ring-2 ring-violet-200 transition-[transform,filter] active:scale-[0.94]"
+        aria-label={`Edit ${petName}`}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="m4 16.5-.7 4.2 4.2-.7L18.7 8.8l-3.5-3.5L4 16.5Z" stroke="currentColor" strokeWidth="2.25" strokeLinejoin="round" />
+          <path d="m14.5 6 3.5 3.5" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" />
+        </svg>
+      </button>
+    </div>
+  )
+}
 
 type FetchHomeTourTarget = 'addFunds' | 'backpack' | 'adventure' | 'bidWar' | 'liveStreams'
 
@@ -216,97 +462,128 @@ const FETCH_HOME_TOUR_STEPS: FetchHomeTourStep[] = [
 function FetchitWelcomeHero({
   displayName,
   isAdventuring,
-  isAdventureHourOneDone,
   adventureLevel,
-  fundsCents,
+  adventureXp,
   fundsLabel,
   gemsCount,
   notificationsCount,
+  petName,
+  petId,
+  heroGender,
+  petAvatarUrl,
+  petFedBannerUrl,
+  petHungryBannerUrl,
+  petFeedTimerLabel,
+  petRank,
+  petHungerStage,
+  isPetFed,
+  canFeedPet,
+  petCelebrationSeq,
   onAddDemoFunds,
   onViewBackpack,
   onOpenGemGames,
+  onOpenPetEdit,
+  onFeedPet,
 }: {
   displayName: string
   isAdventuring: boolean
-  isAdventureHourOneDone: boolean
   adventureLevel: number
-  fundsCents: number
+  /** 0–100 XP into current level (see `fetchAdventureRewards`). */
+  adventureXp: number
   fundsLabel: string
   gemsCount: number
   notificationsCount: number
+  petName: string
+  petId: FetchPetId
+  heroGender: HeroGender
+  petAvatarUrl: string
+  petFedBannerUrl: string
+  petHungryBannerUrl: string
+  petFeedTimerLabel: string
+  petRank: number
+  petHungerStage: 'hungry' | 'risk'
+  isPetFed: boolean
+  canFeedPet: boolean
+  petCelebrationSeq: number
   onAddDemoFunds: () => void
   onViewBackpack: () => void
   onOpenGemGames: () => void
+  onOpenPetEdit: () => void
+  onFeedPet: () => void
 }) {
   const firstName = firstNameFromDisplay(displayName).toUpperCase()
+  const xpBar = heroXpBarNumbers(adventureLevel, adventureXp)
+  const useMaleTigerAdventureBanner = heroGender === 'male' && petId === 'tiger'
   const bannerUrl = isAdventuring
-    ? isAdventureHourOneDone
-      ? fetchitAdventuringHour1BannerUrl
-      : fetchitAdventuringBannerUrl
-    : fundsCents <= 0
-      ? fetchitHomeDefaultBannerUrl
-      : fundsCents <= 10000
-        ? fetchitFundedLowBannerUrl
-        : fundsCents <= 30000
-          ? fetchitFundedMidBannerUrl
-          : fundsCents <= 50000
-            ? fetchitFundedHighBannerUrl
-            : fetchitFundedWhaleBannerUrl
-  const useDefaultBannerSizing =
-    bannerUrl === fetchitHomeDefaultBannerUrl ||
+    ? useMaleTigerAdventureBanner
+      ? isPetFed
+        ? fetchitAdventuringMaleTigerBannerUrl
+        : fetchitAdventuringMaleTigerHungryBannerUrl
+      : isPetFed
+        ? fetchitAdventuringBannerUrl
+        : fetchitAdventuringHour1BannerUrl
+    : isPetFed
+      ? petFedBannerUrl
+      : petHungryBannerUrl
+  const isPetBanner = bannerUrl === petFedBannerUrl || bannerUrl === petHungryBannerUrl
+  const isAdventureBanner =
     bannerUrl === fetchitAdventuringBannerUrl ||
-    bannerUrl === fetchitAdventuringHour1BannerUrl
-  const bannerAspectClass = useDefaultBannerSizing ? 'aspect-[682/768]' : 'aspect-[3/2]'
-  const bannerObjectClass = useDefaultBannerSizing ? 'object-cover object-top' : 'object-cover object-center'
-  const welcomeNameSize =
-    firstName.length > 12
-      ? 'text-[18px] sm:text-[20px]'
-      : firstName.length > 8
-        ? 'text-[21px] sm:text-[23px]'
-        : 'text-[24px] sm:text-[26px]'
+    bannerUrl === fetchitAdventuringHour1BannerUrl ||
+    bannerUrl === fetchitAdventuringMaleTigerBannerUrl ||
+    bannerUrl === fetchitAdventuringMaleTigerHungryBannerUrl
+  const bannerAspectClass = isPetBanner ? 'aspect-square' : isAdventureBanner ? '' : 'aspect-[3/2]'
+  const bannerObjectClass = isAdventureBanner ? 'object-contain object-center' : 'object-cover object-center'
   const backpackImageUrl = backpackImageForLevel(adventureLevel)
   return (
     <section
       className="relative w-full overflow-hidden rounded-t-xl"
       aria-label="Welcome and backpack"
     >
-      <div className="flex items-center gap-1.5 bg-white px-2 py-2 text-[#1c1340] shadow-[0_10px_24px_-20px_rgba(30,15,80,0.35)]">
-        <div className="flex h-8 shrink-0 items-center gap-1.5 rounded-xl bg-violet-50 px-2 text-[#4c1d95] shadow-none">
-          <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-[#7c3aed] text-[10px] font-black text-white">
+      <div className="flex items-stretch gap-2 bg-white px-2 py-2.5 text-[#1c1340]">
+        <div className="flex min-h-[3.35rem] min-w-0 flex-[1.2] items-start gap-2 rounded-xl bg-white px-2 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95">
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#7c3aed] text-[14px] font-black tabular-nums text-white shadow-[0_4px_12px_-4px_rgba(76,29,149,0.55)]"
+            aria-hidden
+          >
             {adventureLevel}
           </span>
-          <span className="text-[10px] font-black uppercase tracking-[0.06em]">
-            Level {adventureLevel}
-          </span>
-        </div>
-        <div
-          className={[feed2dHeaderChip, 'min-w-0 flex-1'].join(' ')}
-          role="group"
-          aria-label={`Wallet balance ${fundsLabel}`}
-        >
-          <img
-            src={heroWalletCashUrl}
-            alt=""
-            width={40}
-            height={40}
-            draggable={false}
-            className="pointer-events-none h-5 w-5 shrink-0 select-none object-contain"
-          />
-          <span className="truncate text-[10px] font-black tabular-nums text-[#1c1340]">{fundsLabel}</span>
+          <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+            <p className="text-[10px] font-black uppercase leading-none tracking-[0.14em] text-[#4c1d95]">
+              Level {adventureLevel}
+            </p>
+            <div className="h-[5px] overflow-hidden rounded-full bg-violet-100">
+              <div
+                className="h-full rounded-full bg-[#7c3aed]"
+                style={{ width: `${xpBar.pct}%` }}
+              />
+            </div>
+            <p className="text-[9px] font-bold tabular-nums leading-none text-zinc-600">
+              {xpBar.current} / {xpBar.next} XP
+            </p>
+          </div>
         </div>
         <button
           type="button"
           onClick={onAddDemoFunds}
+          className="flex min-h-[3.35rem] min-w-0 flex-1 items-center gap-1.5 rounded-xl bg-white px-2 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95 transition-colors active:bg-zinc-50/90"
+          aria-label={`Add funds, wallet balance ${fundsLabel}`}
           data-fetch-tour-target="addFunds"
-          className="flex h-8 shrink-0 items-center justify-center rounded-xl bg-[#7c3aed] px-2.5 py-0 text-[8px] font-black uppercase leading-none tracking-[0.08em] text-white shadow-none transition-colors active:bg-[#6d28d9]"
-          aria-label="Add funds"
         >
-          Add funds
+          <img
+            src={heroWalletCashUrl}
+            alt=""
+            width={36}
+            height={36}
+            draggable={false}
+            className="pointer-events-none h-8 w-8 shrink-0 select-none object-contain"
+          />
+          <span className="min-w-0 flex-1 truncate text-left text-[12px] font-black tabular-nums text-[#1c1340]">{fundsLabel}</span>
+          <HeaderSquarePlusIcon />
         </button>
         <button
           type="button"
           onClick={onOpenGemGames}
-          className={[feed2dHeaderChip, 'min-w-[3.2rem]'].join(' ')}
+          className="flex min-h-[3.35rem] min-w-0 flex-1 items-center gap-1.5 rounded-xl bg-white px-2 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95 transition-colors active:bg-zinc-50/90"
           aria-label={`Open gem games, ${gemsCount} gems`}
           data-fetch-home-gems-chip
         >
@@ -314,19 +591,20 @@ function FetchitWelcomeHero({
             src={purpleGemIconUrl}
             alt=""
             aria-hidden
-            className="h-[15px] w-[15px] shrink-0 object-contain"
+            className="h-[22px] w-[22px] shrink-0 object-contain"
             draggable={false}
             loading="lazy"
             data-fetch-home-gems-icon
           />
-          <span className="text-[10px] font-black tabular-nums text-[#1c1340]">{gemsCount}</span>
+          <span className="min-w-0 flex-1 truncate text-left text-[12px] font-black tabular-nums text-[#1c1340]">{gemsCount}</span>
+          <HeaderSquarePlusIcon />
         </button>
         <button
           type="button"
-          className={[feed2dHeaderChip, 'min-w-[3.2rem]'].join(' ')}
+          className="relative flex h-auto min-h-[3.35rem] w-[3.05rem] shrink-0 items-center justify-center rounded-xl bg-white px-0 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95 transition-colors active:bg-zinc-50/90"
           aria-label={`${notificationsCount} notifications`}
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0 text-zinc-700">
             <path
               d="M18 10a6 6 0 1 0-12 0c0 7-2.5 7-2.5 8h17S18 17 18 10Z"
               stroke="currentColor"
@@ -335,7 +613,11 @@ function FetchitWelcomeHero({
             />
             <path d="M9.5 20a2.8 2.8 0 0 0 5 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
-          <span className="text-[10px] font-black tabular-nums text-[#1c1340]">{notificationsCount}</span>
+          {notificationsCount > 0 ? (
+            <span className="absolute right-1 top-1 flex min-h-[1.05rem] min-w-[1.05rem] items-center justify-center rounded-full bg-red-500 px-1 text-[8px] font-black tabular-nums leading-none text-white ring-[2.5px] ring-white">
+              {notificationsCount > 9 ? '9+' : notificationsCount}
+            </span>
+          ) : null}
         </button>
       </div>
       <div className={`relative ${bannerAspectClass} w-full overflow-hidden rounded-t-xl bg-gradient-to-b from-[#cdb7ff] via-[#a78bfa] to-[#7c3aed] shadow-[0_22px_48px_-22px_rgba(76,29,149,0.6)]`}>
@@ -344,44 +626,200 @@ function FetchitWelcomeHero({
           alt=""
           aria-hidden
           draggable={false}
-          className={`pointer-events-none absolute inset-0 h-full w-full select-none ${bannerObjectClass}`}
+          className={[
+            'pointer-events-none w-full select-none',
+            isAdventureBanner ? 'block h-auto' : 'absolute inset-0 h-full',
+            bannerObjectClass,
+          ].join(' ')}
         />
-        <div className="pointer-events-none absolute bottom-[8%] left-3 z-[3] max-w-[min(100%,16rem)] text-left sm:bottom-[7%] sm:left-4">
-          <p className="text-[11px] font-bold leading-none text-black">
-            Welcome back,
-          </p>
+        <div
+          role="group"
+          aria-label={`Welcome back, ${firstName}`}
+          className="pointer-events-none absolute left-2 top-2 z-[3] max-w-[min(calc(100%-1rem),13rem)] rounded-xl bg-black/55 px-3 py-2.5 text-left text-white shadow-[0_16px_40px_-20px_rgba(0,0,0,0.65)] ring-1 ring-white/15 backdrop-blur-xl sm:left-3 sm:top-3 sm:max-w-[min(calc(100%-1.25rem),14rem)] sm:rounded-[1.1rem] sm:px-3.5 sm:py-3"
+        >
+          <p className="text-[9px] font-semibold leading-none tracking-[0.04em] text-white/85">Welcome back,</p>
           <h2
             className={[
-              'mt-1 truncate font-black leading-[0.95] tracking-[-0.02em] text-[#7c3aed]',
-              welcomeNameSize,
+              'mt-1 truncate font-black uppercase leading-none tracking-tight text-white',
+              firstName.length > 8 ? 'text-[14px] sm:text-[15px]' : 'text-[17px] sm:text-[18px]',
             ].join(' ')}
+            title={firstName}
           >
             {firstName}!
           </h2>
-          <p className="mt-1 text-[11px] font-semibold leading-snug text-black">
-            Ready to bid. Win. Fetch it.
-          </p>
         </div>
+        <div
+          className={[
+            'absolute z-[3] max-w-[min(72vw,7.5rem)] rounded-xl bg-white px-2 py-1.5 text-left text-[8px] font-black leading-snug text-[#1c1340] shadow-[0_14px_28px_-20px_rgba(30,15,80,0.65)] ring-1 ring-violet-100',
+            'sm:max-w-[8.5rem] sm:rounded-2xl sm:px-2.5 sm:py-2 sm:text-[9px] sm:leading-tight',
+            'md:max-w-[9rem] md:px-3 md:text-[9.5px]',
+            'lg:max-w-[9.5rem] lg:text-[10px]',
+            'xl:max-w-[10rem]',
+            isPetBanner || isAdventureBanner
+              ? [
+                  'left-[58%] bottom-[50%] -translate-x-1/2',
+                  'sm:left-[59%] sm:bottom-[51%]',
+                  'md:left-[59.5%] md:bottom-[50%]',
+                  'lg:left-[60%] lg:bottom-[49%]',
+                  'xl:left-[61%] xl:bottom-[48%]',
+                ].join(' ')
+              : [
+                  'right-[6%] top-[36%] -translate-y-1/2',
+                  'sm:right-[8%] sm:top-[38%]',
+                  'md:right-[10%] md:top-[40%]',
+                  'lg:right-[11%] lg:top-[42%]',
+                ].join(' '),
+          ].join(' ')}
+        >
+          {isPetFed ? "I'm full and ready to find epic loot!" : "I'm hungry! Feed me so I can find loot!"}
+          <span
+            className={[
+              'absolute h-2.5 w-2.5 rotate-45 border-r border-b border-violet-100 bg-white sm:h-3 sm:w-3',
+              isPetBanner || isAdventureBanner
+                ? '-bottom-1 left-1/2 -translate-x-1/2 sm:-bottom-1.5'
+                : '-bottom-1 left-5 sm:-bottom-1.5 sm:left-6',
+            ].join(' ')}
+            aria-hidden
+          />
+        </div>
+        <div
+          className={[
+            'absolute z-[3] flex h-7 w-7 items-center justify-center rounded-full text-white ring-2 ring-white',
+            isAdventureBanner
+              ? 'left-[66%] bottom-[9%] sm:left-[65%] sm:bottom-[10%]'
+              : 'left-[54%] bottom-[8%]',
+            isPetFed
+              ? 'bg-emerald-500 shadow-[0_10px_24px_-12px_rgba(16,185,129,0.85)]'
+              : petHungerStage === 'risk'
+                ? 'bg-red-600 shadow-[0_10px_24px_-12px_rgba(185,28,28,0.85)]'
+                : 'bg-amber-400 text-[#1c1340] shadow-[0_10px_24px_-12px_rgba(245,158,11,0.85)]',
+          ].join(' ')}
+          aria-label={
+            isPetFed
+              ? 'Pet has eaten'
+              : petHungerStage === 'risk'
+                ? 'Pet is at risk of starvation'
+                : 'Pet is hungry'
+          }
+        >
+          {isPetFed ? (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="M5 12.5 9.3 17 19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ) : (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="M12 4 21 19.5H3L12 4Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
+              <path d="M12 9v4.5" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
+              <path d="M12 17.25h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={onOpenPetEdit}
+          className="absolute bottom-3 right-3 z-[4] flex h-9 w-9 items-center justify-center rounded-full bg-white text-zinc-800 shadow-[0_6px_14px_-4px_rgba(0,0,0,0.2)] ring-2 ring-zinc-200 transition-[transform,filter] active:scale-[0.94] sm:bottom-4 sm:right-4"
+          aria-label="Edit home and pet"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="m4 16.5-.7 4.2 4.2-.7L18.7 8.8l-3.5-3.5L4 16.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+            <path d="m14.5 6 3.5 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+        <div className="absolute bottom-3 left-3 z-[3] w-[6.35rem] rounded-xl bg-white p-1 text-left text-[#1c1340] shadow-[0_14px_32px_-18px_rgba(0,0,0,0.18)] ring-1 ring-zinc-200 sm:bottom-4 sm:left-4 sm:w-[6.65rem]">
+          <div className="border-b border-zinc-200 px-0.5 pb-1 pt-0.5 text-center">
+            <p
+              className="truncate text-[10px] font-black uppercase leading-none tracking-[0.14em] text-zinc-950 sm:text-[11px]"
+              title={petName}
+            >
+              {petName}
+            </p>
+            <p className="mt-1 flex items-baseline justify-center gap-1">
+              <span className="text-[8px] font-black uppercase leading-none tracking-[0.14em] text-zinc-500 sm:text-[8.5px]">
+                Rank
+              </span>
+              <span className="text-[13px] font-black tabular-nums leading-none tracking-[-0.05em] text-zinc-950 sm:text-[14px]">
+                {petRank}
+              </span>
+            </p>
+          </div>
+          <FetchPetHeroPortrait petAvatarUrl={petAvatarUrl} petName={petName} onEdit={onOpenPetEdit} />
+          <div className="mt-0.5 flex items-center justify-between gap-1 px-0.5">
+            <span
+              className={[
+                'shrink-0 text-[7px] font-black uppercase tracking-[0.06em] sm:text-[8px]',
+                isPetFed ? 'text-emerald-600' : petHungerStage === 'risk' ? 'text-red-600' : 'text-amber-600',
+              ].join(' ')}
+            >
+              {isPetFed ? 'Full' : petHungerStage === 'risk' ? 'Risk' : 'Hungry'}
+            </span>
+            <span className="min-w-0 truncate text-right text-[10px] font-black tabular-nums tracking-tight text-zinc-800 sm:text-[11px]">
+              {petFeedTimerLabel}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onFeedPet}
+            disabled={!canFeedPet}
+            className={[
+              'mt-0.5 flex w-full items-center justify-center gap-1 rounded-xl px-1.5 py-1 text-[7px] font-black uppercase tracking-[0.08em] shadow-none sm:py-1.5 sm:text-[8px]',
+              canFeedPet
+                ? [feed3dPurpleCta, 'ring-1 ring-[#7c3aed]/35'].join(' ')
+                : 'cursor-not-allowed border-b-[4px] border-b-zinc-300/80 bg-zinc-100 text-zinc-500',
+            ].join(' ')}
+            aria-label={canFeedPet ? `Feed ${petName}` : `${petName} can eat again in ${petFeedTimerLabel}`}
+          >
+            {canFeedPet ? 'FEED' : 'FED'}
+          </button>
+        </div>
+        {petCelebrationSeq > 0 ? (
+          <div
+            key={petCelebrationSeq}
+            className="pointer-events-none absolute bottom-[6.2rem] left-[4.2rem] z-[7]"
+            aria-hidden
+          >
+            <span className="fetch-pet-celebration-pop">💜</span>
+            {PET_CELEBRATION_PARTICLES.map((particle, index) => (
+              <span
+                key={`${petCelebrationSeq}-${index}`}
+                className="fetch-pet-celebration-particle"
+                style={
+                  {
+                    '--pet-burst-x': `${particle.tx}px`,
+                    '--pet-burst-y': `${particle.ty}px`,
+                    '--pet-burst-r': `${particle.rot}deg`,
+                    '--pet-burst-s': particle.scale,
+                    '--pet-burst-delay': `${particle.delay}s`,
+                  } as CSSProperties
+                }
+              >
+                {particle.emoji}
+              </span>
+            ))}
+          </div>
+        ) : null}
         <button
           type="button"
           onClick={onViewBackpack}
           data-fetch-backpack-target
           data-fetch-tour-target="backpack"
-          className="group absolute top-2.5 right-2.5 z-[2] transition-transform active:scale-[0.98] sm:top-3 sm:right-3"
+          className="group absolute top-3 right-3 z-[3] transition-transform active:scale-[0.98] sm:top-4 sm:right-4"
           aria-label="View backpack"
         >
-          <div className="fetch-backpack-premium-card relative flex w-[6.85rem] flex-col gap-1.5 overflow-hidden rounded-xl bg-white px-1 py-1.5 shadow-none ring-1 ring-violet-200/60 sm:w-[7.25rem]">
-            <div className="relative z-0 flex flex-col gap-1.5">
-              <span className="flex w-full shrink-0 items-center justify-center px-1 py-0.5 text-[13px] font-black uppercase tracking-[0.04em] text-[#1c1340]">
-                Open
+          <div className="fetch-backpack-premium-card relative flex w-[4.6rem] flex-col gap-1 overflow-hidden rounded-xl bg-white px-1 py-1 shadow-none ring-1 ring-zinc-200 sm:w-[4.9rem]">
+            <div className="relative z-0 flex flex-col gap-1">
+              <span className="px-0.5 text-center text-[7px] font-black uppercase leading-tight tracking-[0.03em] text-[#1c1340]">
+                Backpack
               </span>
               <img
                 src={backpackImageUrl}
                 alt=""
                 aria-hidden
                 draggable={false}
-                className="pointer-events-none block h-auto w-full max-h-[5.65rem] min-h-[3.85rem] shrink-0 select-none object-contain object-center sm:max-h-[6.1rem]"
+                className="pointer-events-none block h-auto w-full max-h-[3.2rem] min-h-[2.45rem] shrink-0 select-none object-contain object-center sm:max-h-[3.45rem]"
               />
+              <span className="mx-auto flex shrink-0 items-center justify-center rounded-full bg-zinc-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.04em] text-zinc-800 ring-1 ring-zinc-200">
+                OPEN
+              </span>
             </div>
             <div className="fetch-backpack-premium-card__flash" aria-hidden>
               <span className="fetch-backpack-premium-card__shimmer" />
@@ -389,7 +827,362 @@ function FetchitWelcomeHero({
           </div>
         </button>
       </div>
+      <style>{`
+        @keyframes fetch-pet-celebration-pop {
+          0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+          18% { opacity: 1; transform: translate(-50%, -50%) scale(1.35); }
+          55% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+          100% { opacity: 0; transform: translate(-50%, -50%) scale(0.72); }
+        }
+        @keyframes fetch-pet-celebration-burst {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.2) rotate(0deg);
+            filter: blur(0);
+          }
+          12% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.15) rotate(0deg);
+          }
+          72% {
+            opacity: 1;
+            transform:
+              translate(calc(-50% + var(--pet-burst-x)), calc(-50% + var(--pet-burst-y)))
+              scale(var(--pet-burst-s))
+              rotate(var(--pet-burst-r));
+            filter: blur(0);
+          }
+          100% {
+            opacity: 0;
+            transform:
+              translate(calc(-50% + var(--pet-burst-x)), calc(-50% + var(--pet-burst-y) + 24px))
+              scale(0.78)
+              rotate(var(--pet-burst-r));
+            filter: blur(1px);
+          }
+        }
+        .fetch-pet-celebration-pop,
+        .fetch-pet-celebration-particle {
+          position: absolute;
+          left: 0;
+          top: 0;
+          display: block;
+          line-height: 1;
+          text-shadow: 0 8px 18px rgba(30, 15, 80, 0.25);
+          will-change: transform, opacity;
+        }
+        .fetch-pet-celebration-pop {
+          font-size: 2.35rem;
+          animation: fetch-pet-celebration-pop 820ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+        }
+        .fetch-pet-celebration-particle {
+          font-size: 1.35rem;
+          animation: fetch-pet-celebration-burst 1.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+          animation-delay: var(--pet-burst-delay);
+        }
+      `}</style>
     </section>
+  )
+}
+
+function PetEditSheet({
+  open,
+  pets,
+  selectedPetId,
+  petNames,
+  petRanks,
+  userDisplayName,
+  heroGender,
+  gemsCount,
+  isPetFed,
+  petFeedTimerLabel,
+  onSelectPet,
+  onPetNameChange,
+  onUserDisplayNameChange,
+  onHeroGenderChange,
+  onRankUpSelectedPet,
+  onClose,
+}: {
+  open: boolean
+  pets: ReadonlyArray<FetchHomePet>
+  selectedPetId: FetchPetId
+  petNames: Record<FetchPetId, string>
+  petRanks: Record<FetchPetId, number>
+  userDisplayName: string
+  heroGender: HeroGender
+  gemsCount: number
+  isPetFed: boolean
+  petFeedTimerLabel: string
+  onSelectPet: (petId: FetchPetId) => void
+  onPetNameChange: (petId: FetchPetId, name: string) => void
+  onUserDisplayNameChange: (name: string) => void
+  onHeroGenderChange: (gender: HeroGender) => void
+  onRankUpSelectedPet: () => void
+  onClose: () => void
+}) {
+  if (!open) return null
+  const selectedPet = pets.find((pet) => pet.id === selectedPetId) ?? pets[0]
+  const selRank = normalizePetRank(petRanks[selectedPet.id])
+  const rankCost = petRankUpGemCost(selRank)
+  const atMaxRank = selRank >= PET_RANK_MAX
+  const canAffordRankUp = gemsCount >= rankCost && !atMaxRank
+
+  return createPortal(
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-[#120822]/45 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] backdrop-blur-sm">
+      <button
+        type="button"
+        className="absolute inset-0 cursor-default"
+        aria-label="Close editor"
+        onClick={onClose}
+      />
+      <section className="relative z-[1] w-full max-w-[430px] overflow-hidden rounded-[2rem] bg-white p-4 text-[#1c1340] shadow-[0_28px_70px_-34px_rgba(30,15,80,0.75)] ring-1 ring-violet-100">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#7c3aed]">Home & pet</p>
+            <h2 className="mt-1 text-[24px] font-black leading-none tracking-[-0.06em]">Make it yours</h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-50 text-[#7c3aed] transition-colors active:bg-violet-100"
+            aria-label="Close editor"
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <label className="mt-4 block text-[10px] font-black uppercase tracking-[0.12em] text-[#7c3aed]" htmlFor="fetch-home-user-display-name">
+          Your name
+        </label>
+        <input
+          id="fetch-home-user-display-name"
+          value={userDisplayName}
+          onChange={(event) => onUserDisplayNameChange(event.target.value)}
+          maxLength={48}
+          className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-4 py-3 text-[16px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+          placeholder="Your first name"
+          autoComplete="given-name"
+          aria-label="Your display name"
+        />
+        <p className="mt-1 text-[11px] font-semibold leading-snug text-zinc-500">
+          Shown on your welcome card.
+        </p>
+
+        <p className="mt-4 text-[10px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Hero banner</p>
+        <p className="mt-1 text-[11px] font-semibold leading-snug text-zinc-500">
+          Female uses illustrated home banners while you&apos;re not adventuring: one when your pet is fed, another when hungry.
+        </p>
+        <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-label="Hero banner gender">
+          <button
+            type="button"
+            onClick={() => onHeroGenderChange('male')}
+            className={[
+              'rounded-2xl px-3 py-3 text-center text-[13px] font-black uppercase tracking-[0.06em] transition-transform active:scale-[0.98]',
+              heroGender === 'male'
+                ? 'bg-[#1c1340] text-white ring-2 ring-[#7c3aed]'
+                : 'bg-violet-50 text-[#1c1340] ring-1 ring-violet-100',
+            ].join(' ')}
+          >
+            Male
+          </button>
+          <button
+            type="button"
+            onClick={() => onHeroGenderChange('female')}
+            className={[
+              'rounded-2xl px-3 py-3 text-center text-[13px] font-black uppercase tracking-[0.06em] transition-transform active:scale-[0.98]',
+              heroGender === 'female'
+                ? 'bg-[#1c1340] text-white ring-2 ring-[#7c3aed]'
+                : 'bg-violet-50 text-[#1c1340] ring-1 ring-violet-100',
+            ].join(' ')}
+          >
+            Female
+          </button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-2.5">
+          {pets.map((pet) => {
+            const selected = pet.id === selectedPetId
+            const name = petNames[pet.id] || pet.defaultName
+            return (
+              <button
+                key={pet.id}
+                type="button"
+                onClick={() => onSelectPet(pet.id)}
+                className={[
+                  'relative overflow-hidden rounded-3xl p-2 text-left transition-transform active:scale-[0.98]',
+                  selected
+                    ? 'bg-[#1c1340] text-white ring-2 ring-[#7c3aed]'
+                    : 'bg-violet-50 text-[#1c1340] ring-1 ring-violet-100',
+                ].join(' ')}
+              >
+                <div className="relative mx-auto w-[88%] rounded-2xl bg-gradient-to-br from-[#c4b5fd] via-[#a78bfa] to-[#7c3aed] p-[2px] shadow-[0_8px_22px_-16px_rgba(76,29,149,0.45)]">
+                  <div className="relative overflow-hidden rounded-[11px] bg-white">
+                    <div className="relative h-[7.25rem] overflow-hidden">
+                      <img
+                        src={pet.avatarUrl}
+                        alt={`${name} avatar`}
+                        draggable={false}
+                        className="absolute left-1/2 top-0 z-[1] h-[10rem] w-[10rem] max-w-none -translate-x-1/2 -translate-y-[22%] select-none object-cover object-top"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <span className="pointer-events-none absolute right-3 top-3 rounded-md bg-[#1c1340]/85 px-1.5 py-0.5 text-[9px] font-black tabular-nums text-white ring-1 ring-white/30">
+                  R{normalizePetRank(petRanks[pet.id])}
+                </span>
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-black leading-none">{name}</p>
+                    <p className={['mt-1 text-[9px] font-bold uppercase tracking-[0.08em]', selected ? 'text-violet-200' : 'text-violet-500'].join(' ')}>
+                      {pet.label}
+                    </p>
+                  </div>
+                  {selected ? (
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-white">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden>
+                        <path d="M5 12.5 9.3 17 19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                  ) : null}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        <label className="mt-4 block text-[10px] font-black uppercase tracking-[0.12em] text-[#7c3aed]" htmlFor="fetch-pet-editor-name">
+          Pet name
+        </label>
+        <input
+          id="fetch-pet-editor-name"
+          value={petNames[selectedPet.id] || selectedPet.defaultName}
+          onChange={(event) => onPetNameChange(selectedPet.id, event.target.value)}
+          maxLength={16}
+          className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-4 py-3 text-[16px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+          aria-label="Edit selected pet name"
+        />
+
+        <div className="mt-4 rounded-2xl bg-violet-50 p-3 ring-1 ring-violet-100">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Pet rank</p>
+              <p className="mt-1 text-[18px] font-black tabular-nums leading-none text-[#1c1340]">
+                R{selRank}
+                {atMaxRank ? (
+                  <span className="ml-2 align-middle text-[10px] font-black uppercase tracking-[0.08em] text-emerald-600">
+                    Max
+                  </span>
+                ) : (
+                  <span className="ml-2 align-middle text-[11px] font-bold text-zinc-500">→ R{selRank + 1}</span>
+                )}
+              </p>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-zinc-500">Gems</p>
+              <p className="mt-0.5 flex items-center justify-end gap-1 text-[13px] font-black tabular-nums text-[#1c1340]">
+                <img src={purpleGemIconUrl} alt="" aria-hidden className="h-4 w-4 object-contain" draggable={false} />
+                {gemsCount}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onRankUpSelectedPet}
+            disabled={!canAffordRankUp}
+            className={[
+              'mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border-b-[4px] px-4 py-3 text-[11px] font-black uppercase tracking-[0.06em] shadow-none transition-[transform,border-bottom-width] duration-150 sm:text-[12px]',
+              canAffordRankUp
+                ? 'border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white active:translate-y-0.5 active:border-b-2'
+                : 'cursor-not-allowed border-zinc-300 border-b-zinc-400 bg-zinc-100 text-zinc-400',
+            ].join(' ')}
+            aria-label={
+              atMaxRank ? 'Pet is at max rank' : `Spend ${rankCost} gems to rank up ${selectedPet.defaultName}`
+            }
+          >
+            {atMaxRank ? (
+              'Max rank reached'
+            ) : (
+              <>
+                <img src={purpleGemIconUrl} alt="" aria-hidden className="h-4 w-4 object-contain" draggable={false} />
+                Rank up — {rankCost} gems
+              </>
+            )}
+          </button>
+          {!atMaxRank && gemsCount < rankCost ? (
+            <p className="mt-2 text-center text-[11px] font-semibold text-amber-700">
+              Need {rankCost - gemsCount} more gems
+            </p>
+          ) : null}
+        </div>
+
+        <div className="mt-3 flex items-center justify-between rounded-2xl bg-violet-50 px-3 py-2 text-[11px] font-black uppercase tracking-[0.08em] text-[#4c1d95]">
+          <span>{isPetFed ? 'Fed and ready' : 'Hungry now'}</span>
+          <span>{petFeedTimerLabel}</span>
+        </div>
+      </section>
+    </div>,
+    document.body,
+  )
+}
+
+function AdventureRewardIcon({ type }: { type: 'loot' | 'discounts' | 'tickets' | 'mystery' }) {
+  if (type === 'loot') {
+    return (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M4 8.5 12 4l8 4.5v7L12 20l-8-4.5v-7Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+        <path d="M4.5 8.75 12 13l7.5-4.25M12 13v7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    )
+  }
+  if (type === 'discounts') {
+    return (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M4 12 12 4h6v6l-8 8-6-6Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+        <path d="m9 15 6-6M9.5 9.5h.01M14.5 14.5h.01" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      </svg>
+    )
+  }
+  if (type === 'tickets') {
+    return (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M4 8.5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4v-2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+        <path d="M12 7v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="2 3" />
+      </svg>
+    )
+  }
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M12 4.5a6.5 6.5 0 0 0-6.5 6.5 6.2 6.2 0 0 0 2.2 4.8c.8.7 1.3 1.4 1.3 2.4h6c0-1 .5-1.7 1.3-2.4a6.2 6.2 0 0 0 2.2-4.8A6.5 6.5 0 0 0 12 4.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M10 21h4M10.5 11a1.5 1.5 0 1 1 2.6 1c-.7.6-1.1 1-1.1 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function AdventureRewardsRow() {
+  const rewards: Array<{ type: 'loot' | 'discounts' | 'tickets' | 'mystery'; label: string; sub: string }> = [
+    { type: 'loot', label: 'Loot', sub: 'Find items' },
+    { type: 'discounts', label: 'Discounts', sub: 'Save money' },
+    { type: 'tickets', label: 'Tickets', sub: 'Bid wars' },
+    { type: 'mystery', label: 'Mystery', sub: 'Epic rewards' },
+  ]
+
+  return (
+    <div className="mt-2 grid grid-cols-4 gap-1.5" aria-label="Adventure rewards">
+      {rewards.map((reward) => (
+        <div
+          key={reward.type}
+          className="flex min-w-0 flex-col items-center px-1 py-1 text-center text-[#4c1d95]"
+        >
+          <span className="flex h-8 w-8 items-center justify-center">
+            <AdventureRewardIcon type={reward.type} />
+          </span>
+          <span className="mt-0.5 max-w-full truncate text-[8px] font-black leading-none text-[#1c1340]">{reward.label}</span>
+          <span className="mt-0.5 max-w-full truncate text-[7px] font-bold leading-none text-zinc-500">{reward.sub}</span>
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -398,21 +1191,28 @@ function AdventureReturnBar({
   onEndEarly,
   onComplete,
   onElapsedSeconds,
+  isPetFed,
+  petName,
 }: {
   canEndEarly: boolean
   onEndEarly: () => void
   onComplete: () => void
   onElapsedSeconds?: (elapsedSeconds: number) => void
+  isPetFed: boolean
+  petName: string
 }) {
-  const totalSeconds = 12 * 60 * 60
+  const totalSeconds = ADVENTURE_MISSION_DURATION_SEC
   const [remainingSeconds, setRemainingSeconds] = useState(totalSeconds)
+  const [payPromptOpen, setPayPromptOpen] = useState(false)
+  const missionPaused = !isPetFed
 
   useEffect(() => {
     const id = window.setInterval(() => {
+      if (!isPetFed) return
       setRemainingSeconds((s) => Math.max(0, s - 1))
     }, 1000)
     return () => window.clearInterval(id)
-  }, [])
+  }, [isPetFed])
 
   useEffect(() => {
     if (remainingSeconds === 0) onComplete()
@@ -426,111 +1226,167 @@ function AdventureReturnBar({
   const backIn = formatBackInClock(remainingSeconds)
 
   return (
+    <>
+      <section
+        className="-mx-0.5 px-0.5"
+        aria-label={
+          missionPaused
+            ? `Adventure paused until ${petName} is fed. Time left ${backIn}.`
+            : `Adventure in progress. Back in ${backIn}.`
+        }
+        data-fetch-tour-target="adventure"
+      >
+        <div className="overflow-visible rounded-3xl bg-white p-2.5 shadow-[0_12px_28px_-18px_rgba(76,29,149,0.45)] ring-1 ring-violet-200/70">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5">
+            <div className="min-w-0">
+              <p className="truncate text-[15px] font-black leading-none tracking-[-0.02em] text-[#1c1340]">
+                {ADVENTURE_THEME_TITLE} mission
+              </p>
+              <p className="mt-1 truncate text-[11px] font-bold leading-none text-zinc-500">
+                {missionPaused
+                  ? `Paused — feed ${petName} to resume the timer.`
+                  : 'Fetch is searching for loot while you wait.'}
+              </p>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-violet-100" aria-hidden>
+                <div
+                  className="h-full rounded-full bg-[#7c3aed] transition-[width] duration-500 ease-out"
+                  style={{ width: `${Math.round(progress * 100)}%` }}
+                />
+              </div>
+            </div>
+            <div
+              className={[
+                'min-w-[8.6rem] rounded-2xl px-3 py-2 text-center ring-1',
+                missionPaused ? 'bg-amber-50 ring-amber-200/80' : 'bg-violet-50 ring-violet-100',
+              ].join(' ')}
+            >
+              <p
+                className={[
+                  'text-[8px] font-black uppercase leading-none tracking-[0.12em]',
+                  missionPaused ? 'text-amber-800' : 'text-[#4c1d95]',
+                ].join(' ')}
+              >
+                {missionPaused ? 'Timer paused' : 'Mission returns in'}
+              </p>
+              <p className="mt-1 text-[20px] font-black leading-none tracking-[-0.06em] text-[#1c1340] tabular-nums">
+                {backIn}
+              </p>
+              <p className="mt-1 text-[9px] font-extrabold leading-none text-[#7c3aed]">View missions &gt;</p>
+            </div>
+          </div>
+          <AdventureRewardsRow />
+          <div className="mt-2.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+            <p className="truncate text-[10px] font-black uppercase tracking-[0.08em] text-zinc-500">
+              {missionPaused ? 'Paused' : `${Math.round(progress * 100)}% complete`}
+            </p>
+            <button
+              type="button"
+              onClick={() => setPayPromptOpen(true)}
+              disabled={!canEndEarly}
+              className={
+                [
+                  'shrink-0 rounded-2xl border-b-[4px] px-4 py-2 text-center text-[10px] font-black uppercase leading-none tracking-[0.06em] text-white shadow-none transition-[transform,border-bottom-width] duration-150 disabled:opacity-65',
+                  canEndEarly
+                    ? 'border-[#090514] bg-gradient-to-b from-[#33225f] to-[#1c1340] active:translate-y-0.5 active:border-b-2'
+                    : 'cursor-not-allowed border-zinc-400 bg-gradient-to-b from-zinc-300 to-zinc-400 text-white/85',
+                ].join(' ')
+              }
+              aria-label={canEndEarly ? 'End adventure early' : 'Add funds to end adventure early'}
+            >
+              End
+            </button>
+          </div>
+        </div>
+      </section>
+      {payPromptOpen
+        ? createPortal(
+            <div className="fixed inset-0 z-[95] flex items-end justify-center bg-[#120822]/45 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] backdrop-blur-sm">
+              <button
+                type="button"
+                className="absolute inset-0 cursor-default"
+                aria-label="Cancel payment"
+                onClick={() => setPayPromptOpen(false)}
+              />
+              <div className="relative z-[1] w-full max-w-sm rounded-3xl bg-white p-4 text-center text-[#1c1340] shadow-[0_22px_54px_-22px_rgba(30,15,80,0.65)] ring-1 ring-violet-100">
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#7c3aed]">Finish mission early</p>
+                <h3 className="mt-2 text-[20px] font-black leading-tight tracking-[-0.04em]">Pay $0.99?</h3>
+                <p className="mx-auto mt-1 max-w-[15rem] text-[12px] font-semibold leading-snug text-zinc-600">
+                  Fetch will return from the {ADVENTURE_THEME_TITLE.toLowerCase()} mission now.
+                </p>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPayPromptOpen(false)}
+                    className="rounded-2xl bg-zinc-100 px-4 py-3 text-[12px] font-black uppercase tracking-[0.06em] text-zinc-700 ring-1 ring-zinc-200 active:scale-[0.98]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPayPromptOpen(false)
+                      onEndEarly()
+                    }}
+                    className={[feed3dPurpleCta, 'rounded-2xl px-4 py-3 text-[12px] font-black uppercase tracking-[0.06em]'].join(' ')}
+                  >
+                    Pay now
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
+  )
+}
+
+function StartAdventureBar({
+  onStart,
+  canStartMission,
+  petName,
+}: {
+  onStart: () => void
+  canStartMission: boolean
+  petName: string
+}) {
+  return (
     <section
       className="-mx-0.5 px-0.5"
-      aria-label={`Adventure in progress. Back in ${backIn}.`}
+      aria-label={canStartMission ? 'Start adventure' : 'Start adventure locked until pet is fed'}
       data-fetch-tour-target="adventure"
     >
       <div className="overflow-visible rounded-3xl bg-white p-2.5 shadow-[0_12px_28px_-18px_rgba(76,29,149,0.45)] ring-1 ring-violet-200/70">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center text-[#7c3aed]">
-            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M12 3.75a8.25 8.25 0 1 0 0 16.5 8.25 8.25 0 0 0 0-16.5Z"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-              <g>
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  values="-12 12 12; 12 12 12; -12 12 12"
-                  dur="2.4s"
-                  repeatCount="indefinite"
-                />
-                <path
-                  d="m15.25 8.75-1.7 4.8-4.8 1.7 1.7-4.8 4.8-1.7Z"
-                  fill="currentColor"
-                />
-              </g>
-            </svg>
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between gap-3">
-              <p className="truncate text-[14px] font-black leading-none tracking-[-0.01em] text-[#1c1340]">
-                Adventuring
-              </p>
-              <p className="shrink-0 text-[11px] font-bold leading-none text-zinc-500">
-                Back in <span className="font-black tabular-nums text-[#7c3aed]">{backIn}</span>
-              </p>
-            </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-violet-100" aria-hidden>
-              <div
-                className="h-full rounded-full bg-[#7c3aed] transition-[width] duration-500 ease-out"
-                style={{ width: `${Math.round(progress * 100)}%` }}
-              />
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onEndEarly}
-            disabled={!canEndEarly}
-            className={
-              [
-                'shrink-0 rounded-2xl border-b-[4px] px-3 py-1.5 text-center text-[10px] font-black uppercase leading-none tracking-[0.06em] text-white shadow-none transition-[transform,border-bottom-width] duration-150 disabled:opacity-65',
-                canEndEarly
-                  ? 'border-[#090514] bg-gradient-to-b from-[#33225f] to-[#1c1340] active:translate-y-0.5 active:border-b-2'
-                  : 'cursor-not-allowed border-zinc-400 bg-gradient-to-b from-zinc-300 to-zinc-400 text-white/85',
-              ].join(' ')
-            }
-            aria-label={canEndEarly ? 'End adventure early for 99 cents' : 'Add funds to end adventure early'}
-          >
-            <span className="block">End</span>
-            <span className="mt-0.5 block text-[9px] opacity-85">$0.99</span>
-          </button>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function StartAdventureBar({ onStart }: { onStart: () => void }) {
-  return (
-    <section className="-mx-0.5 px-0.5" aria-label="Start adventure" data-fetch-tour-target="adventure">
-      <div className="overflow-visible rounded-3xl bg-white p-2.5 shadow-[0_12px_28px_-18px_rgba(76,29,149,0.45)] ring-1 ring-violet-200/70">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center text-[#7c3aed]">
-            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M12 3.75a8.25 8.25 0 1 0 0 16.5 8.25 8.25 0 0 0 0-16.5Z"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-              <path
-                d="m15.25 8.75-1.7 4.8-4.8 1.7 1.7-4.8 4.8-1.7Z"
-                fill="currentColor"
-              />
-            </svg>
-          </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[14px] font-black leading-none tracking-[-0.01em] text-[#1c1340]">
-              Ready to adventure?
+              Send Fetch on a mission!
             </p>
             <p className="mt-1 text-[11px] font-bold leading-none text-zinc-500">
-              Send Fetch out and start the timer.
+              {canStartMission
+                ? "He'll search for loot while you wait."
+                : `Feed ${petName} first to start a mission.`}
             </p>
           </div>
           <button
             type="button"
-            onClick={onStart}
-            className={[feed3dPurpleCta, 'shrink-0 rounded-2xl px-3 py-2 text-[11px] font-black uppercase tracking-[0.06em]'].join(
-              ' ',
-            )}
-            aria-label="Start adventure"
+            onClick={() => {
+              if (!canStartMission) return
+              onStart()
+            }}
+            disabled={!canStartMission}
+            className={[
+              'min-w-[8.9rem] shrink-0 rounded-2xl px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.06em]',
+              canStartMission
+                ? feed3dPurpleCta
+                : 'cursor-not-allowed border-b-[4px] border-b-zinc-300/80 bg-zinc-100 text-zinc-500 shadow-none',
+            ].join(' ')}
+            aria-label={canStartMission ? 'Start adventure' : `Start mission locked — feed ${petName} first`}
           >
-            Start
+            Start mission
           </button>
         </div>
+        <AdventureRewardsRow />
       </div>
     </section>
   )
@@ -614,7 +1470,13 @@ function AdventureLevelUpCelebration({
   )
 }
 
-function BidWarsAdventurePromo({ onJoin }: { onJoin?: () => void }) {
+function BidWarsAdventurePromo({
+  onJoin,
+  bannerSrc,
+}: {
+  onJoin?: () => void
+  bannerSrc: string
+}) {
   return (
     <section className="px-2" aria-label="Bid Wars" data-fetch-tour-target="bidWar">
       <div className="flex items-center gap-2.5 rounded-3xl bg-white p-2.5">
@@ -628,7 +1490,7 @@ function BidWarsAdventurePromo({ onJoin }: { onJoin?: () => void }) {
         </button>
         <div className="min-w-0 flex-1 overflow-hidden rounded-2xl bg-white">
           <img
-            src={fetchitBidWarsBannerUrl}
+            src={bannerSrc}
             alt="Bid Wars. Compete. Bid. Win."
             className="block aspect-[2/1] w-full select-none object-cover object-left"
             draggable={false}
@@ -1850,10 +2712,21 @@ function HomeShellForYouFeedInner({
   const [demoGems, setDemoGems] = useState(() => loadDemoGems())
   const [dailyRewardState, setDailyRewardState] = useState<DailyRewardState>(() => loadDailyRewardState())
   const [dailyGemFx, setDailyGemFx] = useState<DailyGemFxState | null>(null)
+  const [petProfile, setPetProfile] = useState<PetProfileState>(() => {
+    const loaded = loadPetProfile()
+    if (!embedded) return loaded
+    const hungry = { ...loaded, fedUntil: 0, lastFedAt: Date.now() }
+    savePetProfile(hungry)
+    return hungry
+  })
+  const [petEditorOpen, setPetEditorOpen] = useState(false)
+  const [nowMs, setNowMs] = useState(() => Date.now())
   const [gemGamesOpen, setGemGamesOpen] = useState(false)
   const [adventureRunSeq, setAdventureRunSeq] = useState(0)
   const [adventureElapsedSeconds, setAdventureElapsedSeconds] = useState(0)
+  const [petCelebrationSeq, setPetCelebrationSeq] = useState(0)
   const demoGemsRef = useRef(demoGems)
+  const rankUpLockRef = useRef(false)
   const adventureGemMinuteRef = useRef(0)
   const gemsAnimRef = useRef<number | null>(null)
   const [firstGiftOpen, setFirstGiftOpen] = useState(false)
@@ -1861,7 +2734,24 @@ function HomeShellForYouFeedInner({
   const tourRootRef = useRef<HTMLDivElement | null>(null)
   const heroRef = useRef<HTMLDivElement | null>(null)
   const demoFundsLabel = `$${Math.floor(demoFundsCents / 100).toLocaleString('en-AU')}`
-  const heroDisplayName = useMemo(() => loadSession()?.displayName?.trim() || 'Hayden', [])
+  const [heroDisplayName, setHeroDisplayName] = useState(() => {
+    const s = loadSession()?.displayName?.trim()
+    if (s && s.length >= 2) return s.slice(0, 48)
+    return loadStoredHeroDisplayName() ?? 'Hayden'
+  })
+  const [heroGender, setHeroGender] = useState<HeroGender>(() => loadStoredHeroGender())
+
+  function handleHeroDisplayNameChange(name: string) {
+    const next = name.slice(0, 48)
+    setHeroDisplayName(next)
+    const t = next.trim()
+    if (t.length >= 2) persistHeroDisplayName(t)
+  }
+
+  function handleHeroGenderChange(next: HeroGender) {
+    setHeroGender(next)
+    persistHeroGender(next)
+  }
 
   useEffect(() => {
     if (!embedded || !isAdventuring) return undefined
@@ -1877,6 +2767,11 @@ function HomeShellForYouFeedInner({
   )
 
   useEffect(() => {
+    const id = window.setInterval(() => setNowMs(Date.now()), 1000)
+    return () => window.clearInterval(id)
+  }, [])
+
+  useEffect(() => {
     demoGemsRef.current = demoGems
   }, [demoGems])
 
@@ -1885,6 +2780,7 @@ function HomeShellForYouFeedInner({
     adventureGemMinuteRef.current = 0
     setAdventureRunSeq((s) => s + 1)
     setIsAdventuring(true)
+    playAdventureTrumpets()
     if (!hasClaimedFirstAdventureGift()) {
       setFirstGiftOpen(true)
     }
@@ -1965,7 +2861,97 @@ function HomeShellForYouFeedInner({
     spawnGemRewardFx(DAILY_REWARD_GEMS, sourceEl)
   }
 
-  const isAdventureHourOneDone = isAdventuring && adventureElapsedSeconds >= 60 * 60
+  function handlePetEditorNameChange(petId: FetchPetId, name: string) {
+    const nextName = name.slice(0, 16)
+    setPetProfile((current) => {
+      const next = {
+        ...current,
+        names: {
+          ...current.names,
+          [petId]: nextName,
+        },
+      }
+      savePetProfile(next)
+      return next
+    })
+  }
+
+  function handleSelectPet(petId: FetchPetId) {
+    setPetProfile((current) => {
+      const next = {
+        ...current,
+        selectedPetId: petId,
+      }
+      savePetProfile(next)
+      return next
+    })
+    playUiFeedback('coin_hit')
+  }
+
+  function handlePetRankUpSelectedPet() {
+    if (rankUpLockRef.current) return
+    const petId = petProfile.selectedPetId
+    const currentRank = normalizePetRank(petProfile.ranks[petId])
+    if (currentRank >= PET_RANK_MAX) return
+    const cost = petRankUpGemCost(currentRank)
+    const gems = demoGemsRef.current
+    if (gems < cost) return
+    rankUpLockRef.current = true
+    const nextGems = gems - cost
+    demoGemsRef.current = nextGems
+    setDemoGems(nextGems)
+    saveDemoGems(nextGems)
+    setPetProfile((current) => {
+      const r = normalizePetRank(current.ranks[petId])
+      const next = {
+        ...current,
+        ranks: {
+          ...current.ranks,
+          [petId]: Math.min(PET_RANK_MAX, r + 1),
+        },
+      }
+      savePetProfile(next)
+      return next
+    })
+    playUiFeedback('coin_hit')
+    pulseHomeGemIcon()
+    queueMicrotask(() => {
+      rankUpLockRef.current = false
+    })
+  }
+
+  function handleFeedPet() {
+    if (petProfile.fedUntil > nowMs) return
+    const currentPet = FETCH_HOME_PETS.find((pet) => pet.id === petProfile.selectedPetId) ?? FETCH_HOME_PETS[0]
+    const next: PetProfileState = {
+      ...petProfile,
+      names: {
+        ...petProfile.names,
+        [petProfile.selectedPetId]: petProfile.names[petProfile.selectedPetId]?.trim() || currentPet.defaultName,
+      },
+      fedUntil: nowMs + PET_FEED_COOLDOWN_MS,
+      lastFedAt: nowMs,
+    }
+    setPetProfile(next)
+    savePetProfile(next)
+    playUiFeedback('gems_collect')
+    playConfettiPops()
+    setPetCelebrationSeq((seq) => seq + 1)
+    window.setTimeout(() => playWinFanfare(), 120)
+  }
+
+  const petFeedRemainingMs = Math.max(0, petProfile.fedUntil - nowMs)
+  const isPetFed = petFeedRemainingMs > 0
+  const petFeedTimerLabel = isPetFed ? formatTimerLabel(petFeedRemainingMs) : 'Ready'
+  const petHungrySinceMs = petProfile.lastFedAt > 0 ? Math.max(petProfile.lastFedAt, petProfile.fedUntil) : nowMs
+  const petHungerStage: 'hungry' | 'risk' =
+    !isPetFed && nowMs - petHungrySinceMs >= PET_STARVATION_RISK_AFTER_MS ? 'risk' : 'hungry'
+  const activePet = FETCH_HOME_PETS.find((pet) => pet.id === petProfile.selectedPetId) ?? FETCH_HOME_PETS[0]
+  const activePetName = petProfile.names[activePet.id]?.trim() || activePet.defaultName
+  const activePetRank = normalizePetRank(petProfile.ranks[activePet.id])
+  const useWomenHomeBanner = heroGender === 'female' && !isAdventuring
+  const heroPetFedBannerUrl = useWomenHomeBanner ? fetchitHomeWomenBannerUrl : activePet.fedBannerUrl
+  const heroPetHungryBannerUrl = useWomenHomeBanner ? fetchitHomeWomenHungryBannerUrl : activePet.hungryBannerUrl
 
   useEffect(() => {
     if (!embedded || !isAdventuring) return
@@ -2003,45 +2989,83 @@ function HomeShellForYouFeedInner({
           <FetchitWelcomeHero
             displayName={heroDisplayName}
             isAdventuring={isAdventuring}
-            isAdventureHourOneDone={isAdventureHourOneDone}
             adventureLevel={adventureProgress.level}
-            fundsCents={demoFundsCents}
+            adventureXp={adventureProgress.xp}
             fundsLabel={demoFundsLabel}
             gemsCount={demoGems}
             notificationsCount={1}
+            petName={activePetName}
+            petId={activePet.id}
+            heroGender={heroGender}
+            petAvatarUrl={activePet.avatarUrl}
+            petFedBannerUrl={heroPetFedBannerUrl}
+            petHungryBannerUrl={heroPetHungryBannerUrl}
+            petFeedTimerLabel={petFeedTimerLabel}
+            petRank={activePetRank}
+            petHungerStage={petHungerStage}
+            isPetFed={isPetFed}
+            canFeedPet={!isPetFed}
+            petCelebrationSeq={petCelebrationSeq}
             onAddDemoFunds={() => setDemoFundsCents((cents) => cents + 1000)}
             onViewBackpack={() => setBackpackStorageOpen(true)}
             onOpenGemGames={() => setGemGamesOpen(true)}
+            onOpenPetEdit={() => setPetEditorOpen(true)}
+            onFeedPet={handleFeedPet}
           />
-          <div className="pointer-events-none absolute inset-x-2 bottom-0 z-[2] translate-y-[72%] sm:inset-x-3 sm:translate-y-[68%]">
-            <div className="pointer-events-auto">
-              {isAdventuring ? (
-                <AdventureReturnBar
-                  key={adventureRunSeq}
-                  canEndEarly={demoFundsCents >= EARLY_ADVENTURE_END_COST_CENTS}
-                  onElapsedSeconds={setAdventureElapsedSeconds}
-                  onEndEarly={() => {
-                    if (demoFundsCents < EARLY_ADVENTURE_END_COST_CENTS) return
-                    setDemoFundsCents((cents) => Math.max(0, cents - EARLY_ADVENTURE_END_COST_CENTS))
-                    setAdventureElapsedSeconds(0)
-                    setIsAdventuring(false)
-                  }}
-                  onComplete={() => {
-                    setAdventureElapsedSeconds(0)
-                    setIsAdventuring(false)
-                  }}
-                />
-              ) : (
-                <StartAdventureBar onStart={handleStartAdventure} />
-              )}
-            </div>
+          <div className="mt-3 px-2 sm:px-3">
+            {isAdventuring ? (
+              <AdventureReturnBar
+                key={adventureRunSeq}
+                isPetFed={isPetFed}
+                petName={activePetName}
+                canEndEarly={demoFundsCents >= EARLY_ADVENTURE_END_COST_CENTS}
+                onElapsedSeconds={setAdventureElapsedSeconds}
+                onEndEarly={() => {
+                  if (demoFundsCents < EARLY_ADVENTURE_END_COST_CENTS) return
+                  setDemoFundsCents((cents) => Math.max(0, cents - EARLY_ADVENTURE_END_COST_CENTS))
+                  setAdventureElapsedSeconds(0)
+                  setIsAdventuring(false)
+                }}
+                onComplete={() => {
+                  setAdventureElapsedSeconds(0)
+                  setIsAdventuring(false)
+                }}
+              />
+            ) : (
+              <StartAdventureBar
+                canStartMission={isPetFed}
+                petName={activePetName}
+                onStart={handleStartAdventure}
+              />
+            )}
           </div>
         </div>
-        <div className="mt-[4.5rem] sm:mt-20">
+        <PetEditSheet
+          open={petEditorOpen}
+          pets={FETCH_HOME_PETS}
+          selectedPetId={petProfile.selectedPetId}
+          petNames={petProfile.names}
+          petRanks={petProfile.ranks}
+          userDisplayName={heroDisplayName}
+          heroGender={heroGender}
+          gemsCount={demoGems}
+          isPetFed={isPetFed}
+          petFeedTimerLabel={petFeedTimerLabel}
+          onSelectPet={handleSelectPet}
+          onPetNameChange={handlePetEditorNameChange}
+          onUserDisplayNameChange={handleHeroDisplayNameChange}
+          onHeroGenderChange={handleHeroGenderChange}
+          onRankUpSelectedPet={handlePetRankUpSelectedPet}
+          onClose={() => setPetEditorOpen(false)}
+        />
+        <div className="mt-3">
           <DailyRewardTaskCards completed={dailyRewardState.completed} onClaim={handleCompleteDailyRewardTask} />
         </div>
         <div className="mt-2">
-          <BidWarsAdventurePromo onJoin={onJoinBidWar ?? onOpenMarketplace} />
+          <BidWarsAdventurePromo
+            onJoin={onJoinBidWar ?? onOpenMarketplace}
+            bannerSrc={heroGender === 'female' ? fetchitBidWarsBannerFemaleUrl : fetchitBidWarsBannerUrl}
+          />
         </div>
         <div className="mt-3 flex flex-col gap-3 px-2 pt-1">
           <div className="h-px w-full bg-violet-200/70" aria-hidden />
@@ -2051,6 +3075,7 @@ function HomeShellForYouFeedInner({
               reels={homeLiveNowReels}
               onOpenDrops={onOpenDrops}
               onOpenLive={onOpenLiveStream}
+              heroGender={heroGender}
             />
           </section>
           <div className="h-px w-full bg-violet-200/70" aria-hidden />

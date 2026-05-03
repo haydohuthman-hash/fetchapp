@@ -723,11 +723,6 @@ html[data-fetch-theme='light'] .fetch-home-vision .fetch-home-booking-sheet__she
   box-shadow: none;
 }
 
-html[data-fetch-theme='light'] .fetch-home-vision .fetch-home-intent-bottom-nav {
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-
 /* Speech bubble */
 html[data-fetch-theme='light'] .fetch-home-orb-speech-bubble {
   background: rgba(255, 255, 255, 0.92);

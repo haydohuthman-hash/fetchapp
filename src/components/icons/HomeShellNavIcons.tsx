@@ -5,8 +5,6 @@
  * when active. All icons inherit `currentColor` from the dock.
  */
 
-import { useId } from 'react'
-
 type IconProps = {
   className?: string
   /** Tighter hit areas (nav map chrome): slightly smaller artwork via viewBox crop. */
@@ -24,68 +22,30 @@ const NAV_OUTLINE_STROKE = 1.6
 const NAV_OUTLINE_STROKE_ACTIVE = 2.05
 
 /**
- * Two rounded pill eyes — outline when inactive, filled eyes when active.
+ * Home tab — outline when inactive, solid house when active.
  */
 export function FetchEyesHomeIcon({ className, tight, active = true }: IconProps) {
-  const vb = tight ? '1 5 22 15' : '0 0 24 24'
+  const vb = tight ? '2 2 20 20' : '0 0 24 24'
   const stroke = active ? NAV_OUTLINE_STROKE_ACTIVE : NAV_OUTLINE_STROKE
-  const clipId = `fetch-eyes-half-${useId()}`
+  if (active) {
+    return (
+      <svg className={className} viewBox={vb} fill="none" aria-hidden>
+        <path
+          fill="currentColor"
+          d="M4.25 11.15 12 4.45l7.75 6.7v8.15c0 .85-.7 1.55-1.55 1.55h-4.15v-5.7h-4.1v5.7H5.8c-.85 0-1.55-.7-1.55-1.55v-8.15Z"
+        />
+      </svg>
+    )
+  }
   return (
     <svg className={className} viewBox={vb} fill="none" aria-hidden>
-      {active ? (
-        <defs>
-          <clipPath id={clipId}>
-            <rect x="0" y="12" width="24" height="12" />
-          </clipPath>
-        </defs>
-      ) : null}
-      {/* Left eye */}
-      {active ? (
-        <rect
-          x="2.5"
-          y="8"
-          width="8"
-          height="8"
-          rx="4"
-          fill="currentColor"
-          clipPath={`url(#${clipId})`}
-        />
-      ) : null}
-      <rect
-        x="2.5"
-        y="8"
-        width="8"
-        height="8"
-        rx="4"
+      <path
+        d="M4.25 11.15 12 4.45l7.75 6.7v8.15c0 .85-.7 1.55-1.55 1.55h-4.15v-5.7h-4.1v5.7H5.8c-.85 0-1.55-.7-1.55-1.55v-8.15Z"
         fill="none"
         stroke="currentColor"
         strokeWidth={stroke}
+        strokeLinejoin="round"
       />
-      {/* Right eye */}
-      {active ? (
-        <rect
-          x="13.5"
-          y="8"
-          width="8"
-          height="8"
-          rx="4"
-          fill="currentColor"
-          clipPath={`url(#${clipId})`}
-        />
-      ) : null}
-      <rect
-        x="13.5"
-        y="8"
-        width="8"
-        height="8"
-        rx="4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={stroke}
-      />
-      {/* Pupils remain visible in both states */}
-      <circle cx="6.5" cy="10.85" r="1.25" fill="currentColor" />
-      <circle cx="17.5" cy="10.85" r="1.25" fill="currentColor" />
     </svg>
   )
 }
@@ -95,25 +55,21 @@ export function FetchEyesHomeIcon({ className, tight, active = true }: IconProps
  */
 export function FetchSearchNavIcon({ className, active = true }: IconProps) {
   const stroke = active ? NAV_OUTLINE_STROKE_ACTIVE : NAV_OUTLINE_STROKE
-  const clipId = `fetch-search-half-${useId()}`
+  if (active) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+        <circle cx="10.7" cy="10.7" r="6.8" fill="currentColor" />
+        <path
+          d="M15.7 15.7 20.55 20.55"
+          stroke="currentColor"
+          strokeWidth="3.15"
+          strokeLinecap="round"
+        />
+      </svg>
+    )
+  }
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      {active ? (
-        <defs>
-          <clipPath id={clipId}>
-            <rect x="0" y="11" width="24" height="13" />
-          </clipPath>
-        </defs>
-      ) : null}
-      {active ? (
-        <circle
-          cx="10.75"
-          cy="10.75"
-          r="6.5"
-          fill="currentColor"
-          clipPath={`url(#${clipId})`}
-        />
-      ) : null}
       <circle
         cx="10.75"
         cy="10.75"
@@ -137,23 +93,21 @@ export function FetchSearchNavIcon({ className, active = true }: IconProps) {
  */
 export function FetchActivityNavIcon({ className, active = true }: IconProps) {
   const stroke = active ? NAV_OUTLINE_STROKE_ACTIVE : NAV_OUTLINE_STROKE
-  const clipId = `fetch-activity-half-${useId()}`
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      {active ? (
-        <defs>
-          <clipPath id={clipId}>
-            <rect x="0" y="11.5" width="24" height="12.5" />
-          </clipPath>
-        </defs>
-      ) : null}
-      {active ? (
+  if (active) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
         <path
           d="M5.5 5.5h13c1.1 0 2 .9 2 2v6.4c0 1.1-.9 2-2 2h-4.4l-3.4 2.7v-2.7H5.5c-1.1 0-2-.9-2-2V7.5c0-1.1.9-2 2-2Z"
           fill="currentColor"
-          clipPath={`url(#${clipId})`}
         />
-      ) : null}
+        <circle cx="8.5" cy="10.1" r="1.05" fill="#ffffff" fillOpacity="0.86" />
+        <circle cx="12" cy="10.1" r="1.05" fill="#ffffff" fillOpacity="0.86" />
+        <circle cx="15.5" cy="10.1" r="1.05" fill="#ffffff" fillOpacity="0.86" />
+      </svg>
+    )
+  }
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M5.5 5.5h13c1.1 0 2 .9 2 2v6.4c0 1.1-.9 2-2 2h-4.4l-3.4 2.7v-2.7H5.5c-1.1 0-2-.9-2-2V7.5c0-1.1.9-2 2-2Z"
         fill="none"
@@ -173,25 +127,19 @@ export function FetchActivityNavIcon({ className, active = true }: IconProps) {
  */
 export function FetchProfileNavIcon({ className, active = true }: IconProps) {
   const stroke = active ? NAV_OUTLINE_STROKE_ACTIVE : NAV_OUTLINE_STROKE
-  const clipId = `fetch-profile-half-${useId()}`
+  if (active) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+        <circle cx="12" cy="8.55" r="3.75" fill="currentColor" />
+        <path
+          d="M5.2 20.05v-0.45c0-3.2 2.75-5.75 6.25-5.75h1.1c3.5 0 6.25 2.55 6.25 5.75v0.45c0 .45-.35.8-.8.8H6c-.45 0-.8-.35-.8-.8Z"
+          fill="currentColor"
+        />
+      </svg>
+    )
+  }
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      {active ? (
-        <defs>
-          <clipPath id={clipId}>
-            <rect x="0" y="12" width="24" height="12" />
-          </clipPath>
-        </defs>
-      ) : null}
-      {active ? (
-        <circle
-          cx="12"
-          cy="8.6"
-          r="3.7"
-          fill="currentColor"
-          clipPath={`url(#${clipId})`}
-        />
-      ) : null}
       <circle
         cx="12"
         cy="8.6"
@@ -200,13 +148,6 @@ export function FetchProfileNavIcon({ className, active = true }: IconProps) {
         stroke="currentColor"
         strokeWidth={stroke}
       />
-      {active ? (
-        <path
-          d="M5.2 19.85v-0.4c0-3.1 2.65-5.6 6.1-5.6h1.4c3.45 0 6.1 2.5 6.1 5.6v0.4"
-          fill="currentColor"
-          clipPath={`url(#${clipId})`}
-        />
-      ) : null}
       <path
         d="M5.2 19.85v-0.4c0-3.1 2.65-5.6 6.1-5.6h1.4c3.45 0 6.1 2.5 6.1 5.6v0.4"
         fill="none"

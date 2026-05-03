@@ -6851,11 +6851,19 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
   border-radius: 0;
-  background: #faf8ff;
-  box-shadow:
-    0 -1px 0 rgba(76, 29, 149, 0.06),
-    0 6px 14px -6px rgba(76, 29, 149, 0.08);
+  border-top: 1px solid rgb(237 233 254);
+  background-color: rgb(255 255 255 / 0.95);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: none;
   box-sizing: border-box;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
+  .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
+    background-color: rgb(255 255 255 / 0.85);
+  }
 }
 
 /* Auctions / marketplace: mask feed behind floating pill + stronger nav shadow */
@@ -6867,10 +6875,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 }
 
 .fetch-home-marketplace-page .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav {
-  box-shadow:
-    0 12px 24px -10px rgba(0, 0, 0, 0.28),
-    0 4px 12px -8px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
 }
 
 /* Marketplace browse: light sheet */
@@ -7428,10 +7433,10 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   display: block;
   max-width: 100%;
   padding: 0 0.08rem;
-  font-size: 0.5625rem;
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: 0.01em;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: 0.012em;
   text-align: center;
   text-wrap: balance;
   /* Match icon weight — full strength so the dock never reads as "ghosted". */
@@ -7454,8 +7459,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 }
 
 .fetch-home-intent-bottom-nav__icon svg {
-  width: 2.28rem;
-  height: 2.28rem;
+  width: 2.04rem;
+  height: 2.04rem;
   flex-shrink: 0;
   transition:
     width 0.2s ease,
@@ -7464,8 +7469,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 }
 
 .fetch-home-intent-bottom-nav__icon--active svg {
-  width: 2.52rem;
-  height: 2.52rem;
+  width: 2.2rem;
+  height: 2.2rem;
 }
 
 /* Drops active: slightly larger flame */
@@ -7479,8 +7484,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.28rem;
-  height: 2.28rem;
+  width: 2.04rem;
+  height: 2.04rem;
   line-height: 0;
 }
 
@@ -7515,14 +7520,25 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   outline-offset: 2px;
 }
 
-/* Home / shop / chat / reels dock: light bar, purple active. */
+/* Home / shop / chat / reels dock: frosted bar (matches Mystery Flip overlay nav). */
 .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
   border-radius: 0;
-  background: #faf8ff;
-  box-shadow: 0 -1px 0 rgba(76, 29, 149, 0.06);
+  border-top: 1px solid rgb(237 233 254);
+  background-color: rgb(255 255 255 / 0.95);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: none;
   box-sizing: border-box;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav,
+  .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
+  .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
+    background-color: rgb(255 255 255 / 0.85);
+  }
 }
 
 /* Docked shell: full-strength inactive icons (NOT faded), bright purple active. */
@@ -7562,34 +7578,43 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   color: #4c1d95 !important;
 }
 
-/* Phone home: docked bottom nav — light bar, purple active. */
+/* Phone home: docked bottom nav — frosted bar (matches Mystery Flip). */
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
   width: 100% !important;
   margin: 0 !important;
-  min-height: 3.2rem !important;
-  border-radius: 2rem 2rem 0 0 !important;
+  min-height: calc(3.65rem + env(safe-area-inset-bottom, 0px)) !important;
+  border-radius: 0 !important;
   position: relative;
   overflow: visible !important;
-  background: #faf8ff !important;
-  box-shadow: 0 -1px 0 rgba(76, 29, 149, 0.06) !important;
   border: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  border-top: 1px solid rgb(237 233 254) !important;
+  background-color: rgb(255 255 255 / 0.95) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+  box-shadow: none !important;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav,
+  .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
+  .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
+    background-color: rgb(255 255 255 / 0.85) !important;
+  }
 }
 
 /* Compact dock (4 tabs): shorter bar + slightly smaller icons. */
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav--compact,
 .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav--compact,
 .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav--compact {
-  min-height: calc(3.95rem + env(safe-area-inset-bottom, 0px)) !important;
-  padding-top: 0.18rem !important;
-  padding-bottom: max(0.1rem, env(safe-area-inset-bottom, 0px)) !important;
+  min-height: calc(3.65rem + env(safe-area-inset-bottom, 0px)) !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px)) !important;
   justify-content: center;
   column-gap: 0.625rem;
-  padding-left: max(0.75rem, env(safe-area-inset-left, 0px)) !important;
-  padding-right: max(0.75rem, env(safe-area-inset-right, 0px)) !important;
+  padding-left: max(0.5rem, env(safe-area-inset-left, 0px)) !important;
+  padding-right: max(0.5rem, env(safe-area-inset-right, 0px)) !important;
 }
 
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon,
@@ -7614,8 +7639,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   .fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav__icon
   svg {
-  width: 1.82rem !important;
-  height: 1.82rem !important;
+  width: 1.56rem !important;
+  height: 1.56rem !important;
 }
 
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon--active svg,
@@ -7626,8 +7651,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   .fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav__icon--active
   svg {
-  width: 2.02rem !important;
-  height: 2.02rem !important;
+  width: 1.72rem !important;
+  height: 1.72rem !important;
 }
 
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer
@@ -7669,8 +7694,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
    with the side tabs vertically centered (icons read higher in the dock). */
 .fetch-home-phone-stage .fetch-home-intent-bottom-nav--compact.fetch-home-intent-bottom-nav--with-fab {
   align-items: center !important;
-  padding-top: 0.35rem !important;
-  padding-bottom: max(0.55rem, env(safe-area-inset-bottom, 0px)) !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px)) !important;
 }
 
 /* Wider gap between dock items: lay icons out at intrinsic width and let the
@@ -7678,8 +7703,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-intent-bottom-nav--compact {
   justify-content: space-evenly !important;
   column-gap: 0.55rem;
-  padding-left: max(0.85rem, env(safe-area-inset-left, 0px));
-  padding-right: max(0.85rem, env(safe-area-inset-right, 0px));
+  padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+  padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
 }
 
 .fetch-home-intent-bottom-nav--compact > .fetch-home-intent-bottom-nav__icon {
@@ -7692,8 +7717,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 @media (min-width: 420px) {
   .fetch-home-intent-bottom-nav--compact {
     column-gap: 0.85rem;
-    padding-left: max(1.15rem, env(safe-area-inset-left, 0px));
-    padding-right: max(1.15rem, env(safe-area-inset-right, 0px));
+    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
   }
   .fetch-home-intent-bottom-nav--compact > .fetch-home-intent-bottom-nav__icon {
     min-width: 3.45rem;
@@ -7701,6 +7726,66 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 }
 
 /* Center FAB: purple orb (lifted) + “Sell” caption aligned with other tabs */
+.fetch-home-intent-bottom-nav__fab {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent !important;
+  color: inherit;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fetch-home-intent-bottom-nav__fab-stack {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+}
+
+.fetch-home-intent-bottom-nav__fab-orb {
+  display: flex;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transform: translateY(-0.95rem);
+  border-radius: 9999px;
+  border: 3px solid #ffffff;
+  background: linear-gradient(158deg, #8b5cf6 0%, #6d28d9 48%, #4c1d95 100%) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 14px 24px -14px rgba(76, 29, 149, 0.85),
+    0 7px 12px -9px rgba(17, 24, 39, 0.55),
+    inset 0 2px 4px rgba(255, 255, 255, 0.52),
+    inset 0 -8px 11px rgba(45, 13, 102, 0.45);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.2s ease;
+}
+
+.fetch-home-intent-bottom-nav__fab:active .fetch-home-intent-bottom-nav__fab-orb {
+  transform: translateY(-0.95rem) scale(0.95);
+  box-shadow:
+    0 8px 14px -10px rgba(76, 29, 149, 0.78),
+    inset 0 1px 2px rgba(255, 255, 255, 0.42),
+    inset 0 -6px 9px rgba(45, 13, 102, 0.52);
+}
+
 .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab {
   position: relative;
   z-index: 4;
@@ -7732,8 +7817,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 
 .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab-orb {
   display: flex;
-  width: 3.1rem;
-  height: 3.1rem;
+  width: 3rem;
+  height: 3rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -7741,11 +7826,17 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   /* Lift orb above the bar; less negative = sits lower on screen */
   transform: translateY(-0.95rem);
   border-radius: 9999px;
-  border: 4px solid #ffffff;
-  background-color: #4c1d95 !important;
+  border: 3px solid #ffffff;
+  background: linear-gradient(158deg, #8b5cf6 0%, #6d28d9 48%, #4c1d95 100%) !important;
   color: #ffffff !important;
-  box-shadow: none;
-  transition: transform 0.18s ease;
+  box-shadow:
+    0 14px 24px -14px rgba(76, 29, 149, 0.85),
+    0 7px 12px -9px rgba(17, 24, 39, 0.55),
+    inset 0 2px 4px rgba(255, 255, 255, 0.52),
+    inset 0 -8px 11px rgba(45, 13, 102, 0.45);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.2s ease;
 }
 
 @media (min-width: 640px) {
@@ -7758,6 +7849,10 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 
 .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab:active .fetch-home-intent-bottom-nav__fab-orb {
   transform: translateY(-0.95rem) scale(0.95);
+  box-shadow:
+    0 8px 14px -10px rgba(76, 29, 149, 0.78),
+    inset 0 1px 2px rgba(255, 255, 255, 0.42),
+    inset 0 -6px 9px rgba(45, 13, 102, 0.52);
 }
 
 @media (min-width: 640px) {
@@ -7867,14 +7962,25 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   width: 100%;
   max-width: 1024px;
   z-index: 80;
-  background: #faf8ff;
+  border-radius: 0;
   border: none;
-  box-shadow: 0 -1px 0 rgba(76, 29, 149, 0.06);
-  border-radius: 2rem 2rem 0 0;
-  min-height: calc(3.95rem + env(safe-area-inset-bottom, 0px)) !important;
-  padding-top: 0.18rem !important;
-  padding-bottom: max(0.1rem, env(safe-area-inset-bottom, 0px)) !important;
+  border-top: 1px solid rgb(237 233 254);
+  background-color: rgb(255 255 255 / 0.95);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: none;
+  min-height: calc(3.65rem + env(safe-area-inset-bottom, 0px)) !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px)) !important;
+  padding-left: max(0.5rem, env(safe-area-inset-left, 0px)) !important;
+  padding-right: max(0.5rem, env(safe-area-inset-right, 0px)) !important;
   overflow: visible !important;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  .fetch-app-bottom-nav.fetch-home-intent-bottom-nav {
+    background-color: rgb(255 255 255 / 0.85);
+  }
 }
 
 .fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon {
@@ -7884,25 +7990,25 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 }
 
 .fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon svg {
-  width: 1.82rem !important;
-  height: 1.82rem !important;
+  width: 1.56rem !important;
+  height: 1.56rem !important;
 }
 
 .fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav__icon--active
   svg {
-  width: 2.02rem !important;
-  height: 2.02rem !important;
+  width: 1.72rem !important;
+  height: 1.72rem !important;
 }
 
 .fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__label {
   display: block;
   max-width: 100%;
   padding: 0 0.08rem;
-  font-size: 0.5625rem;
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: 0.01em;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: 0.012em;
   text-align: center;
   text-wrap: balance;
   color: #1c1340;
@@ -7921,7 +8027,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav__fab
   .fetch-home-intent-bottom-nav__label {
-  display: none !important;
+  display: block !important;
+  margin-top: -0.62rem;
 }
 
 /* Spacer hook — pages can add `pb-[5.5rem]` themselves, but we also expose this
@@ -7934,13 +8041,13 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
 .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
 .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
-  color: #ffffff !important;
+  color: #4c1d95 !important;
 }
 
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
 .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
 .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
-  color: #ffffff !important;
+  color: #4c1d95 !important;
 }
 
 /* Active tab: intense white glow from bottom (tight spread; icon paints above). */
@@ -13392,10 +13499,19 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
 }
 
 .fetch-app-shell--home-light .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab-orb {
-  background-color: var(--fetch-home-primary) !important;
+  background: linear-gradient(
+    158deg,
+    color-mix(in srgb, var(--fetch-home-primary) 68%, #ffffff 32%) 0%,
+    color-mix(in srgb, var(--fetch-home-primary) 88%, #6d28d9 12%) 50%,
+    var(--fetch-home-primary) 100%
+  ) !important;
   color: #ffffff !important;
-  border: 4px solid #ffffff !important;
-  box-shadow: none !important;
+  border: 3px solid #ffffff !important;
+  box-shadow:
+    0 14px 24px -14px rgba(76, 29, 149, 0.85),
+    0 7px 12px -9px rgba(17, 24, 39, 0.55),
+    inset 0 2px 4px rgba(255, 255, 255, 0.52),
+    inset 0 -8px 11px rgba(45, 13, 102, 0.45) !important;
 }
 
 .fetch-app-shell--home-light

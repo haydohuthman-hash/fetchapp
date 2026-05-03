@@ -1,7 +1,8 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CURATED_DROP_REELS } from '../lib/drops/constants'
 import type { DropReel } from '../lib/drops/types'
-import fetchitLiveNoOneOnlineUrl from '../assets/fetchit-live-no-one-online-hero.png'
+import fetchitLiveNoOneOnlineHeroUrl from '../assets/fetchit-live-no-one-online-hero.png'
+import fetchitLiveNoOneOnlineHeroFemaleUrl from '../assets/fetchit-live-no-one-online-hero-female.png'
 import {
   STARTING_SOON_BATTLES,
   applyNewBid,
@@ -135,12 +136,15 @@ export const LiveNowGrid = memo(function LiveNowGrid({
   onOpenLive,
   reels = LIVE_NOW_DEFAULT_EMPTY_REELS,
   onGetNotified,
+  heroGender = 'male',
 }: {
   onOpenDrops: () => void
   onOpenLive?: (reel: DropReel) => void
   /** Currently live drops/reels from your backend; empty shows the offline hero. */
   reels?: readonly DropReel[]
   onGetNotified?: () => void
+  /** Matches home hero gender — swaps offline artwork only. */
+  heroGender?: 'male' | 'female'
 }) {
   const openLive = onOpenLive ?? (() => onOpenDrops())
   const [notifyAck, setNotifyAck] = useState(false)
@@ -150,11 +154,14 @@ export const LiveNowGrid = memo(function LiveNowGrid({
     setNotifyAck(true)
   }, [onGetNotified])
 
+  const offlineHeroSrc =
+    heroGender === 'female' ? fetchitLiveNoOneOnlineHeroFemaleUrl : fetchitLiveNoOneOnlineHeroUrl
+
   if (reels.length === 0) {
     return (
       <div className="flex flex-col items-center gap-4 rounded-2xl bg-white px-3 py-5 dark:bg-zinc-900">
         <img
-          src={fetchitLiveNoOneOnlineUrl}
+          src={offlineHeroSrc}
           alt="No one is live online right now"
           className="mx-auto w-full max-w-[min(100%,26rem)] select-none object-contain"
           draggable={false}

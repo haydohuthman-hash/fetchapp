@@ -548,6 +548,25 @@ export function playGiftPop(): void {
 }
 
 /**
+ * Adventure start — short trumpet call used when Fetch heads out on a mission.
+ */
+export function playAdventureTrumpets(): void {
+  const c = ctx()
+  if (!c) return
+  const m = out(c, 0.78)
+
+  ;([392, 523.3, 659.3] as const).forEach((f, i) => {
+    osc(c, m, f, 0.28, 'sawtooth', 0.2, i * 0.12)
+    osc(c, m, f * 2, 0.2, 'triangle', 0.08, i * 0.12 + 0.02)
+  })
+  ;([783.9, 1046.5] as const).forEach((f, i) => {
+    osc(c, m, f, 0.42, 'sawtooth', 0.18, 0.42 + i * 0.1)
+    osc(c, m, f * 1.5, 0.34, 'sine', 0.07, 0.44 + i * 0.1)
+  })
+  noise(c, m, 0.12, 0.18, 0.04)
+}
+
+/**
  * Bid War horn — big triumphant blast when a listing wins the vote and the
  * full-screen bidding stage takes over. Layered low-brass + impact + sparkle.
  */
