@@ -6,7 +6,6 @@ import {
   awardFirstAdventureXp,
   FIRST_ADVENTURE_MAP_ITEM,
   FIRST_ADVENTURE_XP_REWARD,
-  hasClaimedFirstAdventureGift,
   loadAdventureProgress,
   loadBackpackItems,
   markFirstAdventureGiftClaimed,
@@ -26,24 +25,19 @@ import { type MarketplacePeerBrowseFilter } from './ExploreBrowseBanner'
 import { MyFetchRewardsBanner } from './MyFetchRewardsBanner'
 import { ListingQuickAddPlusCircleIcon } from './icons/HomeShellNavIcons'
 import { ExploreCategoryBrowse } from './ExploreCategoryBrowse'
-import { LiveNowGrid } from './FeedTabViews'
 import type { DropReel } from '../lib/drops/types'
-import fetchitAdventuringBannerUrl from '../assets/fetchit-adventuring-banner.png'
-import fetchitAdventuringHour1BannerUrl from '../assets/fetchit-adventuring-banner-hour-1.png'
-import fetchitAdventuringMaleTigerBannerUrl from '../assets/fetchit-adventuring-banner-male-tiger.png'
-import fetchitAdventuringMaleTigerHungryBannerUrl from '../assets/fetchit-adventuring-banner-male-tiger-hungry.png'
-import fetchitPetAvatarUrl from '../assets/fetchit-pet-avatar.png'
-import fetchitPetFedBannerUrl from '../assets/fetchit-pet-fed-banner.png'
-import fetchitPetHungryBannerUrl from '../assets/fetchit-pet-hungry-banner.png'
-import fetchitPetTigerAvatarUrl from '../assets/fetchit-pet-tiger-avatar.png'
-import fetchitPetTigerFedBannerUrl from '../assets/fetchit-pet-tiger-fed-banner.png'
-import fetchitPetTigerHungryBannerUrl from '../assets/fetchit-pet-tiger-hungry-banner.png'
+import fetchitStartPetUrl from '../assets/fetchit-start-pet.png'
+import fetchitPetFrostUrl from '../assets/fetchit-pet-frost.png'
+import fetchitPetFireUrl from '../assets/fetchit-pet-fire.png'
+import fetchitPetAirUrl from '../assets/fetchit-pet-air.png'
+import fetchitMysteryStarterPodUrl from '../assets/fetchit-mystery-starter-pod.png'
 import fetchitBackpack3dUrl from '../assets/fetchit-backpack-3d.png'
 import fetchitBackpackLevel1To4Url from '../assets/fetchit-backpack-level-1-4.png'
-import fetchitBidWarsBannerUrl from '../assets/fetchit-bid-wars-banner.png'
-import fetchitBidWarsBannerFemaleUrl from '../assets/fetchit-bid-wars-banner-female.png'
-import fetchitHomeWomenBannerUrl from '../assets/fetchit-home-women-banner.png'
-import fetchitHomeWomenHungryBannerUrl from '../assets/fetchit-home-women-hungry-banner.png'
+import fetchitHomePodRoomBgUrl from '../assets/fetchit-home-pod-room-bg.png'
+import fetchitHomeHeroHumanLayerUrl from '../assets/fetchit-home-hero-human-layer.png'
+import fetchitQuickBidWarsUrl from '../assets/fetchit-quick-bid-wars.png'
+import fetchitQuickLiveAuctionsUrl from '../assets/fetchit-quick-live-auctions.png'
+import fetchitQuickShopUrl from '../assets/fetchit-quick-shop.png'
 import heroWalletCashUrl from '../assets/hero-wallet-cash.png'
 import purpleGemIconUrl from '../assets/pokies-icons/gem.png'
 import searchRealSneakersShoesUrl from '../assets/search-categories-real/sneakers-shoes.png'
@@ -51,39 +45,42 @@ import searchRealTradingCardGamesUrl from '../assets/search-categories-real/trad
 import searchRealJewelleryWatchesUrl from '../assets/search-categories-real/jewellery-watches.png'
 import searchRealToysHobbiesUrl from '../assets/search-categories-real/toys-hobbies.png'
 import searchRealElectronicsUrl from '../assets/search-categories-real/electronics.png'
-import { ambientRegisterAdventure } from '../lib/audio/fetchAmbientMusic'
 import { playAdventureTrumpets, playConfettiPops, playWinFanfare } from '../lib/fetchBattleSounds'
 import { depositWallet, useWalletBalanceCents } from '../lib/data'
 import { playUiFeedback } from '../voice/fetchFeedback'
 
-function formatBackInClock(seconds: number): string {
-  const safe = Math.max(0, Math.floor(seconds))
-  const h = Math.floor(safe / 3600)
-  const m = Math.floor((safe % 3600) / 60)
-  const s = safe % 60
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-}
-
-const EARLY_ADVENTURE_END_COST_CENTS = 99
-/** Demo mission length — countdown pauses while the pet is hungry. */
-const ADVENTURE_MISSION_DURATION_SEC = 7 * 60 * 60
-const DAILY_REWARD_GEMS = 100
-const DAILY_REWARD_STORAGE_KEY = 'fetch.home.dailyRewardTasks.v2'
+const DAILY_REWARD_GEMS_STANDARD = 100
+/** Win 3 bids / auctions (demo todo — Claim when finished). */
+const DAILY_WIN_3_BIDS_GEMS = 300
+/** Bonus after claiming every daily todo today. */
+const DAILY_MYSTERY_UNLOCK_GEMS = 200
+const DAILY_REWARD_STORAGE_KEY = 'fetch.home.dailyRewardTasks.v3'
+const DAILY_REWARD_STORAGE_LEGACY_KEY = 'fetch.home.dailyRewardTasks.v2'
 const DEMO_GEMS_STORAGE_KEY = 'fetch.home.demoGems.v1'
 const PET_PROFILE_STORAGE_KEY = 'fetch.home.petProfile.v1'
 const HOME_HERO_DISPLAY_NAME_KEY = 'fetch.home.heroDisplayName.v1'
 const HOME_HERO_GENDER_KEY = 'fetch.home.heroGender.v1'
-const ADVENTURE_THEME_TITLE = 'Jungle'
+const HOME_PET_SLOTS_KEY = 'fetch.home.unlockedPetSlots.v1'
+const STARTER_PET_REVEALED_KEY = 'fetch.home.starterPetRevealed.v1'
+const PET_HUNTS_STORAGE_KEY = 'fetch.home.petHunts.v1'
+const PET_HUNT_MAX_LIVE = 3
+/** Persisted roster of which pals stay “included” when reopening Home & pet. */
+const PET_EDITOR_INCLUDED_IDS_KEY = 'fetch.home.petEditorIncludedIds.v1'
+const MAX_HOME_PET_SLOTS = 3
+/** Pet edit sheet: max pals you can include at once (independent from banner unlock count). */
+const PET_EDIT_INCLUDED_MAX = MAX_HOME_PET_SLOTS
 
 type HeroGender = 'male' | 'female'
 const PET_FEED_COOLDOWN_MS = 3 * 60 * 60 * 1000
 const PET_STARVATION_RISK_AFTER_MS = 15 * 60 * 1000
 
-type DailyRewardTaskId = 'bid_today' | 'watch_live_10'
+type DailyRewardTaskId = 'bid_today' | 'watch_live_10' | 'win_3_bids'
 
 type DailyRewardState = {
   date: string
   completed: DailyRewardTaskId[]
+  /** Bonus row after finishing every todo for `date`. */
+  dailyMysteryClaimed?: boolean
 }
 
 type DailyGemFxState = {
@@ -113,15 +110,13 @@ const PET_CELEBRATION_PARTICLES: ReadonlyArray<{
   { emoji: '💥', tx: 0, ty: -132, rot: 0, scale: 1.08, delay: 0.13 },
 ]
 
-type FetchPetId = 'fetch' | 'tiger'
+type FetchPetId = 'fetch' | 'frost' | 'fire' | 'air'
 
 type FetchHomePet = {
   id: FetchPetId
   label: string
   defaultName: string
   avatarUrl: string
-  fedBannerUrl: string
-  hungryBannerUrl: string
 }
 
 type PetProfileState = {
@@ -132,35 +127,157 @@ type PetProfileState = {
   lastFedAt: number
 }
 
+type PetHuntCondition = 'Any' | 'New' | 'Used'
+type PetHuntAlertType = 'Instant' | 'Daily summary'
+type PetHuntStatus = 'active' | 'found' | 'paused' | 'expired'
+type PetHuntAutopilotAction = 'message' | 'bid' | 'buy'
+type PetHuntListingSource = 'Listings' | 'Auctions' | 'Live drops'
+type PetHuntFulfillment = 'Any' | 'Pickup' | 'Delivery' | 'Same-day'
+
+type PetHunt = {
+  id: string
+  user_id: string
+  pet_id: FetchPetId
+  query: string
+  category: string
+  brand: string
+  must_include: string
+  exclude_terms: string
+  sources: PetHuntListingSource[]
+  fulfillment: PetHuntFulfillment
+  max_price: number | null
+  condition: PetHuntCondition
+  radius_km: number
+  alert_type: PetHuntAlertType
+  autopilot_enabled: boolean
+  autopilot_actions: PetHuntAutopilotAction[]
+  autopilot_max_bid: number | null
+  status: PetHuntStatus
+  matched_listing_id: string | null
+  created_at: number
+  updated_at: number
+}
+
 const FETCH_HOME_PETS: ReadonlyArray<FetchHomePet> = [
   {
     id: 'fetch',
     label: 'Fetch pup',
     defaultName: 'Fetch',
-    avatarUrl: fetchitPetAvatarUrl,
-    fedBannerUrl: fetchitPetFedBannerUrl,
-    hungryBannerUrl: fetchitPetHungryBannerUrl,
+    avatarUrl: fetchitStartPetUrl,
   },
   {
-    id: 'tiger',
-    label: 'Tiger guardian',
-    defaultName: 'Tiger',
-    avatarUrl: fetchitPetTigerAvatarUrl,
-    fedBannerUrl: fetchitPetTigerFedBannerUrl,
-    hungryBannerUrl: fetchitPetTigerHungryBannerUrl,
+    id: 'frost',
+    label: 'Frost pup',
+    defaultName: 'Rime',
+    avatarUrl: fetchitPetFrostUrl,
+  },
+  {
+    id: 'fire',
+    label: 'Fire pup',
+    defaultName: 'Ember',
+    avatarUrl: fetchitPetFireUrl,
+  },
+  {
+    id: 'air',
+    label: 'Air pup',
+    defaultName: 'Nimbus',
+    avatarUrl: fetchitPetAirUrl,
+  },
+]
+
+/** Element vibes for roster card + optional banner glow accents. */
+const FETCH_PET_CARD_EMOJI: Record<FetchPetId, string> = {
+  fetch: '🐕',
+  frost: '💧',
+  fire: '🔥',
+  air: '💨',
+}
+
+const FETCH_PET_ELEMENT: Record<FetchPetId, string> = {
+  fetch: 'Loyal',
+  frost: 'Frost',
+  fire: 'Fire',
+  air: 'Air',
+}
+
+const FETCH_PET_BANNER_PAD_TAILWIND: Record<FetchPetId, string> = {
+  fetch: 'bg-amber-300/65',
+  frost: 'bg-sky-400/55',
+  fire: 'bg-orange-400/62',
+  air: 'bg-violet-200/70',
+}
+
+function rosterPetBehindLeader(leader: FetchHomePet): FetchHomePet {
+  const n = FETCH_HOME_PETS.length
+  const idx = FETCH_HOME_PETS.findIndex((p) => p.id === leader.id)
+  const ring = idx >= 0 ? idx : 0
+  return FETCH_HOME_PETS[(ring - 1 + n) % n]!
+}
+
+type PetProfileCropPreset = 'circleSm' | 'circleLg' | 'rectMd'
+
+/** Full-body greenscreen art → face-forward framing (less zoom = more of the mug + ears in frame). */
+const PET_PROFILE_FACE_CROP: Record<FetchPetId, Record<PetProfileCropPreset, string>> = {
+  fetch: {
+    circleSm: 'min-h-[118%] min-w-[114%] translate-y-[0%] [object-position:50%_12%]',
+    circleLg: 'min-h-[108%] min-w-[104%] translate-y-[0%] [object-position:50%_11%]',
+    rectMd: 'min-h-[120%] min-w-[110%] translate-y-[3%] [object-position:50%_92%]',
+  },
+  frost: {
+    circleSm: 'min-h-[114%] min-w-[112%] translate-y-[-1%] [object-position:50%_14%]',
+    circleLg: 'min-h-[104%] min-w-[102%] translate-y-[-1%] [object-position:50%_13%]',
+    rectMd: 'min-h-[116%] min-w-[108%] translate-y-[2%] [object-position:50%_90%]',
+  },
+  fire: {
+    circleSm: 'min-h-[116%] min-w-[112%] translate-y-[0%] [object-position:50%_13%]',
+    circleLg: 'min-h-[106%] min-w-[104%] translate-y-[0%] [object-position:50%_12%]',
+    rectMd: 'min-h-[118%] min-w-[110%] translate-y-[3%] [object-position:50%_91%]',
+  },
+  air: {
+    circleSm: 'min-h-[116%] min-w-[114%] translate-y-[1%] [object-position:50%_14%]',
+    circleLg: 'min-h-[106%] min-w-[106%] translate-y-[1%] [object-position:50%_13%]',
+    rectMd: 'min-h-[118%] min-w-[112%] translate-y-[4%] [object-position:50%_89%]',
+  },
+}
+
+function petProfileFaceCrop(pet: FetchHomePet, preset: PetProfileCropPreset): string {
+  return PET_PROFILE_FACE_CROP[pet.id]?.[preset] ?? PET_PROFILE_FACE_CROP.fetch[preset]
+}
+
+const STARTER_PET_SKILLS: ReadonlyArray<{ title: string; detail: string }> = [
+  {
+    title: 'Loyal companion',
+    detail: 'Keeps morale high on adventures and recovers hunger a little faster after a good meal.',
+  },
+  {
+    title: 'Deal nose',
+    detail: 'Occasionally pings when a standout listing pops up nearby on the marketplace.',
+  },
+  {
+    title: 'Playful spark',
+    detail: 'While well-fed, snag a tiny bonus gem from select daily chores around Fetch.',
   },
 ]
 
 const DEFAULT_PET_NAMES: Record<FetchPetId, string> = {
   fetch: 'Fetch',
-  tiger: 'Tiger',
+  frost: 'Rime',
+  fire: 'Ember',
+  air: 'Nimbus',
 }
 
 const PET_RANK_MAX = 50
 
 const DEFAULT_PET_RANKS: Record<FetchPetId, number> = {
   fetch: 1,
-  tiger: 1,
+  frost: 1,
+  fire: 1,
+  air: 1,
+}
+
+function parseFetchPetId(value: unknown): FetchPetId | null {
+  if (value === 'fetch' || value === 'frost' || value === 'fire' || value === 'air') return value
+  return null
 }
 
 function normalizePetRank(value: unknown): number {
@@ -189,11 +306,76 @@ const DAILY_REWARD_TASKS: ReadonlyArray<{
     title: 'Watch a live for 10 mins',
     detail: 'Spend 10 minutes in a live stream today.',
   },
+  {
+    id: 'win_3_bids',
+    title: 'Win 3 bids',
+    detail: 'Win three auctions today — demo flow: Claim when done.',
+  },
 ]
+
+function dailyTaskRewardGems(id: DailyRewardTaskId): number {
+  if (id === 'win_3_bids') return DAILY_WIN_3_BIDS_GEMS
+  return DAILY_REWARD_GEMS_STANDARD
+}
+
+function allDailyRewardTasksComplete(completed: readonly DailyRewardTaskId[]): boolean {
+  return DAILY_REWARD_TASKS.every((t) => completed.includes(t.id))
+}
+
+function parseDailyRewardTaskId(value: unknown): DailyRewardTaskId | null {
+  if (value === 'bid_today' || value === 'watch_live_10' || value === 'win_3_bids') return value
+  return null
+}
 
 function todayKey(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+const DAILY_STREAK_STORAGE_KEY = 'fetch.home.dailyStreak.v1'
+
+type DailyStreakPersisted = {
+  lastDate: string
+  count: number
+}
+
+function calendarDayAddYmd(ymd: string, deltaDays: number): string {
+  const [ys, ms, ds] = ymd.split('-')
+  const y = Number(ys)
+  const m = Number(ms)
+  const d = Number(ds)
+  const dt = new Date(y, m - 1, d + deltaDays)
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+}
+
+/** Visit-based streak on Home — bumps when the calendar day advances; resets after a missed day. */
+function loadAndBumpDailyStreakCount(): number {
+  const today = todayKey()
+  try {
+    const raw = window.localStorage.getItem(DAILY_STREAK_STORAGE_KEY)
+    const parsed = raw ? (JSON.parse(raw) as Partial<DailyStreakPersisted>) : null
+    const lastDate = typeof parsed?.lastDate === 'string' ? parsed.lastDate : null
+    const prevCount =
+      typeof parsed?.count === 'number' && Number.isFinite(parsed.count) ? Math.max(0, Math.floor(parsed.count)) : 0
+
+    const validLast = lastDate && /^\d{4}-\d{2}-\d{2}$/.test(lastDate) ? lastDate : null
+
+    if (!validLast) {
+      const next: DailyStreakPersisted = { lastDate: today, count: 1 }
+      window.localStorage.setItem(DAILY_STREAK_STORAGE_KEY, JSON.stringify(next))
+      return 1
+    }
+    if (validLast === today) {
+      return Math.max(1, prevCount || 1)
+    }
+    const nextCount =
+      validLast === calendarDayAddYmd(today, -1) ? Math.max(1, prevCount || 1) + 1 : 1
+    const next: DailyStreakPersisted = { lastDate: today, count: nextCount }
+    window.localStorage.setItem(DAILY_STREAK_STORAGE_KEY, JSON.stringify(next))
+    return nextCount
+  } catch {
+    return 1
+  }
 }
 
 function loadDemoGems(): number {
@@ -216,18 +398,34 @@ function saveDemoGems(next: number) {
 
 function loadDailyRewardState(): DailyRewardState {
   const date = todayKey()
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(DAILY_REWARD_STORAGE_KEY) || 'null') as Partial<DailyRewardState> | null
-    if (parsed?.date === date && Array.isArray(parsed.completed)) {
-      return {
-        date,
-        completed: parsed.completed.filter((id): id is DailyRewardTaskId =>
-          id === 'bid_today' || id === 'watch_live_10',
-        ),
+  const parseRaw = (raw: string | null): Partial<DailyRewardState> | null => {
+    try {
+      const parsed = JSON.parse(raw || 'null') as Partial<DailyRewardState> | null
+      if (!parsed || typeof parsed !== 'object') return null
+      return parsed
+    } catch {
+      return null
+    }
+  }
+  const fromV3 = parseRaw(window.localStorage.getItem(DAILY_REWARD_STORAGE_KEY))
+  const fromLegacy = fromV3 ? null : parseRaw(window.localStorage.getItem(DAILY_REWARD_STORAGE_LEGACY_KEY))
+  const parsed = fromV3 ?? fromLegacy
+
+  if (parsed?.date === date && Array.isArray(parsed.completed)) {
+    const seen = new Set<DailyRewardTaskId>()
+    const completed: DailyRewardTaskId[] = []
+    for (const rawId of parsed.completed) {
+      const id = parseDailyRewardTaskId(rawId)
+      if (id != null && !seen.has(id)) {
+        seen.add(id)
+        completed.push(id)
       }
     }
-  } catch {
-    /* ignore */
+    return {
+      date,
+      completed,
+      dailyMysteryClaimed: parsed.dailyMysteryClaimed === true,
+    }
   }
   return { date, completed: [] }
 }
@@ -246,20 +444,21 @@ function loadPetProfile(): PetProfileState {
     const legacyName = typeof (parsed as { name?: unknown } | null)?.name === 'string'
       ? String((parsed as { name?: string }).name).trim().slice(0, 16)
       : ''
-    const selectedPetId: FetchPetId = parsed?.selectedPetId === 'tiger' ? 'tiger' : 'fetch'
-    const parsedNames = parsed?.names
-    const names: Record<FetchPetId, string> = {
-      fetch: typeof parsedNames?.fetch === 'string' && parsedNames.fetch.trim()
-        ? parsedNames.fetch.trim().slice(0, 16)
-        : legacyName || DEFAULT_PET_NAMES.fetch,
-      tiger: typeof parsedNames?.tiger === 'string' && parsedNames.tiger.trim()
-        ? parsedNames.tiger.trim().slice(0, 16)
-        : DEFAULT_PET_NAMES.tiger,
+    const selectedPetId: FetchPetId = parseFetchPetId(parsed?.selectedPetId) ?? 'fetch'
+    const parsedNames = parsed?.names as Partial<Record<string, string>> | undefined
+    const names: Record<FetchPetId, string> = { ...DEFAULT_PET_NAMES }
+    for (const pet of FETCH_HOME_PETS) {
+      const raw = parsedNames?.[pet.id]
+      if (typeof raw === 'string' && raw.trim()) {
+        names[pet.id] = raw.trim().slice(0, 16)
+      } else if (pet.id === 'fetch' && legacyName) {
+        names.fetch = legacyName
+      }
     }
-    const pr = parsed?.ranks as Partial<Record<FetchPetId, unknown>> | undefined
-    const ranks: Record<FetchPetId, number> = {
-      fetch: normalizePetRank(pr?.fetch ?? DEFAULT_PET_RANKS.fetch),
-      tiger: normalizePetRank(pr?.tiger ?? DEFAULT_PET_RANKS.tiger),
+    const pr = parsed?.ranks as Partial<Record<string, unknown>> | undefined
+    const ranks: Record<FetchPetId, number> = { ...DEFAULT_PET_RANKS }
+    for (const pet of FETCH_HOME_PETS) {
+      ranks[pet.id] = normalizePetRank(pr?.[pet.id] ?? DEFAULT_PET_RANKS[pet.id])
     }
     return {
       selectedPetId,
@@ -276,6 +475,228 @@ function loadPetProfile(): PetProfileState {
 function savePetProfile(next: PetProfileState) {
   try {
     window.localStorage.setItem(PET_PROFILE_STORAGE_KEY, JSON.stringify(next))
+  } catch {
+    /* ignore */
+  }
+}
+
+function parsePetHuntCondition(value: unknown): PetHuntCondition {
+  return value === 'New' || value === 'Used' ? value : 'Any'
+}
+
+function parsePetHuntAlertType(value: unknown): PetHuntAlertType {
+  return value === 'Daily summary' ? value : 'Instant'
+}
+
+function parsePetHuntStatus(value: unknown): PetHuntStatus {
+  if (value === 'found' || value === 'paused' || value === 'expired') return value
+  return 'active'
+}
+
+function parsePetHuntAutopilotAction(value: unknown): PetHuntAutopilotAction | null {
+  if (value === 'message' || value === 'bid' || value === 'buy') return value
+  return null
+}
+
+function parsePetHuntAutopilotActions(value: unknown): PetHuntAutopilotAction[] {
+  const raw = Array.isArray(value) ? value : []
+  const seen = new Set<PetHuntAutopilotAction>()
+  for (const item of raw) {
+    const action = parsePetHuntAutopilotAction(item)
+    if (action) seen.add(action)
+  }
+  return seen.size ? [...seen] : ['message']
+}
+
+function parsePetHuntListingSource(value: unknown): PetHuntListingSource | null {
+  if (value === 'Listings' || value === 'Auctions' || value === 'Live drops') return value
+  return null
+}
+
+function parsePetHuntListingSources(value: unknown): PetHuntListingSource[] {
+  const raw = Array.isArray(value) ? value : []
+  const seen = new Set<PetHuntListingSource>()
+  for (const item of raw) {
+    const source = parsePetHuntListingSource(item)
+    if (source) seen.add(source)
+  }
+  return seen.size ? [...seen] : ['Listings', 'Auctions', 'Live drops']
+}
+
+function parsePetHuntFulfillment(value: unknown): PetHuntFulfillment {
+  if (value === 'Pickup' || value === 'Delivery' || value === 'Same-day') return value
+  return 'Any'
+}
+
+function normalizePetHuntPrice(value: unknown): number | null {
+  const n = typeof value === 'number' ? value : Number.parseFloat(String(value ?? '').replace(/[^0-9.]/g, ''))
+  if (!Number.isFinite(n) || n <= 0) return null
+  return Math.round(n * 100)
+}
+
+function loadPetHunts(): PetHunt[] {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(PET_HUNTS_STORAGE_KEY) || '[]') as Array<Partial<PetHunt>>
+    if (!Array.isArray(parsed)) return []
+    return parsed.flatMap((hunt): PetHunt[] => {
+      const petId = parseFetchPetId(hunt.pet_id)
+      const query = typeof hunt.query === 'string' ? hunt.query.trim().slice(0, 80) : ''
+      if (!petId || !query) return []
+      const createdAt = typeof hunt.created_at === 'number' && Number.isFinite(hunt.created_at) ? hunt.created_at : Date.now()
+      return [
+        {
+          id: typeof hunt.id === 'string' && hunt.id.trim() ? hunt.id : `hunt_${createdAt}`,
+          user_id: typeof hunt.user_id === 'string' && hunt.user_id.trim() ? hunt.user_id : 'local-demo-user',
+          pet_id: petId,
+          query,
+          category: typeof hunt.category === 'string' && hunt.category.trim() ? hunt.category.trim().slice(0, 32) : 'Custom item',
+          brand: typeof hunt.brand === 'string' && hunt.brand.trim() ? hunt.brand.trim().slice(0, 40) : '',
+          must_include: typeof hunt.must_include === 'string' && hunt.must_include.trim() ? hunt.must_include.trim().slice(0, 120) : '',
+          exclude_terms: typeof hunt.exclude_terms === 'string' && hunt.exclude_terms.trim() ? hunt.exclude_terms.trim().slice(0, 120) : '',
+          sources: parsePetHuntListingSources(hunt.sources),
+          fulfillment: parsePetHuntFulfillment(hunt.fulfillment),
+          max_price: typeof hunt.max_price === 'number' && Number.isFinite(hunt.max_price) ? Math.max(0, Math.round(hunt.max_price)) : null,
+          condition: parsePetHuntCondition(hunt.condition),
+          radius_km: typeof hunt.radius_km === 'number' && Number.isFinite(hunt.radius_km) ? Math.max(1, Math.round(hunt.radius_km)) : 25,
+          alert_type: parsePetHuntAlertType(hunt.alert_type),
+          autopilot_enabled: hunt.autopilot_enabled === true,
+          autopilot_actions: parsePetHuntAutopilotActions(hunt.autopilot_actions),
+          autopilot_max_bid: typeof hunt.autopilot_max_bid === 'number' && Number.isFinite(hunt.autopilot_max_bid)
+            ? Math.max(0, Math.round(hunt.autopilot_max_bid))
+            : null,
+          status: parsePetHuntStatus(hunt.status),
+          matched_listing_id: typeof hunt.matched_listing_id === 'string' && hunt.matched_listing_id.trim() ? hunt.matched_listing_id : null,
+          created_at: createdAt,
+          updated_at: typeof hunt.updated_at === 'number' && Number.isFinite(hunt.updated_at) ? hunt.updated_at : createdAt,
+        },
+      ]
+    })
+  } catch {
+    return []
+  }
+}
+
+function savePetHunts(next: readonly PetHunt[]) {
+  try {
+    window.localStorage.setItem(PET_HUNTS_STORAGE_KEY, JSON.stringify(next))
+  } catch {
+    /* ignore */
+  }
+}
+
+function petHuntBoostPercent(petId: FetchPetId, rank: number): number {
+  const base: Record<FetchPetId, number> = { fetch: 8, frost: 10, fire: 12, air: 14 }
+  return Math.min(32, base[petId] + Math.floor(normalizePetRank(rank) / 5))
+}
+
+function normalizeHuntText(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+}
+
+function huntTextTokens(value: string): string[] {
+  return normalizeHuntText(value).split(/\s+/).filter((word) => word.length >= 2)
+}
+
+function petHuntMatchesListing(hunt: PetHunt, listing: PeerListing): boolean {
+  if (hunt.max_price != null && listing.priceCents > hunt.max_price) return false
+  if (hunt.condition === 'New' && listing.condition.toLowerCase() !== 'new') return false
+  if (hunt.condition === 'Used' && listing.condition.toLowerCase() === 'new') return false
+  if (listing.saleMode === 'auction' && !hunt.sources.includes('Auctions')) return false
+  if (listing.saleMode !== 'auction' && !hunt.sources.includes('Listings') && !hunt.sources.includes('Live drops')) return false
+  if (hunt.fulfillment === 'Delivery' && !listing.fetchDelivery && !listing.sameDayDelivery) return false
+  if (hunt.fulfillment === 'Same-day' && !listing.sameDayDelivery) return false
+
+  const query = normalizeHuntText(hunt.query)
+  const brand = normalizeHuntText(hunt.brand)
+  const category = normalizeHuntText(hunt.category)
+  const haystack = normalizeHuntText([listing.title, listing.category, listing.keywords ?? '', listing.description].join(' '))
+  const queryWords = query.split(/\s+/).filter((word) => word.length >= 3)
+  const queryHit = query.length >= 3 && (haystack.includes(query) || queryWords.some((word) => haystack.includes(word)))
+  const brandHit = !brand || haystack.includes(brand)
+  const mustIncludeTokens = huntTextTokens(hunt.must_include)
+  const mustIncludeHit = mustIncludeTokens.every((word) => haystack.includes(word))
+  const excludeHit = huntTextTokens(hunt.exclude_terms).some((word) => haystack.includes(word))
+  const categoryHit =
+    category.length >= 3 &&
+    category !== 'custom item' &&
+    category !== 'any' &&
+    haystack.includes(category.replace(/s$/, ''))
+
+  if (!brandHit || !mustIncludeHit || excludeHit) return false
+  return queryHit || categoryHit || Boolean(brand && haystack.includes(brand))
+}
+
+function findPetHuntMatch(hunt: PetHunt, listings: readonly PeerListing[]): PeerListing | null {
+  return listings.find((listing) => petHuntMatchesListing(hunt, listing)) ?? null
+}
+
+function petHuntDisplayPrice(cents: number | null): string {
+  return cents == null ? 'Any price' : `Max ${formatAudFromCents(cents)}`
+}
+
+function petHuntDetailLabel(hunt: Pick<PetHunt, 'category' | 'max_price' | 'alert_type' | 'sources' | 'fulfillment'>): string {
+  const sourceLabel =
+    hunt.sources.length >= 3
+      ? 'All drops'
+      : hunt.sources.join(' + ')
+  return `${hunt.category} · ${sourceLabel} · ${hunt.fulfillment} · ${petHuntDisplayPrice(hunt.max_price)} · ${hunt.alert_type}`
+}
+
+function petHuntAutopilotLabel(hunt: Pick<PetHunt, 'autopilot_enabled' | 'autopilot_actions'>): string {
+  if (!hunt.autopilot_enabled) return 'Alerts only'
+  const labelMap: Record<PetHuntAutopilotAction, string> = {
+    message: 'Message',
+    bid: 'Bid',
+    buy: 'Buy',
+  }
+  return `Autopilot: ${hunt.autopilot_actions.map((action) => labelMap[action]).join(' + ')}`
+}
+
+function petHuntAutopilotResultLabel(hunt: Pick<PetHunt, 'autopilot_enabled' | 'autopilot_actions'>): string {
+  if (!hunt.autopilot_enabled) return ''
+  const parts: string[] = []
+  if (hunt.autopilot_actions.includes('message')) parts.push('messaged the seller')
+  if (hunt.autopilot_actions.includes('bid')) parts.push('placed your auto bid')
+  if (hunt.autopilot_actions.includes('buy')) parts.push('started buy now')
+  return parts.length ? ` Autopilot ${parts.join(', ')}.` : ''
+}
+
+/** First-time starter flow: Mystery Pod unlock (skip when already saved or veteran profile exists). */
+function loadStarterPetRevealed(): boolean {
+  try {
+    const flagged = window.localStorage.getItem(STARTER_PET_REVEALED_KEY)
+    if (flagged === '1') return true
+    if (window.localStorage.getItem(PET_PROFILE_STORAGE_KEY)) {
+      window.localStorage.setItem(STARTER_PET_REVEALED_KEY, '1')
+      return true
+    }
+    return false
+  } catch {
+    return true
+  }
+}
+
+function persistStarterPetRevealed() {
+  try {
+    window.localStorage.setItem(STARTER_PET_REVEALED_KEY, '1')
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Dev only: append `?resetStarterPet=1` to the URL once → clears starter flags & pet profile → reload → replay Mystery Pod flow. */
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  try {
+    const sp = new URLSearchParams(window.location.search)
+    if (sp.get('resetStarterPet') === '1') {
+      window.localStorage.removeItem(STARTER_PET_REVEALED_KEY)
+      window.localStorage.removeItem(PET_PROFILE_STORAGE_KEY)
+      sp.delete('resetStarterPet')
+      const next = sp.toString()
+      const base = `${window.location.pathname}${next ? `?${next}` : ''}${window.location.hash}`
+      window.history.replaceState({}, '', base)
+      window.location.reload()
+    }
   } catch {
     /* ignore */
   }
@@ -320,12 +741,198 @@ function persistHeroGender(next: HeroGender) {
   }
 }
 
+function loadHomeUnlockedPetSlots(): number {
+  try {
+    const raw = window.localStorage.getItem(HOME_PET_SLOTS_KEY)
+    const n = raw ? Number.parseInt(raw, 10) : 1
+    const safe = Number.isFinite(n) ? n : 1
+    return Math.min(MAX_HOME_PET_SLOTS, Math.max(1, Math.floor(safe)))
+  } catch {
+    return 1
+  }
+}
+
+function saveHomeUnlockedPetSlots(next: number) {
+  try {
+    window.localStorage.setItem(
+      HOME_PET_SLOTS_KEY,
+      String(Math.min(MAX_HOME_PET_SLOTS, Math.max(1, Math.floor(next)))),
+    )
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Gems for slot 2, then slot 3 (slot 1 is always included). */
+function nextHomePetSlotUnlockGemCost(unlocked: number): number | null {
+  if (unlocked >= MAX_HOME_PET_SLOTS) return null
+  return unlocked === 1 ? 220 : unlocked === 2 ? 380 : null
+}
+
+/** Zero out alpha for typical lime / greenscreen backdrops (canvas, RGBA). */
+function applyHomeBannerGreenscreenAlpha(data: Uint8ClampedArray) {
+  const edge0 = 26
+  const edge1 = 48
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i]
+    const g = data[i + 1]
+    const b = data[i + 2]
+    const a = data[i + 3]
+    if (a === 0) continue
+    const maxRb = Math.max(r, b)
+    const greenLead = g - maxRb
+    if (greenLead > edge0 && g > 85) {
+      const t = Math.min(1, Math.max(0, (greenLead - edge0) / edge1))
+      data[i + 3] = Math.round(a * (1 - t))
+      if (t > 0.15) {
+        data[i + 1] = Math.round(Math.min(g, maxRb + (1 - t) * 40))
+      }
+    }
+  }
+}
+
+/** Remove flat light studio backdrops (white / gray-white); tuned to avoid golden/cream fur. */
+function applyNearWhiteBackdropAlpha(data: Uint8ClampedArray) {
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i]!
+    const g = data[i + 1]!
+    const b = data[i + 2]!
+    const a = data[i + 3]!
+    if (a === 0) continue
+    const mn = Math.min(r, g, b)
+    const mx = Math.max(r, g, b)
+    const spread = mx - mn
+    if (mn < 250 || mx < 252 || spread > 12) continue
+    const t = Math.min(1, Math.max(0, (mn - 242) / 14))
+    data[i + 3] = Math.round(a * (1 - t))
+  }
+}
+
+/** Tighter neutral-white key for full-body characters (avoids eating #f8–#fc white sneaker panels). */
+function applyNearStrictWhiteBackdropAlpha(data: Uint8ClampedArray) {
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i]!
+    const g = data[i + 1]!
+    const b = data[i + 2]!
+    const a = data[i + 3]!
+    if (a === 0) continue
+    const mn = Math.min(r, g, b)
+    const mx = Math.max(r, g, b)
+    const spread = mx - mn
+    if (mn < 252 || mx < 254 || spread > 8) continue
+    const t = Math.min(1, Math.max(0, (mn - 246) / 10))
+    data[i + 3] = Math.round(a * (1 - t))
+  }
+}
+
+type WhiteBackdropKeyMode = boolean | 'strict'
+
+function GreenscreenKeyedImage({
+  src,
+  className = '',
+  imgClassName = '',
+  keyNearWhiteBackdrop = false,
+}: {
+  src: string
+  className?: string
+  imgClassName?: string
+  /** When set, keys bright neutral studio backdrops; `'strict'` only removes near-pure whites. */
+  keyNearWhiteBackdrop?: WhiteBackdropKeyMode
+}) {
+  const [keyedSrc, setKeyedSrc] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const img = new Image()
+    img.decoding = 'async'
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      if (cancelled) return
+      const w = img.naturalWidth
+      const h = img.naturalHeight
+      if (w < 2 || h < 2) return
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      if (!ctx) return
+      ctx.drawImage(img, 0, 0)
+      const imageData = ctx.getImageData(0, 0, w, h)
+      applyHomeBannerGreenscreenAlpha(imageData.data)
+      if (keyNearWhiteBackdrop === 'strict') {
+        applyNearStrictWhiteBackdropAlpha(imageData.data)
+      } else if (keyNearWhiteBackdrop) {
+        applyNearWhiteBackdropAlpha(imageData.data)
+      }
+      ctx.putImageData(imageData, 0, 0)
+      const dataUrl = canvas.toDataURL('image/png')
+      if (!cancelled) setKeyedSrc(dataUrl)
+    }
+    img.onerror = () => {
+      if (!cancelled) setKeyedSrc(null)
+    }
+    img.src = src
+    return () => {
+      cancelled = true
+      setKeyedSrc(null)
+    }
+  }, [src, keyNearWhiteBackdrop])
+
+  const hideGreenFlash = keyedSrc === null
+
+  return (
+    <span className={className}>
+      <img
+        src={hideGreenFlash ? src : keyedSrc}
+        alt=""
+        aria-hidden
+        draggable={false}
+        className={hideGreenFlash ? [imgClassName, 'opacity-0'].join(' ') : imgClassName}
+      />
+    </span>
+  )
+}
+
+function homeDisplayImageForPet(pet: FetchHomePet): string {
+  return pet.avatarUrl
+}
+
+function PetProfileImage({
+  pet,
+  className,
+  preset = 'circleSm',
+  imgClassName = '',
+}: {
+  pet: FetchHomePet
+  className: string
+  preset?: PetProfileCropPreset
+  imgClassName?: string
+}) {
+  const crop = imgClassName.trim() ? imgClassName.trim() : petProfileFaceCrop(pet, preset)
+  return (
+    <GreenscreenKeyedImage
+      src={homeDisplayImageForPet(pet)}
+      className={className}
+      imgClassName={['pointer-events-none w-auto max-w-none select-none object-cover', crop].join(' ')}
+    />
+  )
+}
+
 function formatTimerLabel(ms: number): string {
   const totalSeconds = Math.max(0, Math.ceil(ms / 1000))
   const h = Math.floor(totalSeconds / 3600)
   const m = Math.floor((totalSeconds % 3600) / 60)
   const s = totalSeconds % 60
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
+function formatPetHuntElapsedLabel(createdAt: number, nowMs: number): string {
+  const totalSeconds = Math.max(0, Math.floor((nowMs - createdAt) / 1000))
+  const h = Math.floor(totalSeconds / 3600)
+  const m = Math.floor((totalSeconds % 3600) / 60)
+  const s = totalSeconds % 60
+  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`
+  return `${m}:${String(s).padStart(2, '0')}`
 }
 
 function backpackImageForLevel(level: number): string {
@@ -370,45 +977,6 @@ function HeaderSquarePlusIcon({ className = '' }: { className?: string }) {
   )
 }
 
-/** Pet portrait: gradient rounded frame; head overlaps top border, lower body clips inside. */
-function FetchPetHeroPortrait({
-  petAvatarUrl,
-  petName,
-  onEdit,
-}: {
-  petAvatarUrl: string
-  petName: string
-  onEdit: () => void
-}) {
-  return (
-    <div className="relative mx-auto mt-1 w-[min(100%,5.95rem)] shrink-0 px-0.5">
-      <div className="rounded-2xl bg-gradient-to-br from-[#c4b5fd] via-[#a78bfa] to-[#7c3aed] p-[2.5px] shadow-[0_10px_26px_-18px_rgba(76,29,149,0.48)]">
-        <div className="relative overflow-hidden rounded-[13px] bg-gradient-to-b from-violet-50 to-white">
-          <div className="relative h-[5rem] overflow-hidden sm:h-[5.35rem]">
-            <img
-              src={petAvatarUrl}
-              alt={`${petName} portrait`}
-              draggable={false}
-              className="absolute left-1/2 top-0 z-[1] h-[7.25rem] w-[7.25rem] max-w-none -translate-x-1/2 -translate-y-[26%] select-none object-cover object-top sm:h-[7.5rem] sm:w-[7.5rem] sm:-translate-y-[28%]"
-            />
-          </div>
-        </div>
-      </div>
-      <button
-        type="button"
-        onClick={onEdit}
-        className="absolute bottom-1 right-1 z-[3] flex h-6 w-6 items-center justify-center rounded-full bg-white text-zinc-800 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.25)] ring-2 ring-violet-200 transition-[transform,filter] active:scale-[0.94]"
-        aria-label={`Edit ${petName}`}
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="m4 16.5-.7 4.2 4.2-.7L18.7 8.8l-3.5-3.5L4 16.5Z" stroke="currentColor" strokeWidth="2.25" strokeLinejoin="round" />
-          <path d="m14.5 6 3.5 3.5" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" />
-        </svg>
-      </button>
-    </div>
-  )
-}
-
 type FetchHomeTourTarget = 'addFunds' | 'backpack' | 'adventure' | 'bidWar' | 'liveStreams'
 
 type FetchHomeTourStep = {
@@ -439,8 +1007,8 @@ const FETCH_HOME_TOUR_STEPS: FetchHomeTourStep[] = [
   {
     id: 'adventure',
     eyebrow: 'Step 3 of 5',
-    title: 'Adventure card',
-    body: 'Start an adventure to send Fetch out. The timer tracks the run, and first-time rewards unlock as you play.',
+    title: 'Pet Hunt',
+    body: 'Send a pet to watch listings, auctions, and live drops for the exact item you want.',
     placement: 'above',
   },
   {
@@ -459,26 +1027,455 @@ const FETCH_HOME_TOUR_STEPS: FetchHomeTourStep[] = [
   },
 ]
 
+function HeroMyPetsRosterMiniIconLock({ className = '' }: { className?: string }) {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M7 11V8a5 5 0 0 1 10 0v3M6 21h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function HeroPetBowlIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={['shrink-0', className].join(' ')} aria-hidden>
+      <path
+        d="M4 11h16M7 11c.9 5.2 9.1 5.2 10 0"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M9 20h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.85" />
+    </svg>
+  )
+}
+
+function HeroMyPetsRosterCard({
+  unlockedSlots,
+  rosterActivePet,
+  benchPet,
+  petNames,
+  petRanks: _petRanks,
+  leaderName,
+  leaderRank: _leaderRank,
+  isPetFed,
+  petFeedTimerLabel,
+  petHungerStage,
+  starterMysteryActive,
+  mysteryPodImageUrl,
+  canFeedPet,
+  feedPetLabel,
+  onOpenPetEdit,
+  onFeedPet,
+}: {
+  unlockedSlots: number
+  rosterActivePet: FetchHomePet
+  benchPet: FetchHomePet | null
+  petNames: Record<FetchPetId, string>
+  petRanks: Record<FetchPetId, number>
+  leaderName: string
+  leaderRank: number
+  isPetFed: boolean
+  petFeedTimerLabel: string
+  petHungerStage: 'hungry' | 'risk'
+  starterMysteryActive: boolean
+  mysteryPodImageUrl: string
+  canFeedPet: boolean
+  feedPetLabel: string
+  onOpenPetEdit: () => void
+  onFeedPet: () => void
+}) {
+  const benchName = benchPet ? petNames[benchPet.id]?.trim() || benchPet.defaultName : ''
+  const trailPet =
+    unlockedSlots >= 3 && benchPet && !starterMysteryActive ? rosterPetBehindLeader(rosterActivePet) : null
+  const trailName = trailPet ? petNames[trailPet.id]?.trim() || trailPet.defaultName : ''
+  const showTripleRosterRows = !!trailPet && !!benchPet && unlockedSlots >= 3 && !starterMysteryActive
+  const nextSlotCost =
+    unlockedSlots >= MAX_HOME_PET_SLOTS ? null : nextHomePetSlotUnlockGemCost(unlockedSlots)
+  const leadLabel = starterMysteryActive ? '???' : leaderName
+
+  function rosterRow(
+    pet: FetchHomePet | null,
+    label: string,
+    rowKey: string,
+    emphasized: boolean,
+    isMysteryAvatar: boolean,
+  ) {
+    return (
+      <div
+        key={rowKey}
+        className={[
+          'flex min-h-[1.65rem] items-center gap-1 rounded-md px-[3px] py-[2px] ring-1',
+          emphasized && !isMysteryAvatar
+            ? 'bg-gradient-to-br from-violet-50 to-white shadow-[0_2px_8px_-4px_rgba(15,23,42,0.1)] ring-zinc-200/90'
+            : 'bg-white ring-zinc-200/90 shadow-[0_1px_6px_-4px_rgba(15,23,42,0.1)]',
+        ].join(' ')}
+      >
+        {isMysteryAvatar || pet == null ? (
+          <GreenscreenKeyedImage
+            src={mysteryPodImageUrl}
+            className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-violet-100"
+            imgClassName="pointer-events-none h-[148%] w-auto max-w-[none] translate-y-[4%] object-contain object-center select-none"
+          />
+        ) : (
+          <PetProfileImage
+            pet={pet}
+            className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-violet-50/95"
+          />
+        )}
+        <p className="min-w-0 flex-1 truncate text-[10px] font-black leading-tight tracking-tight text-zinc-950">{label}</p>
+        <span className="shrink-0 text-[12px] leading-none" title="" aria-hidden>
+          {pet ? FETCH_PET_CARD_EMOJI[pet.id] : '🎁'}
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="pointer-events-auto absolute bottom-2.5 left-2 z-[3] w-[7.5rem] max-w-[calc(100%-0.85rem)] rounded-lg bg-white px-[3px] py-0.5 text-left text-[#1c1340] shadow-[0_12px_28px_-16px_rgba(0,0,0,0.18)] ring-1 ring-zinc-200 sm:bottom-3.5 sm:left-3 sm:w-[7.85rem]"
+      data-fetch-home-my-pets-card
+    >
+      <button
+        type="button"
+        onClick={onOpenPetEdit}
+        className="absolute -top-8 left-0 z-[4] flex h-7 w-7 items-center justify-center rounded-full bg-white text-zinc-800 shadow-[0_6px_14px_-4px_rgba(0,0,0,0.2)] ring-2 ring-zinc-200 transition-[transform,filter] active:scale-[0.94]"
+        aria-label="Edit home and pet"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="m4 16.5-.7 4.2 4.2-.7L18.7 8.8l-3.5-3.5L4 16.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+          <path d="m14.5 6 3.5 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </button>
+      <div className="flex items-baseline justify-between gap-1 border-b border-zinc-200 px-[3px] pb-[3px] pt-px">
+        <span className="flex min-w-0 items-center gap-0.5 text-[7px] font-black uppercase leading-none tracking-[0.1em] text-zinc-950">
+          <span aria-hidden className="inline-block shrink-0 text-[8px]">
+            🐾
+          </span>
+          My pets
+        </span>
+        <span className="shrink-0 font-black tabular-nums text-[6.75px] leading-none tracking-wide text-zinc-500">{unlockedSlots}/3</span>
+      </div>
+      <div className="mt-[3px] flex flex-col gap-[2px]">
+        {trailPet && showTripleRosterRows ? rosterRow(trailPet, trailName, 'trail', false, false) : null}
+        {rosterRow(
+          starterMysteryActive ? null : rosterActivePet,
+          leadLabel,
+          'lead',
+          true,
+          starterMysteryActive,
+        )}
+        {unlockedSlots >= 2 && benchPet && !starterMysteryActive ? (
+          rosterRow(benchPet, benchName, 'bench', false, false)
+        ) : (
+          <button
+            type="button"
+            onClick={onOpenPetEdit}
+            className="flex min-h-[1.65rem] w-full items-center gap-1 rounded-md bg-zinc-50 px-[3px] py-[2px] text-left ring-1 ring-zinc-200 transition-colors active:bg-zinc-100"
+            aria-label={
+              nextSlotCost != null
+                ? `Pet slot locked. Unlock for ${nextSlotCost} gems in Home and pet`
+                : 'Pet slot locked. Open Home and pet'
+            }
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-300/95 text-[#52525c] shadow-inner ring-2 ring-white">
+              <HeroMyPetsRosterMiniIconLock className="text-zinc-600" />
+            </span>
+            <span className="text-[9px] font-black uppercase tracking-[0.06em] text-zinc-600">Locked</span>
+            <span className="ml-auto shrink-0 text-[10px] opacity-55" aria-hidden>
+              🔒
+            </span>
+          </button>
+        )}
+        {showTripleRosterRows ? null : unlockedSlots >= MAX_HOME_PET_SLOTS ? (
+          <div className="flex items-center gap-1 rounded-md bg-violet-50/55 px-[3px] py-[2px] ring-1 ring-zinc-200/85">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[11px]" aria-hidden>
+              ✦
+            </span>
+            <p className="min-w-0 flex-1 truncate text-[8px] font-black uppercase tracking-[0.07em] text-violet-600">Soon</p>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onOpenPetEdit}
+            className="flex min-h-[1.65rem] w-full items-center gap-1 rounded-md bg-zinc-50 px-[3px] py-[2px] text-left ring-1 ring-zinc-200 transition-colors active:bg-zinc-100"
+            aria-label={
+              unlockedSlots <= 1
+                ? 'Third roster slot locked. Unlock slot two first in Home and pet'
+                : nextHomePetSlotUnlockGemCost(unlockedSlots) != null
+                  ? `Third roster slot locked. Unlock for ${nextHomePetSlotUnlockGemCost(unlockedSlots)} gems in Home and pet`
+                  : 'Third roster slot locked. Open Home and pet'
+            }
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-300/95 text-[#52525c] shadow-inner ring-2 ring-white">
+              <HeroMyPetsRosterMiniIconLock className="text-zinc-600" />
+            </span>
+            <span className="text-[9px] font-black uppercase tracking-[0.06em] text-zinc-600">Locked</span>
+            <span className="ml-auto shrink-0 text-[10px] opacity-55" aria-hidden>
+              🔒
+            </span>
+          </button>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={onOpenPetEdit}
+        className="mt-[3px] w-full text-center text-[6.75px] font-black uppercase tracking-[0.11em] text-[#7c3aed]"
+      >
+        View all pets &gt;
+      </button>
+      <div className="my-1 h-px w-full bg-zinc-100" aria-hidden />
+      <p className="mb-[3px] flex items-center justify-between px-[3px] text-[7.75px] font-black uppercase tracking-[0.055em] text-zinc-500 sm:text-[8px]">
+        <span>Leader appetite</span>
+        <span
+          className={[
+            isPetFed ? 'text-emerald-600' : petHungerStage === 'risk' ? 'text-red-600' : 'text-amber-600',
+          ].join(' ')}
+        >
+          {isPetFed ? 'Fed' : petHungerStage === 'risk' ? 'Risk' : 'Hungry'}
+        </span>
+      </p>
+      <div className="flex items-center justify-between gap-1 px-[3px] pb-[3px]">
+        <span className="min-w-0 truncate text-[10px] font-black tabular-nums text-zinc-800 sm:text-[11px]">
+          {petFeedTimerLabel}
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={onFeedPet}
+        disabled={starterMysteryActive || !canFeedPet}
+        className={[
+          'flex w-full items-center justify-center gap-1.5 rounded-xl px-1.5 py-[5px] text-[10px] font-black uppercase tracking-[0.075em] shadow-none sm:text-[11px]',
+          starterMysteryActive
+            ? 'cursor-not-allowed border-b-[4px] border-b-zinc-300/80 bg-zinc-100 text-zinc-500'
+            : canFeedPet
+              ? feed3dPurpleCta
+              : 'cursor-not-allowed border-b-[4px] border-b-zinc-300/80 bg-zinc-100 text-zinc-500',
+        ].join(' ')}
+        aria-label={
+          starterMysteryActive
+            ? `Unlock your companion in the banner to enable feeding (${feedPetLabel})`
+            : feedPetLabel
+        }
+      >
+        <HeroPetBowlIcon className="h-[14px] w-[14px] sm:h-4 sm:w-4" />
+        {starterMysteryActive ? 'WAIT' : canFeedPet ? 'FEED' : 'FED'}
+      </button>
+    </div>
+  )
+}
+
+function HomeBannerDockPetColumn({
+  pet,
+  layout,
+  hungerFilterClass,
+  lane = 'even',
+}: {
+  pet: FetchHomePet
+  layout: 'triple' | 'dual' | 'solo'
+  hungerFilterClass: string
+  /** Triple / dual: banner leader reads “in front”. */
+  lane?: 'even' | 'center' | 'side'
+}) {
+  const airFloat = pet.id === 'air'
+  const padClass = FETCH_PET_BANNER_PAD_TAILWIND[pet.id] ?? 'bg-white/55'
+  const isCenter = lane === 'center'
+  const isSide = lane === 'side'
+
+  const colHeights =
+    layout === 'solo'
+      ? 'h-[min(42vw,13.1rem)]'
+      : layout === 'triple' && isCenter
+        ? 'h-[min(39vw,11.55rem)] sm:h-[min(36vw,11.75rem)]'
+        : layout === 'triple' && isSide
+          ? 'h-[min(35vw,10.65rem)] sm:h-[min(33vw,10.8rem)]'
+          : layout === 'dual' && isCenter
+            ? 'h-[min(40vw,11.55rem)]'
+            : layout === 'dual' && isSide
+              ? 'h-[min(37vw,11.05rem)]'
+              : 'h-[min(39vw,11.35rem)]'
+
+  const imgSizing =
+    layout === 'triple' && isCenter
+      ? ['pointer-events-none h-[116%] w-auto max-w-[none] translate-y-[9.75%]', hungerFilterClass].filter(Boolean).join(' ')
+      : layout === 'triple' && isSide
+        ? ['pointer-events-none h-[108%] w-auto max-w-[none] translate-y-[9%]', hungerFilterClass].filter(Boolean).join(' ')
+        : layout === 'dual' && isCenter
+          ? ['pointer-events-none h-[110%] w-auto max-w-[none] translate-y-[10%]', hungerFilterClass].filter(Boolean).join(' ')
+          : layout === 'dual' && isSide
+            ? ['pointer-events-none h-[106%] w-auto max-w-[none] translate-y-[10%]', hungerFilterClass].filter(Boolean).join(' ')
+            : layout === 'triple'
+              ? ['pointer-events-none h-[108%] w-auto max-w-[none] translate-y-[9%]', hungerFilterClass].filter(Boolean).join(' ')
+              : layout === 'dual'
+                ? ['pointer-events-none h-[108%] w-auto max-w-[none] translate-y-[10%]', hungerFilterClass].filter(Boolean).join(' ')
+                : ['pointer-events-none h-[114%] w-auto max-w-[none] translate-y-[10%]', hungerFilterClass].filter(Boolean).join(' ')
+
+  const depthPresentation =
+    layout === 'triple' && isCenter
+      ? 'relative z-[6] origin-bottom scale-[1.1] sm:scale-[1.12]'
+      : layout === 'triple' && isSide
+        ? 'relative z-[1] origin-bottom scale-[0.9] sm:scale-[0.91] opacity-[0.96]'
+        : layout === 'dual' && isCenter
+          ? 'relative z-[5] origin-bottom scale-[1.07] sm:scale-[1.08]'
+          : layout === 'dual' && isSide
+            ? 'relative z-[1] origin-bottom scale-[0.93] sm:scale-[0.94]'
+            : layout === 'solo'
+              ? 'relative z-[2] origin-bottom scale-[1.04] sm:scale-[1.05]'
+              : 'relative z-[1] origin-bottom'
+
+  const colOuter =
+    layout === 'solo'
+      ? 'relative z-[2] flex min-h-0 min-w-0 flex-1 flex-col items-center justify-end overflow-visible'
+      : [
+          'relative flex flex-none shrink-0 flex-col items-center justify-end overflow-visible first:ml-0 -ml-[11px] sm:-ml-[13px]',
+          isCenter
+            ? 'z-[5] max-w-[6.62rem] w-[clamp(5.15rem,26.5vw,6.62rem)] sm:z-[6] sm:max-w-[6.82rem] sm:w-[clamp(5.25rem,26vw,6.82rem)]'
+            : 'z-[1] max-w-[5.78rem] w-[clamp(4.55rem,22.5vw,5.78rem)] sm:max-w-[5.9rem] sm:w-[clamp(4.6rem,22vw,5.9rem)]',
+        ].join(' ')
+
+  const innerWrapMax =
+    layout === 'solo'
+      ? 'relative flex w-full max-w-[9rem] flex-col items-center justify-end sm:max-w-[9.55rem]'
+      : isCenter
+        ? 'relative flex w-full max-w-[6.75rem] flex-col items-center justify-end sm:max-w-[6.95rem]'
+        : 'relative flex w-full max-w-[5.88rem] flex-col items-center justify-end sm:max-w-[6rem]'
+
+  return (
+    <div className={colOuter}>
+      <span
+        className={[
+          'pointer-events-none absolute bottom-[2px] left-1/2 z-[0] h-[21%] min-h-[0.55rem] w-[72%] max-w-[6.75rem] -translate-x-1/2 rounded-[50%] blur-[10px]',
+          isCenter ? 'h-[24%] opacity-90' : '',
+          padClass,
+        ].join(' ')}
+        aria-hidden
+      />
+      <div className={[innerWrapMax, colHeights, depthPresentation, airFloat ? 'fetch-banner-air-pet-float' : ''].join(' ')}>
+        <GreenscreenKeyedImage
+          src={homeDisplayImageForPet(pet)}
+          className="flex h-full w-full items-end justify-center"
+          imgClassName={[imgSizing, 'object-contain object-bottom select-none'].join(' ')}
+        />
+      </div>
+    </div>
+  )
+}
+
+function HomeBannerPetDock({
+  unlockedSlots,
+  leaderPet,
+  benchPet,
+  trailPet,
+  isPetFed,
+  starterMysteryActive,
+  starterUnlockRunning,
+  mysteryPodImageUrl,
+  onStarterUnlockClick,
+}: {
+  unlockedSlots: number
+  leaderPet: FetchHomePet
+  benchPet: FetchHomePet | null
+  trailPet: FetchHomePet | null
+  isPetFed: boolean
+  starterMysteryActive: boolean
+  starterUnlockRunning: boolean
+  mysteryPodImageUrl: string
+  onStarterUnlockClick: () => void
+}) {
+  const hungerFilterLeader = !isPetFed ? 'saturate-[0.88] hue-rotate-[-18deg] contrast-[1.05]' : ''
+  const triple = unlockedSlots >= 3 && !starterMysteryActive && benchPet != null && trailPet != null
+  const duo = unlockedSlots >= 2 && !starterMysteryActive && benchPet != null && !triple
+
+  const frameClass = triple
+    ? 'h-[min(45vw,12.95rem)] w-[min(54vw,16.35rem)] sm:h-[min(43vw,12.85rem)] sm:w-[min(50vw,16.05rem)]'
+    : duo
+      ? 'h-[min(43vw,12.65rem)] w-[min(52vw,15.05rem)]'
+      : 'h-[min(43vw,12.95rem)] w-[min(58vw,15.85rem)]'
+
+  if (starterMysteryActive) {
+    return (
+      <div className={['relative flex shrink-0 flex-col items-center justify-end', frameClass].join(' ')}>
+        <div className="flex w-full flex-col items-center justify-end">
+          <div className="relative flex w-full max-w-[8.5rem] flex-col items-center justify-end">
+            <div
+              className={['relative flex w-full flex-col items-center justify-end', starterUnlockRunning ? 'fetch-mystery-pod-unlock-burst' : ''].join(
+                ' ',
+              )}
+            >
+              <div className="flex w-full items-end justify-center [-webkit-tap-highlight-color:transparent]">
+                <GreenscreenKeyedImage
+                  src={mysteryPodImageUrl}
+                  className="pointer-events-none flex h-full max-h-[min(34vw,10.5rem)] w-full items-end justify-center"
+                  imgClassName="pointer-events-none h-[122%] w-auto max-w-[none] translate-y-[6%] object-contain object-bottom select-none"
+                />
+              </div>
+              {!starterUnlockRunning ? (
+                <button
+                  type="button"
+                  onClick={onStarterUnlockClick}
+                  data-fetch-starter-unlock
+                  className="pointer-events-auto relative z-[12] mb-[-2px] mt-1 w-[min(92%,11rem)] rounded-xl border-b-[4px] border-[#4c1d95] bg-gradient-to-b from-[#c4b5fd] to-[#7c3aed] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2 sm:text-[11px] sm:tracking-[0.16em]"
+                >
+                  Unlock
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={['relative flex shrink-0 items-end justify-center', frameClass].join(' ')}>
+      {triple && trailPet ? (
+        <div className="flex h-full w-full items-end justify-end gap-0 pl-11 pr-0.5 sm:pl-[3.5rem] sm:pr-1">
+          <HomeBannerDockPetColumn pet={trailPet} layout="triple" lane="side" hungerFilterClass="" />
+          <HomeBannerDockPetColumn pet={leaderPet} layout="triple" lane="center" hungerFilterClass={hungerFilterLeader} />
+          <HomeBannerDockPetColumn pet={benchPet} layout="triple" lane="side" hungerFilterClass="" />
+        </div>
+      ) : duo && benchPet ? (
+        <div className="flex h-full w-full items-end justify-end gap-0 px-10 pr-1 sm:px-11 sm:pr-1.5">
+          <HomeBannerDockPetColumn pet={leaderPet} layout="dual" lane="center" hungerFilterClass={hungerFilterLeader} />
+          <HomeBannerDockPetColumn pet={benchPet} layout="dual" lane="side" hungerFilterClass="" />
+        </div>
+      ) : (
+        <div className="flex h-full w-full items-end justify-center">
+          <HomeBannerDockPetColumn pet={leaderPet} layout="solo" hungerFilterClass={hungerFilterLeader} />
+        </div>
+      )}
+    </div>
+  )
+}
+
 function FetchitWelcomeHero({
   displayName,
-  isAdventuring,
+  dailyStreakCount,
   adventureLevel,
   adventureXp,
   fundsLabel,
   gemsCount,
   notificationsCount,
   petName,
-  petId,
-  heroGender,
-  petAvatarUrl,
-  petFedBannerUrl,
-  petHungryBannerUrl,
   petFeedTimerLabel,
   petRank,
   petHungerStage,
   isPetFed,
   canFeedPet,
   petCelebrationSeq,
+  unlockedHomePetSlots,
+  rosterActivePet,
+  benchPet,
+  petNames,
+  petRanks,
+  starterPetRevealed,
+  starterUnlockRunning,
+  onStarterUnlockClick,
   onAddDemoFunds,
   onViewBackpack,
   onOpenGemGames,
@@ -486,7 +1483,7 @@ function FetchitWelcomeHero({
   onFeedPet,
 }: {
   displayName: string
-  isAdventuring: boolean
+  dailyStreakCount: number
   adventureLevel: number
   /** 0–100 XP into current level (see `fetchAdventureRewards`). */
   adventureXp: number
@@ -494,70 +1491,66 @@ function FetchitWelcomeHero({
   gemsCount: number
   notificationsCount: number
   petName: string
-  petId: FetchPetId
-  heroGender: HeroGender
-  petAvatarUrl: string
-  petFedBannerUrl: string
-  petHungryBannerUrl: string
   petFeedTimerLabel: string
   petRank: number
   petHungerStage: 'hungry' | 'risk'
   isPetFed: boolean
   canFeedPet: boolean
   petCelebrationSeq: number
+  unlockedHomePetSlots: number
+  rosterActivePet: FetchHomePet
+  benchPet: FetchHomePet | null
+  petNames: Record<FetchPetId, string>
+  petRanks: Record<FetchPetId, number>
+  starterPetRevealed: boolean
+  starterUnlockRunning: boolean
+  onStarterUnlockClick: () => void
   onAddDemoFunds: () => void
   onViewBackpack: () => void
   onOpenGemGames: () => void
   onOpenPetEdit: () => void
   onFeedPet: () => void
 }) {
-  const firstName = firstNameFromDisplay(displayName).toUpperCase()
+  const levelCardName = firstNameFromDisplay(displayName)
+  const levelCardTitle = `${levelCardName} · ${petName}`
   const xpBar = heroXpBarNumbers(adventureLevel, adventureXp)
-  const useMaleTigerAdventureBanner = heroGender === 'male' && petId === 'tiger'
-  const bannerUrl = isAdventuring
-    ? useMaleTigerAdventureBanner
-      ? isPetFed
-        ? fetchitAdventuringMaleTigerBannerUrl
-        : fetchitAdventuringMaleTigerHungryBannerUrl
-      : isPetFed
-        ? fetchitAdventuringBannerUrl
-        : fetchitAdventuringHour1BannerUrl
-    : isPetFed
-      ? petFedBannerUrl
-      : petHungryBannerUrl
-  const isPetBanner = bannerUrl === petFedBannerUrl || bannerUrl === petHungryBannerUrl
-  const isAdventureBanner =
-    bannerUrl === fetchitAdventuringBannerUrl ||
-    bannerUrl === fetchitAdventuringHour1BannerUrl ||
-    bannerUrl === fetchitAdventuringMaleTigerBannerUrl ||
-    bannerUrl === fetchitAdventuringMaleTigerHungryBannerUrl
-  const bannerAspectClass = isPetBanner ? 'aspect-square' : isAdventureBanner ? '' : 'aspect-[3/2]'
-  const bannerObjectClass = isAdventureBanner ? 'object-contain object-center' : 'object-cover object-center'
   const backpackImageUrl = backpackImageForLevel(adventureLevel)
+  const starterMysteryActive = !starterPetRevealed
+  const bannerTrailPet =
+    unlockedHomePetSlots >= 3 && benchPet && starterPetRevealed ? rosterPetBehindLeader(rosterActivePet) : null
   return (
     <section
       className="relative w-full overflow-hidden rounded-t-xl"
-      aria-label="Welcome and backpack"
+      aria-label="Home hero, header stats, and backpack"
     >
-      <div className="flex items-stretch gap-2 bg-white px-2 py-2.5 text-[#1c1340]">
-        <div className="flex min-h-[3.35rem] min-w-0 flex-[1.2] items-start gap-2 rounded-xl bg-white px-2 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95">
+      <div className="flex items-stretch gap-1.5 bg-white px-2 py-1.5 text-[#1c1340]">
+        <div className="flex min-h-[2.5rem] min-w-0 flex-[1.2] items-start gap-1.5 rounded-lg bg-white px-1.5 py-1 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95">
           <span
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#7c3aed] text-[14px] font-black tabular-nums text-white shadow-[0_4px_12px_-4px_rgba(76,29,149,0.55)]"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#7c3aed] text-[12px] font-black tabular-nums text-white shadow-[0_4px_12px_-4px_rgba(76,29,149,0.55)]"
             aria-hidden
           >
             {adventureLevel}
           </span>
-          <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
-            <p className="text-[10px] font-black uppercase leading-none tracking-[0.14em] text-[#4c1d95]">
+          <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
+            <p
+              className={[
+                'truncate font-black leading-none tracking-tight text-[#1c1340]',
+                levelCardTitle.length > 18 ? 'text-[8px]' : levelCardTitle.length > 12 ? 'text-[9px]' : 'text-[10px]',
+              ].join(' ')}
+              title={levelCardTitle}
+            >
+              {levelCardName} · {petName}
+            </p>
+            <p className="text-[9px] font-black uppercase leading-none tracking-[0.14em] text-[#4c1d95]">
               Level {adventureLevel}
             </p>
-            <div className="h-[5px] overflow-hidden rounded-full bg-violet-100">
+            <div className="h-[4px] overflow-hidden rounded-full bg-violet-100">
               <div
                 className="h-full rounded-full bg-[#7c3aed]"
                 style={{ width: `${xpBar.pct}%` }}
               />
             </div>
-            <p className="text-[9px] font-bold tabular-nums leading-none text-zinc-600">
+            <p className="text-[8px] font-bold tabular-nums leading-none text-zinc-600">
               {xpBar.current} / {xpBar.next} XP
             </p>
           </div>
@@ -565,7 +1558,7 @@ function FetchitWelcomeHero({
         <button
           type="button"
           onClick={onAddDemoFunds}
-          className="flex min-h-[3.35rem] min-w-0 flex-1 items-center gap-1.5 rounded-xl bg-white px-2 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95 transition-colors active:bg-zinc-50/90"
+          className="flex min-h-[2.5rem] min-w-0 flex-1 items-center gap-1 rounded-lg bg-white px-1.5 py-1 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95 transition-colors active:bg-zinc-50/90"
           aria-label={`Add funds, wallet balance ${fundsLabel}`}
           data-fetch-tour-target="addFunds"
         >
@@ -575,15 +1568,15 @@ function FetchitWelcomeHero({
             width={36}
             height={36}
             draggable={false}
-            className="pointer-events-none h-8 w-8 shrink-0 select-none object-contain"
+            className="pointer-events-none h-7 w-7 shrink-0 select-none object-contain"
           />
-          <span className="min-w-0 flex-1 truncate text-left text-[12px] font-black tabular-nums text-[#1c1340]">{fundsLabel}</span>
-          <HeaderSquarePlusIcon />
+          <span className="min-w-0 flex-1 truncate text-left text-[11px] font-black tabular-nums text-[#1c1340]">{fundsLabel}</span>
+          <HeaderSquarePlusIcon className="!h-6 !w-6" />
         </button>
         <button
           type="button"
           onClick={onOpenGemGames}
-          className="flex min-h-[3.35rem] min-w-0 flex-1 items-center gap-1.5 rounded-xl bg-white px-2 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95 transition-colors active:bg-zinc-50/90"
+          className="flex min-h-[2.5rem] min-w-[4.25rem] shrink-0 flex-col items-center justify-center gap-0 rounded-lg bg-white px-2 py-0.5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95 transition-colors active:bg-violet-50/90 sm:min-w-[4.5rem]"
           aria-label={`Open gem games, ${gemsCount} gems`}
           data-fetch-home-gems-chip
         >
@@ -591,20 +1584,19 @@ function FetchitWelcomeHero({
             src={purpleGemIconUrl}
             alt=""
             aria-hidden
-            className="h-[22px] w-[22px] shrink-0 object-contain"
+            className="h-[18px] w-[18px] shrink-0 object-contain"
             draggable={false}
             loading="lazy"
             data-fetch-home-gems-icon
           />
-          <span className="min-w-0 flex-1 truncate text-left text-[12px] font-black tabular-nums text-[#1c1340]">{gemsCount}</span>
-          <HeaderSquarePlusIcon />
+          <span className="text-[11px] font-black leading-none tabular-nums text-[#1c1340]">{gemsCount}</span>
         </button>
         <button
           type="button"
-          className="relative flex h-auto min-h-[3.35rem] w-[3.05rem] shrink-0 items-center justify-center rounded-xl bg-white px-0 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95 transition-colors active:bg-zinc-50/90"
+          className="relative flex h-auto min-h-[2.5rem] w-[2.68rem] shrink-0 flex-col items-center justify-center rounded-lg bg-white px-0 py-0.5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95 transition-colors active:bg-zinc-50/90"
           aria-label={`${notificationsCount} notifications`}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0 text-zinc-700">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0 text-zinc-700">
             <path
               d="M18 10a6 6 0 1 0-12 0c0 7-2.5 7-2.5 8h17S18 17 18 10Z"
               stroke="currentColor"
@@ -620,161 +1612,101 @@ function FetchitWelcomeHero({
           ) : null}
         </button>
       </div>
-      <div className={`relative ${bannerAspectClass} w-full overflow-hidden rounded-t-xl bg-gradient-to-b from-[#cdb7ff] via-[#a78bfa] to-[#7c3aed] shadow-[0_22px_48px_-22px_rgba(76,29,149,0.6)]`}>
+      <div className="relative mt-2 aspect-square w-full overflow-hidden rounded-t-xl bg-gradient-to-b from-[#cdb7ff] via-[#a78bfa] to-[#7c3aed] shadow-[0_22px_48px_-22px_rgba(76,29,149,0.6)] sm:mt-2.5">
         <img
-          src={bannerUrl}
+          src={fetchitHomePodRoomBgUrl}
           alt=""
           aria-hidden
           draggable={false}
-          className={[
-            'pointer-events-none w-full select-none',
-            isAdventureBanner ? 'block h-auto' : 'absolute inset-0 h-full',
-            bannerObjectClass,
-          ].join(' ')}
+          className="pointer-events-none absolute inset-0 z-0 h-full w-full select-none object-cover object-center"
         />
         <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-[min(32%,156px)] bg-gradient-to-b from-white via-white/55 to-transparent"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[min(52%,260px)] bg-gradient-to-b from-transparent via-white/55 to-white"
+        />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[9%] z-[2]">
+          <div className="absolute bottom-[-1.5%] left-[41%] z-[2] w-[min(72%,19.5rem)] max-w-none -translate-x-1/2 sm:left-[40%] sm:w-[min(68%,19.75rem)]">
+            <GreenscreenKeyedImage
+              src={fetchitHomeHeroHumanLayerUrl}
+              className="block w-full"
+              imgClassName="pointer-events-none h-auto w-full origin-bottom scale-[1.3] select-none object-contain object-bottom"
+            />
+          </div>
+          <div
+            className={[
+              'absolute bottom-0 right-0 z-[5] -translate-x-5 -translate-y-1.5 px-0 sm:-translate-x-4 sm:-translate-y-2',
+              starterMysteryActive || starterUnlockRunning ? 'pointer-events-auto' : 'pointer-events-none',
+            ].join(' ')}
+          >
+            <HomeBannerPetDock
+              unlockedSlots={unlockedHomePetSlots}
+              leaderPet={rosterActivePet}
+              benchPet={benchPet}
+              trailPet={bannerTrailPet}
+              isPetFed={isPetFed}
+              starterMysteryActive={starterMysteryActive}
+              starterUnlockRunning={starterUnlockRunning}
+              mysteryPodImageUrl={fetchitMysteryStarterPodUrl}
+              onStarterUnlockClick={onStarterUnlockClick}
+            />
+          </div>
+        </div>
+        <div
           role="group"
-          aria-label={`Welcome back, ${firstName}`}
-          className="pointer-events-none absolute left-2 top-2 z-[3] max-w-[min(calc(100%-1rem),13rem)] rounded-xl bg-black/55 px-3 py-2.5 text-left text-white shadow-[0_16px_40px_-20px_rgba(0,0,0,0.65)] ring-1 ring-white/15 backdrop-blur-xl sm:left-3 sm:top-3 sm:max-w-[min(calc(100%-1.25rem),14rem)] sm:rounded-[1.1rem] sm:px-3.5 sm:py-3"
+          aria-label={`Daily streak ${dailyStreakCount} ${dailyStreakCount === 1 ? 'day' : 'days'}`}
+          title="Open Fetch again tomorrow to grow your streak."
+          className="pointer-events-none absolute left-2 top-0.5 z-[3] flex max-w-[min(calc(100%-1rem),10.5rem)] items-center gap-1.5 rounded-lg bg-white px-2 py-1.5 text-left text-[#1c1340] shadow-[0_6px_20px_-12px_rgba(30,15,80,0.22)] ring-1 ring-zinc-200/90 sm:left-3 sm:top-1"
         >
-          <p className="text-[9px] font-semibold leading-none tracking-[0.04em] text-white/85">Welcome back,</p>
-          <h2
-            className={[
-              'mt-1 truncate font-black uppercase leading-none tracking-tight text-white',
-              firstName.length > 8 ? 'text-[14px] sm:text-[15px]' : 'text-[17px] sm:text-[18px]',
-            ].join(' ')}
-            title={firstName}
-          >
-            {firstName}!
-          </h2>
-        </div>
-        <div
-          className={[
-            'absolute z-[3] max-w-[min(72vw,7.5rem)] rounded-xl bg-white px-2 py-1.5 text-left text-[8px] font-black leading-snug text-[#1c1340] shadow-[0_14px_28px_-20px_rgba(30,15,80,0.65)] ring-1 ring-violet-100',
-            'sm:max-w-[8.5rem] sm:rounded-2xl sm:px-2.5 sm:py-2 sm:text-[9px] sm:leading-tight',
-            'md:max-w-[9rem] md:px-3 md:text-[9.5px]',
-            'lg:max-w-[9.5rem] lg:text-[10px]',
-            'xl:max-w-[10rem]',
-            isPetBanner || isAdventureBanner
-              ? [
-                  'left-[58%] bottom-[50%] -translate-x-1/2',
-                  'sm:left-[59%] sm:bottom-[51%]',
-                  'md:left-[59.5%] md:bottom-[50%]',
-                  'lg:left-[60%] lg:bottom-[49%]',
-                  'xl:left-[61%] xl:bottom-[48%]',
-                ].join(' ')
-              : [
-                  'right-[6%] top-[36%] -translate-y-1/2',
-                  'sm:right-[8%] sm:top-[38%]',
-                  'md:right-[10%] md:top-[40%]',
-                  'lg:right-[11%] lg:top-[42%]',
-                ].join(' '),
-          ].join(' ')}
-        >
-          {isPetFed ? "I'm full and ready to find epic loot!" : "I'm hungry! Feed me so I can find loot!"}
-          <span
-            className={[
-              'absolute h-2.5 w-2.5 rotate-45 border-r border-b border-violet-100 bg-white sm:h-3 sm:w-3',
-              isPetBanner || isAdventureBanner
-                ? '-bottom-1 left-1/2 -translate-x-1/2 sm:-bottom-1.5'
-                : '-bottom-1 left-5 sm:-bottom-1.5 sm:left-6',
-            ].join(' ')}
-            aria-hidden
-          />
-        </div>
-        <div
-          className={[
-            'absolute z-[3] flex h-7 w-7 items-center justify-center rounded-full text-white ring-2 ring-white',
-            isAdventureBanner
-              ? 'left-[66%] bottom-[9%] sm:left-[65%] sm:bottom-[10%]'
-              : 'left-[54%] bottom-[8%]',
-            isPetFed
-              ? 'bg-emerald-500 shadow-[0_10px_24px_-12px_rgba(16,185,129,0.85)]'
-              : petHungerStage === 'risk'
-                ? 'bg-red-600 shadow-[0_10px_24px_-12px_rgba(185,28,28,0.85)]'
-                : 'bg-amber-400 text-[#1c1340] shadow-[0_10px_24px_-12px_rgba(245,158,11,0.85)]',
-          ].join(' ')}
-          aria-label={
-            isPetFed
-              ? 'Pet has eaten'
-              : petHungerStage === 'risk'
-                ? 'Pet is at risk of starvation'
-                : 'Pet is hungry'
-          }
-        >
-          {isPetFed ? (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M5 12.5 9.3 17 19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          ) : (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M12 4 21 19.5H3L12 4Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
-              <path d="M12 9v4.5" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
-              <path d="M12 17.25h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-            </svg>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={onOpenPetEdit}
-          className="absolute bottom-3 right-3 z-[4] flex h-9 w-9 items-center justify-center rounded-full bg-white text-zinc-800 shadow-[0_6px_14px_-4px_rgba(0,0,0,0.2)] ring-2 ring-zinc-200 transition-[transform,filter] active:scale-[0.94] sm:bottom-4 sm:right-4"
-          aria-label="Edit home and pet"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path d="m4 16.5-.7 4.2 4.2-.7L18.7 8.8l-3.5-3.5L4 16.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-            <path d="m14.5 6 3.5 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
-        <div className="absolute bottom-3 left-3 z-[3] w-[6.35rem] rounded-xl bg-white p-1 text-left text-[#1c1340] shadow-[0_14px_32px_-18px_rgba(0,0,0,0.18)] ring-1 ring-zinc-200 sm:bottom-4 sm:left-4 sm:w-[6.65rem]">
-          <div className="border-b border-zinc-200 px-0.5 pb-1 pt-0.5 text-center">
-            <p
-              className="truncate text-[10px] font-black uppercase leading-none tracking-[0.14em] text-zinc-950 sm:text-[11px]"
-              title={petName}
-            >
-              {petName}
-            </p>
-            <p className="mt-1 flex items-baseline justify-center gap-1">
-              <span className="text-[8px] font-black uppercase leading-none tracking-[0.14em] text-zinc-500 sm:text-[8.5px]">
-                Rank
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center text-[17px] leading-none" aria-hidden>
+            🔥
+          </span>
+          <div className="min-w-0 flex-1 leading-none">
+            <p className="text-[7.5px] font-semibold uppercase tracking-[0.08em] text-[#4c1d95]/88">Daily streak</p>
+            <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1 gap-y-0 tabular-nums">
+              <span
+                className={
+                  dailyStreakCount >= 100
+                    ? 'text-[15px] font-black leading-none'
+                    : 'text-[17px] font-black leading-none sm:text-[18px]'
+                }
+              >
+                {dailyStreakCount}
               </span>
-              <span className="text-[13px] font-black tabular-nums leading-none tracking-[-0.05em] text-zinc-950 sm:text-[14px]">
-                {petRank}
+              <span className="text-[8px] font-bold leading-none text-zinc-500">
+                {dailyStreakCount === 1 ? 'day' : 'days'}
               </span>
             </p>
           </div>
-          <FetchPetHeroPortrait petAvatarUrl={petAvatarUrl} petName={petName} onEdit={onOpenPetEdit} />
-          <div className="mt-0.5 flex items-center justify-between gap-1 px-0.5">
-            <span
-              className={[
-                'shrink-0 text-[7px] font-black uppercase tracking-[0.06em] sm:text-[8px]',
-                isPetFed ? 'text-emerald-600' : petHungerStage === 'risk' ? 'text-red-600' : 'text-amber-600',
-              ].join(' ')}
-            >
-              {isPetFed ? 'Full' : petHungerStage === 'risk' ? 'Risk' : 'Hungry'}
-            </span>
-            <span className="min-w-0 truncate text-right text-[10px] font-black tabular-nums tracking-tight text-zinc-800 sm:text-[11px]">
-              {petFeedTimerLabel}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={onFeedPet}
-            disabled={!canFeedPet}
-            className={[
-              'mt-0.5 flex w-full items-center justify-center gap-1 rounded-xl px-1.5 py-1 text-[7px] font-black uppercase tracking-[0.08em] shadow-none sm:py-1.5 sm:text-[8px]',
-              canFeedPet
-                ? [feed3dPurpleCta, 'ring-1 ring-[#7c3aed]/35'].join(' ')
-                : 'cursor-not-allowed border-b-[4px] border-b-zinc-300/80 bg-zinc-100 text-zinc-500',
-            ].join(' ')}
-            aria-label={canFeedPet ? `Feed ${petName}` : `${petName} can eat again in ${petFeedTimerLabel}`}
-          >
-            {canFeedPet ? 'FEED' : 'FED'}
-          </button>
         </div>
-        {petCelebrationSeq > 0 ? (
+        <HeroMyPetsRosterCard
+          unlockedSlots={unlockedHomePetSlots}
+          rosterActivePet={rosterActivePet}
+          benchPet={benchPet}
+          petNames={petNames}
+          petRanks={petRanks}
+          leaderName={petName}
+          leaderRank={petRank}
+          isPetFed={isPetFed}
+          petFeedTimerLabel={petFeedTimerLabel}
+          petHungerStage={petHungerStage}
+          starterMysteryActive={starterMysteryActive}
+          mysteryPodImageUrl={fetchitMysteryStarterPodUrl}
+          canFeedPet={canFeedPet}
+          feedPetLabel={canFeedPet ? `Feed ${petName}` : `${petName} can eat again in ${petFeedTimerLabel}`}
+          onOpenPetEdit={onOpenPetEdit}
+          onFeedPet={onFeedPet}
+        />
+        {petCelebrationSeq > 0 && starterPetRevealed ? (
           <div
             key={petCelebrationSeq}
-            className="pointer-events-none absolute bottom-[6.2rem] left-[4.2rem] z-[7]"
+            className={[
+              'pointer-events-none absolute z-[7]',
+              'bottom-[5.75rem] left-[70%] -translate-x-1/2 sm:bottom-[6.25rem] sm:left-[72%]',
+            ].join(' ')}
             aria-hidden
           >
             <span className="fetch-pet-celebration-pop">💜</span>
@@ -802,7 +1734,7 @@ function FetchitWelcomeHero({
           onClick={onViewBackpack}
           data-fetch-backpack-target
           data-fetch-tour-target="backpack"
-          className="group absolute top-3 right-3 z-[3] transition-transform active:scale-[0.98] sm:top-4 sm:right-4"
+          className="group absolute right-3 top-1.5 z-[3] transition-transform active:scale-[0.98] sm:right-4 sm:top-2"
           aria-label="View backpack"
         >
           <div className="fetch-backpack-premium-card relative flex w-[4.6rem] flex-col gap-1 overflow-hidden rounded-xl bg-white px-1 py-1 shadow-none ring-1 ring-zinc-200 sm:w-[4.9rem]">
@@ -880,9 +1812,172 @@ function FetchitWelcomeHero({
           animation: fetch-pet-celebration-burst 1.35s cubic-bezier(0.16, 1, 0.3, 1) both;
           animation-delay: var(--pet-burst-delay);
         }
+        @keyframes fetch-mystery-pod-unlock-burst-kf {
+          0% {
+            transform: translateY(0) rotate(0deg) scale(1);
+            opacity: 1;
+            filter: brightness(1);
+          }
+          22% {
+            transform: translateY(3px) rotate(-7deg) scale(1.04);
+          }
+          44% {
+            transform: translateY(-3px) rotate(7deg) scale(1.07);
+          }
+          66% {
+            transform: translateY(0) rotate(0deg) scale(1.1);
+            filter: brightness(1.45) saturate(1.15);
+          }
+          84% {
+            transform: translateY(-4px) scale(1.16);
+            filter: brightness(1.9)
+              drop-shadow(0 0 22px rgba(167, 139, 250, 0.85))
+              drop-shadow(0 0 42px rgba(124, 58, 237, 0.5));
+          }
+          100% {
+            transform: translateY(-18px) scale(0);
+            opacity: 0;
+            filter: brightness(2.25) blur(3px);
+          }
+        }
+        .fetch-mystery-pod-unlock-burst {
+          transform-origin: 50% 88%;
+          animation: fetch-mystery-pod-unlock-burst-kf 1.45s cubic-bezier(0.38, 0.02, 0.09, 1) forwards;
+        }
       `}</style>
     </section>
   )
+}
+
+function StarterPetSkillsSheet({
+  open,
+  petDisplayName,
+  onClose,
+}: {
+  open: boolean
+  petDisplayName: string
+  onClose: () => void
+}) {
+  if (!open) return null
+  const pet = FETCH_HOME_PETS[0]!
+  return createPortal(
+    <div className="fixed inset-0 z-[93] flex items-end justify-center bg-[#0f0820]/48 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] backdrop-blur-[3px] sm:items-center sm:pb-3">
+      <button type="button" className="absolute inset-0 cursor-default" aria-label="Dismiss" onClick={onClose} />
+      <section
+        className="relative z-[1] w-full max-w-[400px] overflow-hidden rounded-[1.85rem] bg-white text-[#1c1340] shadow-[0_28px_70px_-34px_rgba(30,15,80,0.82)] ring-1 ring-violet-100"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="fetch-starter-skills-title"
+      >
+        <div className="relative overflow-hidden bg-gradient-to-b from-[#ddd6fe] via-[#a78bfa] to-[#6d28d9] px-5 pb-8 pt-6 text-center text-white">
+          <div
+            className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/20 blur-2xl"
+            aria-hidden
+          />
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/90">Starter unlocked</p>
+          <h2 id="fetch-starter-skills-title" className="mt-1 text-[26px] font-black leading-none tracking-[-0.05em]">
+            {petDisplayName}
+          </h2>
+          <p className="mt-1 text-[12px] font-semibold text-white/85">{pet.label}</p>
+          <div className="relative mx-auto mt-4 flex h-[7rem] w-[7rem] items-center justify-center overflow-hidden rounded-full bg-white/15">
+            <PetProfileImage
+              pet={pet}
+              className="relative flex h-full w-full items-center justify-center"
+              preset="circleLg"
+            />
+          </div>
+        </div>
+        <div className="px-4 pb-4 pt-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Skills</p>
+          <ul className="mt-2 flex flex-col gap-2">
+            {STARTER_PET_SKILLS.map((skill) => (
+              <li
+                key={skill.title}
+                className="rounded-2xl bg-violet-50/90 px-3 py-2.5 ring-1 ring-violet-100/90"
+              >
+                <p className="text-[13px] font-black leading-tight text-[#1c1340]">{skill.title}</p>
+                <p className="mt-0.5 text-[11px] font-semibold leading-snug text-zinc-600">{skill.detail}</p>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={onClose}
+            className="mt-4 flex w-full items-center justify-center rounded-2xl border-b-[4px] border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] px-4 py-3.5 text-[12px] font-black uppercase tracking-[0.08em] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
+          >
+            Let&apos;s go
+          </button>
+        </div>
+      </section>
+    </div>,
+    document.body,
+  )
+}
+
+function defaultIncludedPetIdsForEditSheet(
+  pets: ReadonlyArray<FetchHomePet>,
+  selectedPetId: FetchPetId,
+  maxIncluded: number,
+): Set<FetchPetId> {
+  const cap = Math.min(Math.max(1, maxIncluded), PET_EDIT_INCLUDED_MAX, pets.length)
+  if (pets.length <= cap) return new Set(pets.map((p) => p.id))
+  const next = new Set<FetchPetId>([selectedPetId])
+  for (const p of pets) {
+    if (next.size >= cap) break
+    next.add(p.id)
+  }
+  return next
+}
+
+function loadSavedPetEditorIncludedIds(): FetchPetId[] | null {
+  try {
+    const raw = window.localStorage.getItem(PET_EDITOR_INCLUDED_IDS_KEY)?.trim()
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return null
+    const out: FetchPetId[] = []
+    for (const x of parsed) {
+      const id = parseFetchPetId(x)
+      if (id) out.push(id)
+    }
+    return [...new Set(out)]
+  } catch {
+    return null
+  }
+}
+
+function savePetEditorIncludedIds(ids: ReadonlyArray<FetchPetId>) {
+  try {
+    window.localStorage.setItem(PET_EDITOR_INCLUDED_IDS_KEY, JSON.stringify([...new Set(ids)]))
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Merge locally saved roster with banner leader + PET_EDIT_INCLUDED_MAX cap. */
+function resolvePetEditorIncludedIds(
+  pets: ReadonlyArray<FetchHomePet>,
+  selectedPetId: FetchPetId,
+  cap: number,
+): Set<FetchPetId> {
+  const petIdOrder = pets.map((p) => p.id)
+  const allowed = new Set(petIdOrder)
+  const saved = loadSavedPetEditorIncludedIds()
+  if (!saved?.length) {
+    return defaultIncludedPetIdsForEditSheet(pets, selectedPetId, cap)
+  }
+  const next = new Set<FetchPetId>()
+  for (const id of saved) {
+    if (allowed.has(id)) next.add(id)
+  }
+  if (next.size === 0) return defaultIncludedPetIdsForEditSheet(pets, selectedPetId, cap)
+  if (!next.has(selectedPetId)) next.add(selectedPetId)
+  while (next.size > cap) {
+    const drop = petIdOrder.find((id) => next.has(id) && id !== selectedPetId)
+    if (!drop) break
+    next.delete(drop)
+  }
+  return next.size ? next : defaultIncludedPetIdsForEditSheet(pets, selectedPetId, cap)
 }
 
 function PetEditSheet({
@@ -896,12 +1991,15 @@ function PetEditSheet({
   gemsCount,
   isPetFed,
   petFeedTimerLabel,
+  homeUnlockedPetSlots,
   onSelectPet,
   onPetNameChange,
   onUserDisplayNameChange,
   onHeroGenderChange,
-  onRankUpSelectedPet,
+  onRankUpPet,
+  onUnlockHomePetSlot,
   onClose,
+  onSave,
 }: {
   open: boolean
   pets: ReadonlyArray<FetchHomePet>
@@ -913,47 +2011,140 @@ function PetEditSheet({
   gemsCount: number
   isPetFed: boolean
   petFeedTimerLabel: string
+  homeUnlockedPetSlots: number
   onSelectPet: (petId: FetchPetId) => void
   onPetNameChange: (petId: FetchPetId, name: string) => void
   onUserDisplayNameChange: (name: string) => void
   onHeroGenderChange: (gender: HeroGender) => void
-  onRankUpSelectedPet: () => void
+  onRankUpPet: (petId: FetchPetId) => void
+  onUnlockHomePetSlot: () => void
   onClose: () => void
+  /** Commit and dismiss (profile already saves as you edit). */
+  onSave: () => void
 }) {
+  /** Max editor “included” roster (banner slot gems are unrelated — capped at PET_EDIT_INCLUDED_MAX). */
+  const sheetIncludeCap = Math.min(PET_EDIT_INCLUDED_MAX, pets.length)
+
+  const prevSheetOpenRef = useRef(false)
+  /** Banner id for swap math; updated each render and after each swap so batched swaps drop the right pet. */
+  const bannerPetIdRef = useRef(selectedPetId)
+  bannerPetIdRef.current = selectedPetId
+  const [focusedPetId, setFocusedPetId] = useState<FetchPetId>(selectedPetId)
+  const [includedIds, setIncludedIds] = useState<Set<FetchPetId>>(() =>
+    resolvePetEditorIncludedIds(pets, selectedPetId, Math.min(PET_EDIT_INCLUDED_MAX, pets.length)),
+  )
+
+  useEffect(() => {
+    if (!open) {
+      prevSheetOpenRef.current = false
+      return
+    }
+    const sheetJustOpened = !prevSheetOpenRef.current
+    prevSheetOpenRef.current = true
+    if (!sheetJustOpened) return
+    setFocusedPetId(selectedPetId)
+    setIncludedIds(resolvePetEditorIncludedIds(pets, selectedPetId, sheetIncludeCap))
+  }, [open, selectedPetId, pets, sheetIncludeCap])
+
+  useEffect(() => {
+    if (!open || includedIds.size === 0) return
+    savePetEditorIncludedIds([...includedIds])
+  }, [open, includedIds])
+
+  // Only re-point focus when roster membership changes (e.g. "Off").
+  // Including `focusedPetId` here would reset focus when the user taps a pet that is not
+  // yet in the sheet — they need to inspect it before tapping "Swap in".
+  useEffect(() => {
+    if (!open || includedIds.size === 0) return
+    setFocusedPetId((current) => {
+      if (includedIds.has(current)) return current
+      return pets.find((p) => includedIds.has(p.id))?.id ?? current
+    })
+  }, [open, includedIds, pets])
+
+  function setPetIncludedInSheet(petId: FetchPetId, turnOn: boolean) {
+    setIncludedIds((prev) => {
+      if (turnOn) {
+        if (prev.has(petId)) return prev
+        if (prev.size >= sheetIncludeCap) return prev
+        const next = new Set(prev)
+        next.add(petId)
+        return next
+      }
+      if (!prev.has(petId)) return prev
+      if (prev.size <= 1) return prev
+      const next = new Set(prev)
+      next.delete(petId)
+      return next
+    })
+  }
+
+  function swapBannerPet(petId: FetchPetId) {
+    const retiringBannerId = bannerPetIdRef.current
+    setFocusedPetId(petId)
+    setIncludedIds((prev) => {
+      const next = new Set(prev)
+      next.add(petId)
+
+      // A direct swap should work even when the roster is full: replace the old banner first.
+      if (next.size > sheetIncludeCap && retiringBannerId !== petId) {
+        next.delete(retiringBannerId)
+      }
+      while (next.size > sheetIncludeCap) {
+        const drop = pets.find((p) => p.id !== petId && next.has(p.id))?.id
+        if (!drop) break
+        next.delete(drop)
+      }
+      return next
+    })
+    onSelectPet(petId)
+    bannerPetIdRef.current = petId
+  }
+
   if (!open) return null
-  const selectedPet = pets.find((pet) => pet.id === selectedPetId) ?? pets[0]
-  const selRank = normalizePetRank(petRanks[selectedPet.id])
+
+  const focusedPet = pets.find((pet) => pet.id === focusedPetId) ?? pets[0]
+  const selRank = normalizePetRank(petRanks[focusedPet.id])
   const rankCost = petRankUpGemCost(selRank)
   const atMaxRank = selRank >= PET_RANK_MAX
   const canAffordRankUp = gemsCount >= rankCost && !atMaxRank
+  const nextBannerSlotGemCost = nextHomePetSlotUnlockGemCost(homeUnlockedPetSlots)
+  const canUnlockBannerSlot =
+    nextBannerSlotGemCost != null && gemsCount >= nextBannerSlotGemCost && homeUnlockedPetSlots < MAX_HOME_PET_SLOTS
+  const focusedLabel = petNames[focusedPet.id]?.trim() || focusedPet.defaultName
 
   return createPortal(
-    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-[#120822]/45 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] backdrop-blur-sm">
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-[#120822]/45 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] backdrop-blur-sm">
       <button
         type="button"
         className="absolute inset-0 cursor-default"
         aria-label="Close editor"
         onClick={onClose}
       />
-      <section className="relative z-[1] w-full max-w-[430px] overflow-hidden rounded-[2rem] bg-white p-4 text-[#1c1340] shadow-[0_28px_70px_-34px_rgba(30,15,80,0.75)] ring-1 ring-violet-100">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#7c3aed]">Home & pet</p>
-            <h2 className="mt-1 text-[24px] font-black leading-none tracking-[-0.06em]">Make it yours</h2>
+      <section
+        className="relative z-[1] max-h-[min(38rem,calc(100dvh-1.25rem))] w-full max-w-[392px] overflow-y-auto overscroll-contain rounded-2xl bg-white px-3 py-3 text-[#1c1340] shadow-[0_24px_60px_-32px_rgba(30,15,80,0.72)] ring-1 ring-violet-100 [-webkit-overflow-scrolling:touch]"
+        aria-labelledby="fetch-pet-edit-sheet-title"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#7c3aed]">Home & pet</p>
+            <h2 id="fetch-pet-edit-sheet-title" className="mt-0.5 text-[19px] font-black leading-none tracking-[-0.05em] sm:text-xl">
+              Make it yours
+            </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-50 text-[#7c3aed] transition-colors active:bg-violet-100"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-50 text-[#7c3aed] transition-colors active:bg-violet-100"
             aria-label="Close editor"
           >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
           </button>
         </div>
 
-        <label className="mt-4 block text-[10px] font-black uppercase tracking-[0.12em] text-[#7c3aed]" htmlFor="fetch-home-user-display-name">
+        <label className="mt-3 block text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]" htmlFor="fetch-home-user-display-name">
           Your name
         </label>
         <input
@@ -961,25 +2152,23 @@ function PetEditSheet({
           value={userDisplayName}
           onChange={(event) => onUserDisplayNameChange(event.target.value)}
           maxLength={48}
-          className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-4 py-3 text-[16px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+          className="mt-1 w-full rounded-xl border-0 bg-violet-50 px-3 py-2 text-[15px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
           placeholder="Your first name"
           autoComplete="given-name"
           aria-label="Your display name"
         />
-        <p className="mt-1 text-[11px] font-semibold leading-snug text-zinc-500">
-          Shown on your welcome card.
-        </p>
+        <p className="mt-1 text-[10px] font-semibold leading-snug text-zinc-500">Shown on your level card in the hero header.</p>
 
-        <p className="mt-4 text-[10px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Hero banner</p>
-        <p className="mt-1 text-[11px] font-semibold leading-snug text-zinc-500">
-          Female uses illustrated home banners while you&apos;re not adventuring: one when your pet is fed, another when hungry.
+        <p className="mt-3 text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Hero banner</p>
+        <p className="mt-0.5 text-[10px] font-semibold leading-snug text-zinc-500">
+          Female home art swaps between fed vs hungry states when idle.
         </p>
-        <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-label="Hero banner gender">
+        <div className="mt-1.5 grid grid-cols-2 gap-1.5" role="group" aria-label="Hero banner gender">
           <button
             type="button"
             onClick={() => onHeroGenderChange('male')}
             className={[
-              'rounded-2xl px-3 py-3 text-center text-[13px] font-black uppercase tracking-[0.06em] transition-transform active:scale-[0.98]',
+              'rounded-xl px-2 py-2 text-center text-[11px] font-black uppercase tracking-[0.06em] transition-transform active:scale-[0.98]',
               heroGender === 'male'
                 ? 'bg-[#1c1340] text-white ring-2 ring-[#7c3aed]'
                 : 'bg-violet-50 text-[#1c1340] ring-1 ring-violet-100',
@@ -991,7 +2180,7 @@ function PetEditSheet({
             type="button"
             onClick={() => onHeroGenderChange('female')}
             className={[
-              'rounded-2xl px-3 py-3 text-center text-[13px] font-black uppercase tracking-[0.06em] transition-transform active:scale-[0.98]',
+              'rounded-xl px-2 py-2 text-center text-[11px] font-black uppercase tracking-[0.06em] transition-transform active:scale-[0.98]',
               heroGender === 'female'
                 ? 'bg-[#1c1340] text-white ring-2 ring-[#7c3aed]'
                 : 'bg-violet-50 text-[#1c1340] ring-1 ring-violet-100',
@@ -1001,125 +2190,238 @@ function PetEditSheet({
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2.5">
-          {pets.map((pet) => {
-            const selected = pet.id === selectedPetId
-            const name = petNames[pet.id] || pet.defaultName
-            return (
-              <button
-                key={pet.id}
-                type="button"
-                onClick={() => onSelectPet(pet.id)}
-                className={[
-                  'relative overflow-hidden rounded-3xl p-2 text-left transition-transform active:scale-[0.98]',
-                  selected
-                    ? 'bg-[#1c1340] text-white ring-2 ring-[#7c3aed]'
-                    : 'bg-violet-50 text-[#1c1340] ring-1 ring-violet-100',
-                ].join(' ')}
-              >
-                <div className="relative mx-auto w-[88%] rounded-2xl bg-gradient-to-br from-[#c4b5fd] via-[#a78bfa] to-[#7c3aed] p-[2px] shadow-[0_8px_22px_-16px_rgba(76,29,149,0.45)]">
-                  <div className="relative overflow-hidden rounded-[11px] bg-white">
-                    <div className="relative h-[7.25rem] overflow-hidden">
-                      <img
-                        src={pet.avatarUrl}
-                        alt={`${name} avatar`}
-                        draggable={false}
-                        className="absolute left-1/2 top-0 z-[1] h-[10rem] w-[10rem] max-w-none -translate-x-1/2 -translate-y-[22%] select-none object-cover object-top"
-                      />
+        <div className="mt-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Pets</p>
+            <p className="text-[9px] font-semibold tabular-nums text-zinc-500">
+              Tap card to edit · Swap any pet · max {sheetIncludeCap} ({includedIds.size}/{sheetIncludeCap})
+            </p>
+          </div>
+          <div className="mt-1.5 grid grid-cols-2 gap-1.5 min-[401px]:grid-cols-4">
+            {pets.map((pet) => {
+              const included = includedIds.has(pet.id)
+              const atIncludeCap = includedIds.size >= sheetIncludeCap
+              const onBlocked = !included && atIncludeCap
+              const offBlocked = included && includedIds.size <= 1
+              const isBanner = pet.id === selectedPetId
+              const isFocus = pet.id === focusedPetId
+              const name = petNames[pet.id] || pet.defaultName
+              const swapButtonClass = isBanner
+                ? 'cursor-default border-b-[2px] border-emerald-300 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100'
+                : [
+                    'border-b-[2px] border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white shadow-none ring-1 ring-violet-400/40',
+                    'active:border-b-[1px]',
+                  ].join(' ')
+              return (
+                <div key={pet.id} className="relative flex min-w-0 flex-col">
+                  <button
+                    type="button"
+                    onClick={() => setFocusedPetId(pet.id)}
+                    className={[
+                      'relative w-full overflow-hidden rounded-2xl p-1 text-left opacity-100 transition-[transform,opacity] active:scale-[0.97]',
+                      isFocus ? 'ring-2 ring-[#7c3aed] ring-offset-1 ring-offset-white' : 'ring-1 ring-zinc-200/90',
+                      included ? 'bg-zinc-50/95' : 'bg-zinc-100/85 opacity-[0.78]',
+                    ].join(' ')}
+                  >
+                    <div className="relative w-full overflow-hidden rounded-xl bg-gradient-to-b from-white to-violet-50/35 ring-1 ring-zinc-100">
+                      <div className="relative flex h-[4.95rem] w-full items-end justify-center overflow-hidden">
+                        <PetProfileImage
+                          pet={pet}
+                          className="flex max-h-none w-full translate-y-[1px] items-end justify-center"
+                          preset="rectMd"
+                        />
+                      </div>
+                      {isBanner ? (
+                        <span className="pointer-events-none absolute right-0.5 top-0.5 z-[2] rounded px-1 py-px text-[6.25px] font-black uppercase tracking-[0.06em] text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+                          Banner
+                        </span>
+                      ) : null}
+                      <span className="pointer-events-none absolute bottom-0.5 left-0.5 z-[2] rounded bg-[#1c1340]/88 px-[3px] py-px text-[7.5px] font-black tabular-nums leading-none text-white">
+                        R{normalizePetRank(petRanks[pet.id])}
+                      </span>
                     </div>
-                  </div>
+                    <div className="mt-1 px-0.5">
+                      <p className="truncate text-[11px] font-black leading-none text-[#1c1340]">{name}</p>
+                      <p className="mt-px truncate text-[7.5px] font-bold uppercase tracking-[0.06em] text-violet-500">{pet.label}</p>
+                    </div>
+                  </button>
+                  {included ? (
+                    <div className="mt-1 grid grid-cols-2 gap-1">
+                      <button
+                        type="button"
+                        disabled={isBanner}
+                        aria-disabled={isBanner}
+                        aria-label={isBanner ? `${name} is already your banner pet` : `Swap banner pet to ${name}`}
+                        className={[
+                          'rounded-lg px-1 py-1.5 text-[8px] font-black uppercase leading-none tracking-[0.06em] transition-[transform] active:scale-[0.98] sm:text-[8.5px]',
+                          swapButtonClass,
+                        ].join(' ')}
+                        onClick={() => {
+                          if (isBanner) return
+                          swapBannerPet(pet.id)
+                        }}
+                      >
+                        {isBanner ? 'Banner' : 'Swap'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={offBlocked || isBanner}
+                        aria-disabled={offBlocked || isBanner}
+                        aria-label={
+                          isBanner
+                            ? `${name} is the banner pet — swap to another pet before deactivating`
+                            : offBlocked
+                              ? `${name} is the last pet in sheet — mark another Active before removing`
+                              : `Deactivate ${name} · remove from sheet`
+                        }
+                        className={[
+                          'rounded-lg border-b-[2px] border-zinc-400 bg-zinc-100 px-1 py-1.5 text-[8px] font-black uppercase leading-none tracking-[0.06em] text-zinc-800 ring-1 ring-zinc-200 transition-[transform] active:scale-[0.98] active:border-b-[1px] sm:text-[8.5px]',
+                          offBlocked || isBanner ? 'cursor-not-allowed opacity-45 active:scale-100 active:border-b-[2px]' : '',
+                        ].join(' ')}
+                        onClick={() => setPetIncludedInSheet(pet.id, false)}
+                      >
+                        Off
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-label={`Swap banner pet to ${name}`}
+                      className={[
+                        'mt-1 w-full rounded-lg border-b-[2px] border-[#4c1d95] bg-gradient-to-b from-[#c4b5fd] to-[#7c3aed] px-1 py-1.5 text-[8px] font-black uppercase leading-none tracking-[0.06em] text-white ring-1 ring-violet-400/35 transition-[transform] active:scale-[0.98] active:border-b-[1px] sm:text-[8.5px]',
+                        onBlocked ? 'ring-amber-200' : '',
+                      ].join(' ')}
+                      onClick={() => swapBannerPet(pet.id)}
+                    >
+                      Swap in
+                    </button>
+                  )}
                 </div>
-                <span className="pointer-events-none absolute right-3 top-3 rounded-md bg-[#1c1340]/85 px-1.5 py-0.5 text-[9px] font-black tabular-nums text-white ring-1 ring-white/30">
-                  R{normalizePetRank(petRanks[pet.id])}
-                </span>
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-[13px] font-black leading-none">{name}</p>
-                    <p className={['mt-1 text-[9px] font-bold uppercase tracking-[0.08em]', selected ? 'text-violet-200' : 'text-violet-500'].join(' ')}>
-                      {pet.label}
-                    </p>
-                  </div>
-                  {selected ? (
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-white">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden>
-                        <path d="M5 12.5 9.3 17 19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
-                  ) : null}
-                </div>
-              </button>
-            )
-          })}
+              )
+            })}
+          </div>
+          {focusedPetId !== selectedPetId ? (
+            <button
+              type="button"
+              onClick={() => {
+                swapBannerPet(focusedPetId)
+              }}
+              className="mt-2 w-full rounded-xl bg-violet-50 py-2 text-center text-[10px] font-black uppercase tracking-[0.06em] text-[#4c1d95] ring-1 ring-violet-100 transition-colors active:bg-violet-100"
+            >
+              Make {focusedLabel} banner pet
+            </button>
+          ) : (
+            <p className="mt-1.5 px-px text-center text-[9px] font-semibold text-zinc-500">{focusedLabel} is your banner pet.</p>
+          )}
         </div>
 
-        <label className="mt-4 block text-[10px] font-black uppercase tracking-[0.12em] text-[#7c3aed]" htmlFor="fetch-pet-editor-name">
-          Pet name
+        <div className="mt-3 rounded-xl bg-zinc-50 p-2 ring-1 ring-zinc-100">
+          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Roster slots</p>
+          <p className="mt-1 text-[11px] font-black tabular-nums leading-snug text-[#1c1340]">
+            {Math.min(MAX_HOME_PET_SLOTS, homeUnlockedPetSlots)} / {MAX_HOME_PET_SLOTS} unlocked
+          </p>
+          <p className="mt-0.5 text-[9px] font-semibold leading-snug text-zinc-500">Banner rows unlock with gems.</p>
+          {homeUnlockedPetSlots >= MAX_HOME_PET_SLOTS ? (
+            <p className="mt-2 text-[10px] font-bold text-emerald-600">All slots unlocked.</p>
+          ) : nextBannerSlotGemCost != null ? (
+            <>
+              <button
+                type="button"
+                onClick={onUnlockHomePetSlot}
+                disabled={!canUnlockBannerSlot}
+                className={[
+                  'mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border-b-[3px] px-3 py-2 text-[10px] font-black uppercase tracking-[0.06em] shadow-none transition-[transform,border-bottom-width] duration-150 sm:text-[11px]',
+                  canUnlockBannerSlot
+                    ? 'border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white active:translate-y-0.5 active:border-b-[1.5px]'
+                    : 'cursor-not-allowed border-zinc-300 border-b-zinc-400 bg-zinc-100 text-zinc-400',
+                ].join(' ')}
+              >
+                <img src={purpleGemIconUrl} alt="" aria-hidden className="h-3.5 w-3.5 object-contain" draggable={false} />
+                Unlock · {nextBannerSlotGemCost} gems
+              </button>
+              {!canUnlockBannerSlot && gemsCount < (nextBannerSlotGemCost ?? 0) ? (
+                <p className="mt-1.5 text-center text-[10px] font-semibold text-amber-700">
+                  Need {(nextBannerSlotGemCost ?? 0) - gemsCount} more gems
+                </p>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+
+        <label className="mt-3 block text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]" htmlFor="fetch-pet-editor-name">
+          Pet name · {focusedLabel}
         </label>
         <input
           id="fetch-pet-editor-name"
-          value={petNames[selectedPet.id] || selectedPet.defaultName}
-          onChange={(event) => onPetNameChange(selectedPet.id, event.target.value)}
+          value={petNames[focusedPet.id] || focusedPet.defaultName}
+          onChange={(event) => onPetNameChange(focusedPet.id, event.target.value)}
           maxLength={16}
-          className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-4 py-3 text-[16px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
-          aria-label="Edit selected pet name"
+          className="mt-1 w-full rounded-xl border-0 bg-violet-50 px-3 py-2 text-[15px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+          aria-label={`Edit name for ${focusedLabel}`}
         />
 
-        <div className="mt-4 rounded-2xl bg-violet-50 p-3 ring-1 ring-violet-100">
-          <div className="flex items-start justify-between gap-3">
+        <div className="mt-3 rounded-xl bg-violet-50 p-2 ring-1 ring-violet-100">
+          <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Pet rank</p>
-              <p className="mt-1 text-[18px] font-black tabular-nums leading-none text-[#1c1340]">
+              <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Rank · {focusedLabel}</p>
+              <p className="mt-1 text-[16px] font-black tabular-nums leading-none text-[#1c1340]">
                 R{selRank}
                 {atMaxRank ? (
-                  <span className="ml-2 align-middle text-[10px] font-black uppercase tracking-[0.08em] text-emerald-600">
-                    Max
-                  </span>
+                  <span className="ml-1.5 align-middle text-[9px] font-black uppercase tracking-[0.08em] text-emerald-600">Max</span>
                 ) : (
-                  <span className="ml-2 align-middle text-[11px] font-bold text-zinc-500">→ R{selRank + 1}</span>
+                  <span className="ml-1.5 align-middle text-[10px] font-bold text-zinc-500">→ R{selRank + 1}</span>
                 )}
               </p>
             </div>
             <div className="shrink-0 text-right">
-              <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-zinc-500">Gems</p>
-              <p className="mt-0.5 flex items-center justify-end gap-1 text-[13px] font-black tabular-nums text-[#1c1340]">
-                <img src={purpleGemIconUrl} alt="" aria-hidden className="h-4 w-4 object-contain" draggable={false} />
+              <p className="text-[8px] font-bold uppercase tracking-[0.08em] text-zinc-500">Gems</p>
+              <p className="mt-0.5 flex items-center justify-end gap-0.5 text-[12px] font-black tabular-nums text-[#1c1340]">
+                <img src={purpleGemIconUrl} alt="" aria-hidden className="h-3.5 w-3.5 object-contain" draggable={false} />
                 {gemsCount}
               </p>
             </div>
           </div>
           <button
             type="button"
-            onClick={onRankUpSelectedPet}
-            disabled={!canAffordRankUp}
+            onClick={() => onRankUpPet(focusedPet.id)}
+            disabled={!includedIds.has(focusedPet.id) || !canAffordRankUp}
             className={[
-              'mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border-b-[4px] px-4 py-3 text-[11px] font-black uppercase tracking-[0.06em] shadow-none transition-[transform,border-bottom-width] duration-150 sm:text-[12px]',
-              canAffordRankUp
-                ? 'border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white active:translate-y-0.5 active:border-b-2'
+              'mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border-b-[3px] px-3 py-2 text-[10px] font-black uppercase tracking-[0.06em] shadow-none transition-[transform,border-bottom-width] duration-150 sm:text-[11px]',
+              includedIds.has(focusedPet.id) && canAffordRankUp
+                ? 'border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white active:translate-y-0.5 active:border-b-[1.5px]'
                 : 'cursor-not-allowed border-zinc-300 border-b-zinc-400 bg-zinc-100 text-zinc-400',
             ].join(' ')}
-            aria-label={
-              atMaxRank ? 'Pet is at max rank' : `Spend ${rankCost} gems to rank up ${selectedPet.defaultName}`
-            }
+            aria-label={atMaxRank ? `${focusedLabel} is at max rank` : `Spend ${rankCost} gems to rank up ${focusedLabel}`}
           >
             {atMaxRank ? (
-              'Max rank reached'
+              'Max rank'
             ) : (
               <>
-                <img src={purpleGemIconUrl} alt="" aria-hidden className="h-4 w-4 object-contain" draggable={false} />
-                Rank up — {rankCost} gems
+                <img src={purpleGemIconUrl} alt="" aria-hidden className="h-3.5 w-3.5 object-contain" draggable={false} />
+                Rank up · {rankCost}
               </>
             )}
           </button>
           {!atMaxRank && gemsCount < rankCost ? (
-            <p className="mt-2 text-center text-[11px] font-semibold text-amber-700">
-              Need {rankCost - gemsCount} more gems
-            </p>
+            <p className="mt-1.5 text-center text-[10px] font-semibold text-amber-700">Need {rankCost - gemsCount} gems</p>
           ) : null}
         </div>
 
-        <div className="mt-3 flex items-center justify-between rounded-2xl bg-violet-50 px-3 py-2 text-[11px] font-black uppercase tracking-[0.08em] text-[#4c1d95]">
-          <span>{isPetFed ? 'Fed and ready' : 'Hungry now'}</span>
-          <span>{petFeedTimerLabel}</span>
+        <div className="my-3 flex items-center justify-between rounded-xl bg-violet-50 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-[#4c1d95]">
+          <span>{isPetFed ? 'Fed' : 'Hungry'}</span>
+          <span className="tabular-nums">{petFeedTimerLabel}</span>
+        </div>
+
+        <div className="sticky bottom-0 z-[4] mt-4 border-t border-violet-100 bg-gradient-to-b from-white via-white to-violet-50/40 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-4 shadow-[0_-8px_24px_-18px_rgba(76,29,149,0.18)] backdrop-blur-sm">
+          <p className="mb-2 text-center text-[9px] font-semibold text-zinc-500">Edits save as you go.</p>
+          <button
+            type="button"
+            onClick={onSave}
+            aria-label="Save and close home and pet editor"
+            className="flex w-full items-center justify-center rounded-2xl border-b-[4px] border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] px-4 py-3 text-[12px] font-black uppercase tracking-[0.09em] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
+          >
+            Save
+          </button>
         </div>
       </section>
     </div>,
@@ -1127,268 +2429,741 @@ function PetEditSheet({
   )
 }
 
-function AdventureRewardIcon({ type }: { type: 'loot' | 'discounts' | 'tickets' | 'mystery' }) {
-  if (type === 'loot') {
-    return (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path d="M4 8.5 12 4l8 4.5v7L12 20l-8-4.5v-7Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-        <path d="M4.5 8.75 12 13l7.5-4.25M12 13v7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    )
-  }
-  if (type === 'discounts') {
-    return (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path d="M4 12 12 4h6v6l-8 8-6-6Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-        <path d="m9 15 6-6M9.5 9.5h.01M14.5 14.5h.01" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-      </svg>
-    )
-  }
-  if (type === 'tickets') {
-    return (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path d="M4 8.5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4v-2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-        <path d="M12 7v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="2 3" />
-      </svg>
-    )
-  }
-  return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M12 4.5a6.5 6.5 0 0 0-6.5 6.5 6.2 6.2 0 0 0 2.2 4.8c.8.7 1.3 1.4 1.3 2.4h6c0-1 .5-1.7 1.3-2.4a6.2 6.2 0 0 0 2.2-4.8A6.5 6.5 0 0 0 12 4.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-      <path d="M10 21h4M10.5 11a1.5 1.5 0 1 1 2.6 1c-.7.6-1.1 1-1.1 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function AdventureRewardsRow() {
-  const rewards: Array<{ type: 'loot' | 'discounts' | 'tickets' | 'mystery'; label: string; sub: string }> = [
-    { type: 'loot', label: 'Loot', sub: 'Find items' },
-    { type: 'discounts', label: 'Discounts', sub: 'Save money' },
-    { type: 'tickets', label: 'Tickets', sub: 'Bid wars' },
-    { type: 'mystery', label: 'Mystery', sub: 'Epic rewards' },
-  ]
-
-  return (
-    <div className="mt-2 grid grid-cols-4 gap-1.5" aria-label="Adventure rewards">
-      {rewards.map((reward) => (
-        <div
-          key={reward.type}
-          className="flex min-w-0 flex-col items-center px-1 py-1 text-center text-[#4c1d95]"
-        >
-          <span className="flex h-8 w-8 items-center justify-center">
-            <AdventureRewardIcon type={reward.type} />
-          </span>
-          <span className="mt-0.5 max-w-full truncate text-[8px] font-black leading-none text-[#1c1340]">{reward.label}</span>
-          <span className="mt-0.5 max-w-full truncate text-[7px] font-bold leading-none text-zinc-500">{reward.sub}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function AdventureReturnBar({
-  canEndEarly,
-  onEndEarly,
-  onComplete,
-  onElapsedSeconds,
-  isPetFed,
-  petName,
+function PetHuntMissionCard({
+  hunts,
+  matchesByHuntId,
+  petNames,
+  petRanks,
+  fallbackPetName,
+  nowMs,
+  canStartHunt,
+  starterLocked,
+  onStartHunt,
+  onViewHunt,
+  onViewListing,
+  onMessage,
+  onBid,
+  onBuyNow,
 }: {
-  canEndEarly: boolean
-  onEndEarly: () => void
-  onComplete: () => void
-  onElapsedSeconds?: (elapsedSeconds: number) => void
-  isPetFed: boolean
-  petName: string
+  hunts: readonly PetHunt[]
+  matchesByHuntId: Readonly<Record<string, PeerListing | null>>
+  petNames: Record<FetchPetId, string>
+  petRanks: Record<FetchPetId, number>
+  fallbackPetName: string
+  nowMs: number
+  canStartHunt: boolean
+  starterLocked?: boolean
+  onStartHunt: (preset?: string) => void
+  onViewHunt: (huntId: string) => void
+  onViewListing: (huntId: string) => void
+  onMessage: (huntId: string) => void
+  onBid: (huntId: string) => void
+  onBuyNow: (huntId: string) => void
 }) {
-  const totalSeconds = ADVENTURE_MISSION_DURATION_SEC
-  const [remainingSeconds, setRemainingSeconds] = useState(totalSeconds)
-  const [payPromptOpen, setPayPromptOpen] = useState(false)
-  const missionPaused = !isPetFed
+  const presets = ['Sneakers', 'Watches', 'Jewellery', 'Cards', 'Collectibles', 'Custom item']
+  const liveHuntCount = hunts.length
+  const canAddMore = canStartHunt && liveHuntCount < PET_HUNT_MAX_LIVE
 
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      if (!isPetFed) return
-      setRemainingSeconds((s) => Math.max(0, s - 1))
-    }, 1000)
-    return () => window.clearInterval(id)
-  }, [isPetFed])
-
-  useEffect(() => {
-    if (remainingSeconds === 0) onComplete()
-  }, [remainingSeconds, onComplete])
-
-  useEffect(() => {
-    onElapsedSeconds?.(Math.max(0, totalSeconds - remainingSeconds))
-  }, [remainingSeconds, totalSeconds, onElapsedSeconds])
-
-  const progress = Math.max(0, Math.min(1, 1 - remainingSeconds / totalSeconds))
-  const backIn = formatBackInClock(remainingSeconds)
-
-  return (
-    <>
-      <section
-        className="-mx-0.5 px-0.5"
-        aria-label={
-          missionPaused
-            ? `Adventure paused until ${petName} is fed. Time left ${backIn}.`
-            : `Adventure in progress. Back in ${backIn}.`
-        }
-        data-fetch-tour-target="adventure"
-      >
-        <div className="overflow-visible rounded-3xl bg-white p-2.5 shadow-[0_12px_28px_-18px_rgba(76,29,149,0.45)] ring-1 ring-violet-200/70">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5">
+  if (liveHuntCount > 0) {
+    return (
+      <section className="-mx-0.5 px-0.5" aria-label="Active Pet Hunts" data-fetch-tour-target="adventure">
+        <div className="overflow-hidden rounded-3xl bg-white p-3 shadow-[0_12px_28px_-18px_rgba(76,29,149,0.45)] ring-1 ring-violet-200/70">
+          <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="truncate text-[15px] font-black leading-none tracking-[-0.02em] text-[#1c1340]">
-                {ADVENTURE_THEME_TITLE} mission
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#7c3aed]">Pet Hunt</p>
+              <h3 className="mt-1 text-[17px] font-black leading-tight tracking-[-0.04em] text-[#1c1340]">
+                {liveHuntCount}/{PET_HUNT_MAX_LIVE} pets hunting
+              </h3>
+              <p className="mt-1 text-[11px] font-semibold leading-snug text-zinc-500">
+                Each pet can track one item. Autopilot can message, bid, or buy when a match drops.
               </p>
-              <p className="mt-1 truncate text-[11px] font-bold leading-none text-zinc-500">
-                {missionPaused
-                  ? `Paused — feed ${petName} to resume the timer.`
-                  : 'Fetch is searching for loot while you wait.'}
-              </p>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-violet-100" aria-hidden>
-                <div
-                  className="h-full rounded-full bg-[#7c3aed] transition-[width] duration-500 ease-out"
-                  style={{ width: `${Math.round(progress * 100)}%` }}
-                />
-              </div>
             </div>
-            <div
-              className={[
-                'min-w-[8.6rem] rounded-2xl px-3 py-2 text-center ring-1',
-                missionPaused ? 'bg-amber-50 ring-amber-200/80' : 'bg-violet-50 ring-violet-100',
-              ].join(' ')}
-            >
-              <p
-                className={[
-                  'text-[8px] font-black uppercase leading-none tracking-[0.12em]',
-                  missionPaused ? 'text-amber-800' : 'text-[#4c1d95]',
-                ].join(' ')}
-              >
-                {missionPaused ? 'Timer paused' : 'Mission returns in'}
-              </p>
-              <p className="mt-1 text-[20px] font-black leading-none tracking-[-0.06em] text-[#1c1340] tabular-nums">
-                {backIn}
-              </p>
-              <p className="mt-1 text-[9px] font-extrabold leading-none text-[#7c3aed]">View missions &gt;</p>
-            </div>
-          </div>
-          <AdventureRewardsRow />
-          <div className="mt-2.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-            <p className="truncate text-[10px] font-black uppercase tracking-[0.08em] text-zinc-500">
-              {missionPaused ? 'Paused' : `${Math.round(progress * 100)}% complete`}
-            </p>
             <button
               type="button"
-              onClick={() => setPayPromptOpen(true)}
-              disabled={!canEndEarly}
-              className={
-                [
-                  'shrink-0 rounded-2xl border-b-[4px] px-4 py-2 text-center text-[10px] font-black uppercase leading-none tracking-[0.06em] text-white shadow-none transition-[transform,border-bottom-width] duration-150 disabled:opacity-65',
-                  canEndEarly
-                    ? 'border-[#090514] bg-gradient-to-b from-[#33225f] to-[#1c1340] active:translate-y-0.5 active:border-b-2'
-                    : 'cursor-not-allowed border-zinc-400 bg-gradient-to-b from-zinc-300 to-zinc-400 text-white/85',
-                ].join(' ')
-              }
-              aria-label={canEndEarly ? 'End adventure early' : 'Add funds to end adventure early'}
+              onClick={() => canAddMore && onStartHunt()}
+              disabled={!canAddMore}
+              className={[
+                'shrink-0 rounded-xl px-3 py-2 text-[9px] font-black uppercase tracking-[0.06em]',
+                canAddMore
+                  ? feed3dPurpleCta
+                  : 'cursor-not-allowed bg-zinc-100 text-zinc-400 ring-1 ring-zinc-200',
+              ].join(' ')}
             >
-              End
+              {liveHuntCount >= PET_HUNT_MAX_LIVE ? 'Max 3' : 'Add hunt'}
             </button>
           </div>
+
+          <div className="mt-3 space-y-2">
+            {hunts.map((hunt) => {
+              const pet = FETCH_HOME_PETS.find((p) => p.id === hunt.pet_id) ?? FETCH_HOME_PETS[0]
+              const petName = petNames[hunt.pet_id]?.trim() || pet.defaultName
+              const petRank = normalizePetRank(petRanks[hunt.pet_id])
+              const matchedListing = matchesByHuntId[hunt.id] ?? null
+              const found = hunt.status === 'found' && matchedListing
+              const elapsedLabel = formatPetHuntElapsedLabel(hunt.created_at, nowMs)
+              const scanProgress = 28 + (((Math.max(0, nowMs - hunt.created_at) / 1000) * 9 + petRank * 7) % 64)
+
+              return (
+                <div
+                  key={hunt.id}
+                  className={[
+                    'rounded-2xl bg-white p-2.5 ring-1',
+                    found
+                      ? 'ring-emerald-200'
+                      : 'ring-violet-100',
+                  ].join(' ')}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <div
+                      className={[
+                        'relative flex h-[4.75rem] w-[4.75rem] shrink-0 items-end justify-center overflow-visible rounded-2xl bg-transparent',
+                        found ? 'drop-shadow-[0_8px_10px_rgba(16,185,129,0.14)]' : 'drop-shadow-[0_8px_10px_rgba(124,58,237,0.12)]',
+                      ].join(' ')}
+                    >
+                      <PetProfileImage
+                        pet={pet}
+                        className="flex h-full w-full scale-[1.18] items-end justify-center"
+                        preset="rectMd"
+                        imgClassName="pointer-events-none h-[138%] w-auto max-w-none translate-y-[8%] object-contain object-bottom select-none"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className={['text-[9px] font-black uppercase tracking-[0.12em]', found ? 'text-emerald-600' : 'text-[#7c3aed]'].join(' ')}>
+                            {found ? 'Found it' : `Searching · ${elapsedLabel}`}
+                          </p>
+                          <h4 className="mt-0.5 truncate text-[14px] font-black leading-tight tracking-[-0.04em] text-[#1c1340]">
+                            {found ? `${hunt.query} just dropped` : `${petName} wants ${hunt.query}`}
+                          </h4>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-white px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-violet-700 ring-1 ring-violet-100">
+                          Lv {petRank}
+                        </span>
+                      </div>
+                      <p className="mt-1 truncate text-[10px] font-bold text-zinc-500">
+                        {found && matchedListing
+                          ? `${matchedListing.title} · ${formatAudFromCents(matchedListing.priceCents)}`
+                          : petHuntDetailLabel(hunt)}
+                      </p>
+                      <p className="mt-1 truncate text-[10px] font-black text-[#4c1d95]">
+                        {petHuntAutopilotLabel(hunt)}
+                        {hunt.autopilot_enabled && hunt.autopilot_max_bid != null ? ` · Bid cap ${formatAudFromCents(hunt.autopilot_max_bid)}` : ''}
+                      </p>
+                    </div>
+                  </div>
+
+                  {found ? (
+                    <div className="mt-2 grid grid-cols-4 gap-1.5">
+                      <button type="button" onClick={() => onViewListing(hunt.id)} className="rounded-xl bg-white px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em] text-[#4c1d95] ring-1 ring-violet-100">
+                        View
+                      </button>
+                      <button type="button" onClick={() => onMessage(hunt.id)} className="rounded-xl bg-white px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em] text-[#4c1d95] ring-1 ring-violet-100">
+                        Message
+                      </button>
+                      <button type="button" onClick={() => onBid(hunt.id)} className="rounded-xl bg-white px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em] text-[#4c1d95] ring-1 ring-violet-100">
+                        Bid
+                      </button>
+                      <button type="button" onClick={() => onBuyNow(hunt.id)} className={[feed3dPurpleCta, 'rounded-xl px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em]'].join(' ')}>
+                        Buy
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-[0.08em] text-violet-500">
+                            Scanning
+                            <span className="inline-flex items-center gap-0.5" aria-hidden>
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#7c3aed] [animation-delay:-180ms]" />
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8b5cf6] [animation-delay:-90ms]" />
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#a78bfa]" />
+                            </span>
+                          </span>
+                          <span className="text-[9px] font-black tabular-nums text-zinc-400">{elapsedLabel}</span>
+                        </div>
+                        <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-violet-100 ring-1 ring-violet-100" aria-hidden>
+                          <div
+                            className="fetch-seq-cta-shine relative h-full overflow-hidden rounded-full bg-gradient-to-r from-[#c4b5fd] via-[#7c3aed] to-[#a78bfa] transition-[width] duration-500"
+                            style={{ width: `${scanProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => onViewHunt(hunt.id)} className="shrink-0 rounded-xl bg-white px-3 py-2 text-[8px] font-black uppercase tracking-[0.05em] text-[#4c1d95] ring-1 ring-violet-100">
+                        View hunt
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {canAddMore ? (
+            <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {presets.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => onStartHunt(preset)}
+                  className="shrink-0 rounded-full bg-violet-50 px-2.5 py-1.5 text-[9px] font-black text-[#4c1d95] ring-1 ring-violet-100"
+                >
+                  {preset}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
       </section>
-      {payPromptOpen
-        ? createPortal(
-            <div className="fixed inset-0 z-[95] flex items-end justify-center bg-[#120822]/45 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] backdrop-blur-sm">
-              <button
-                type="button"
-                className="absolute inset-0 cursor-default"
-                aria-label="Cancel payment"
-                onClick={() => setPayPromptOpen(false)}
-              />
-              <div className="relative z-[1] w-full max-w-sm rounded-3xl bg-white p-4 text-center text-[#1c1340] shadow-[0_22px_54px_-22px_rgba(30,15,80,0.65)] ring-1 ring-violet-100">
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#7c3aed]">Finish mission early</p>
-                <h3 className="mt-2 text-[20px] font-black leading-tight tracking-[-0.04em]">Pay $0.99?</h3>
-                <p className="mx-auto mt-1 max-w-[15rem] text-[12px] font-semibold leading-snug text-zinc-600">
-                  Fetch will return from the {ADVENTURE_THEME_TITLE.toLowerCase()} mission now.
-                </p>
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPayPromptOpen(false)}
-                    className="rounded-2xl bg-zinc-100 px-4 py-3 text-[12px] font-black uppercase tracking-[0.06em] text-zinc-700 ring-1 ring-zinc-200 active:scale-[0.98]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPayPromptOpen(false)
-                      onEndEarly()
-                    }}
-                    className={[feed3dPurpleCta, 'rounded-2xl px-4 py-3 text-[12px] font-black uppercase tracking-[0.06em]'].join(' ')}
-                  >
-                    Pay now
-                  </button>
-                </div>
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
-    </>
-  )
-}
+    )
+  }
 
-function StartAdventureBar({
-  onStart,
-  canStartMission,
-  petName,
-}: {
-  onStart: () => void
-  canStartMission: boolean
-  petName: string
-}) {
   return (
     <section
       className="-mx-0.5 px-0.5"
-      aria-label={canStartMission ? 'Start adventure' : 'Start adventure locked until pet is fed'}
+      aria-label={canStartHunt ? 'Start Pet Hunt' : 'Pet Hunt locked until pet is fed'}
       data-fetch-tour-target="adventure"
     >
       <div className="overflow-visible rounded-3xl bg-white p-2.5 shadow-[0_12px_28px_-18px_rgba(76,29,149,0.45)] ring-1 ring-violet-200/70">
-        <div className="flex items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[14px] font-black leading-none tracking-[-0.01em] text-[#1c1340]">
-              Send Fetch on a mission!
-            </p>
-            <p className="mt-1 text-[11px] font-bold leading-none text-zinc-500">
-              {canStartMission
-                ? "He'll search for loot while you wait."
-                : `Feed ${petName} first to start a mission.`}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              if (!canStartMission) return
-              onStart()
-            }}
-            disabled={!canStartMission}
-            className={[
-              'min-w-[8.9rem] shrink-0 rounded-2xl px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.06em]',
-              canStartMission
-                ? feed3dPurpleCta
-                : 'cursor-not-allowed border-b-[4px] border-b-zinc-300/80 bg-zinc-100 text-zinc-500 shadow-none',
-            ].join(' ')}
-            aria-label={canStartMission ? 'Start adventure' : `Start mission locked — feed ${petName} first`}
-          >
-            Start mission
-          </button>
+        <div className="min-w-0">
+          <p className="truncate text-[15px] font-black leading-none tracking-[-0.02em] text-[#1c1340]">
+            Send your pets on a hunt
+          </p>
+          <p className="mt-1 text-[11px] font-bold leading-snug text-zinc-500">
+            {canStartHunt
+              ? "Tell them what to find. They'll alert you when it drops."
+              : starterLocked
+                ? 'Unlock your companion from the Mystery Pet Pod in the banner first.'
+                : `Feed ${fallbackPetName} first so they can watch new listings.`}
+          </p>
         </div>
-        <AdventureRewardsRow />
+        <button
+          type="button"
+          onClick={() => canStartHunt && onStartHunt()}
+          disabled={!canStartHunt}
+          className={[
+            'mt-3 flex w-full items-center justify-center rounded-2xl px-5 py-3 text-[11px] font-black uppercase tracking-[0.08em]',
+            canStartHunt
+              ? feed3dPurpleCta
+              : 'cursor-not-allowed border-b-[4px] border-b-zinc-300/80 bg-zinc-100 text-zinc-500 shadow-none',
+          ].join(' ')}
+        >
+          Start Hunt
+        </button>
+        <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {presets.map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => canStartHunt && onStartHunt(preset)}
+              disabled={!canStartHunt}
+              className="shrink-0 rounded-full bg-violet-50 px-2.5 py-1.5 text-[9px] font-black text-[#4c1d95] ring-1 ring-violet-100 disabled:opacity-45"
+            >
+              {preset}
+            </button>
+          ))}
+        </div>
       </div>
     </section>
+  )
+}
+
+function PetHuntSetupSheet({
+  open,
+  pets,
+  petNames,
+  petRanks,
+  liveHunts,
+  defaultPetId,
+  presetQuery,
+  listings,
+  onClose,
+  onCreate,
+}: {
+  open: boolean
+  pets: readonly FetchHomePet[]
+  petNames: Record<FetchPetId, string>
+  petRanks: Record<FetchPetId, number>
+  liveHunts: readonly PetHunt[]
+  defaultPetId: FetchPetId
+  presetQuery: string
+  listings: readonly PeerListing[]
+  onClose: () => void
+  onCreate: (input: {
+    petId: FetchPetId
+    query: string
+    category: string
+    brand: string
+    mustInclude: string
+    excludeTerms: string
+    sources: PetHuntListingSource[]
+    fulfillment: PetHuntFulfillment
+    maxPrice: number | null
+    condition: PetHuntCondition
+    radiusKm: number
+    alertType: PetHuntAlertType
+    autopilotEnabled: boolean
+    autopilotActions: PetHuntAutopilotAction[]
+    autopilotMaxBid: number | null
+  }) => void
+}) {
+  const prevPetHuntSetupOpenRef = useRef(false)
+  const [selectedPetId, setSelectedPetId] = useState<FetchPetId>(defaultPetId)
+  const [query, setQuery] = useState('')
+  const [brand, setBrand] = useState('')
+  const [mustInclude, setMustInclude] = useState('')
+  const [excludeTerms, setExcludeTerms] = useState('')
+  const [category, setCategory] = useState('Custom item')
+  const [sources, setSources] = useState<PetHuntListingSource[]>(['Listings', 'Auctions', 'Live drops'])
+  const [fulfillment, setFulfillment] = useState<PetHuntFulfillment>('Any')
+  const [maxPrice, setMaxPrice] = useState('')
+  const [condition, setCondition] = useState<PetHuntCondition>('Any')
+  const [radiusKm, setRadiusKm] = useState(25)
+  const [alertType, setAlertType] = useState<PetHuntAlertType>('Instant')
+  const [autopilotEnabled, setAutopilotEnabled] = useState(false)
+  const [autopilotActions, setAutopilotActions] = useState<PetHuntAutopilotAction[]>(['message'])
+  const [autopilotMaxBid, setAutopilotMaxBid] = useState('')
+
+  // Initialise only when the sheet opens — `defaultPetId` floats with live hunts / banner pet and
+  // must not wipe the player's choice mid-flow.
+  useEffect(() => {
+    if (!open) {
+      prevPetHuntSetupOpenRef.current = false
+      return
+    }
+    const sheetJustOpened = !prevPetHuntSetupOpenRef.current
+    prevPetHuntSetupOpenRef.current = true
+    if (!sheetJustOpened) return
+    setSelectedPetId(defaultPetId)
+    setQuery(presetQuery === 'Custom item' ? '' : presetQuery)
+    setBrand('')
+    setMustInclude('')
+    setExcludeTerms('')
+    setCategory(presetQuery || 'Custom item')
+    setSources(['Listings', 'Auctions', 'Live drops'])
+    setFulfillment('Any')
+    setMaxPrice('')
+    setCondition('Any')
+    setRadiusKm(25)
+    setAlertType('Instant')
+    setAutopilotEnabled(false)
+    setAutopilotActions(['message'])
+    setAutopilotMaxBid('')
+  }, [defaultPetId, open, presetQuery])
+
+  useEffect(() => {
+    if (!open) return undefined
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose, open])
+
+  if (!open) return null
+
+  const trimmedQuery = query.trim()
+  const draftHunt: PetHunt = {
+    id: 'draft',
+    user_id: 'local-demo-user',
+    pet_id: selectedPetId,
+    query: trimmedQuery || 'item',
+    category,
+    brand: brand.trim().slice(0, 40),
+    must_include: mustInclude.trim().slice(0, 120),
+    exclude_terms: excludeTerms.trim().slice(0, 120),
+    sources,
+    fulfillment,
+    max_price: normalizePetHuntPrice(maxPrice),
+    condition,
+    radius_km: radiusKm,
+    alert_type: alertType,
+    autopilot_enabled: autopilotEnabled,
+    autopilot_actions: autopilotActions,
+    autopilot_max_bid: normalizePetHuntPrice(autopilotMaxBid),
+    status: 'active',
+    matched_listing_id: null,
+    created_at: Date.now(),
+    updated_at: Date.now(),
+  }
+  const currentMatch = trimmedQuery ? findPetHuntMatch(draftHunt, listings) : null
+  const selectedPet = pets.find((pet) => pet.id === selectedPetId) ?? pets[0]
+  const selectedPetName = petNames[selectedPet.id]?.trim() || selectedPet.defaultName
+  const liveHuntCount = liveHunts.length
+  const usedPetIds = new Set(liveHunts.map((hunt) => hunt.pet_id))
+  const limitReached = liveHuntCount >= PET_HUNT_MAX_LIVE
+  const selectedPetBusy = usedPetIds.has(selectedPetId)
+  const canCreate = Boolean(trimmedQuery) && !limitReached && !selectedPetBusy
+
+  function toggleAutopilotAction(action: PetHuntAutopilotAction) {
+    setAutopilotActions((current) => {
+      if (current.includes(action)) {
+        const next = current.filter((item) => item !== action)
+        return next.length ? next : ['message']
+      }
+      return [...current, action]
+    })
+  }
+
+  function toggleSource(source: PetHuntListingSource) {
+    setSources((current) => {
+      if (current.includes(source)) {
+        const next = current.filter((item) => item !== source)
+        return next.length ? next : [source]
+      }
+      return [...current, source]
+    })
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-[#120822]/45 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-8 backdrop-blur-sm">
+      <button type="button" aria-label="Close Pet Hunt setup" className="absolute inset-0 cursor-default" onClick={onClose} />
+      <section
+        className="relative z-[1] max-h-[min(42rem,calc(100dvh-1.5rem))] w-full max-w-[392px] overflow-y-auto rounded-3xl bg-white p-4 text-[#1c1340] shadow-[0_24px_60px_-32px_rgba(30,15,80,0.72)] ring-1 ring-violet-100 [-webkit-overflow-scrolling:touch]"
+        aria-labelledby="fetch-pet-hunt-title"
+      >
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-violet-200" aria-hidden />
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#7c3aed]">Pet Hunt</p>
+        <h2 id="fetch-pet-hunt-title" className="mt-1 text-[20px] font-black leading-tight tracking-[-0.05em]">
+          Choose your hunt pet
+        </h2>
+        <p className="mt-1 text-[12px] font-semibold leading-snug text-zinc-500">
+          Pick up to 3 pets total. Each one hunts a different item across listings, auctions, and live drops.
+        </p>
+        <div className="mt-3 rounded-2xl bg-violet-50 px-3 py-2 text-[11px] font-black text-[#4c1d95] ring-1 ring-violet-100">
+          {liveHuntCount}/{PET_HUNT_MAX_LIVE} hunt slots active
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          {pets.map((pet) => {
+            const active = selectedPetId === pet.id
+            const busy = usedPetIds.has(pet.id)
+            const name = petNames[pet.id]?.trim() || pet.defaultName
+            const rank = normalizePetRank(petRanks[pet.id])
+            const boost = petHuntBoostPercent(pet.id, rank)
+            return (
+              <button
+                key={pet.id}
+                type="button"
+                onClick={() => setSelectedPetId(pet.id)}
+                disabled={busy && !active}
+                className={[
+                  'relative overflow-hidden rounded-2xl bg-white p-2 text-left transition-[transform,box-shadow] active:scale-[0.98]',
+                  active
+                    ? 'ring-2 ring-[#7c3aed] shadow-[0_0_24px_rgba(124,58,237,0.2)]'
+                    : 'ring-1 ring-violet-100',
+                  busy && !active ? 'opacity-45' : '',
+                ].join(' ')}
+                aria-pressed={active}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="flex h-12 w-12 shrink-0 items-end justify-center overflow-hidden rounded-xl bg-violet-50 ring-1 ring-violet-100">
+                    <PetProfileImage pet={pet} className="flex h-full w-full items-end justify-center" preset="rectMd" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-[12px] font-black leading-none">{name}</p>
+                    <p className="mt-1 text-[8px] font-black uppercase tracking-[0.08em] text-violet-500">
+                      Lv {rank} · {FETCH_PET_ELEMENT[pet.id]}
+                    </p>
+                    <p className="mt-1 text-[9px] font-bold text-zinc-500">+{boost}% faster finds</p>
+                    {busy ? <p className="mt-1 text-[8px] font-black uppercase tracking-[0.08em] text-emerald-600">Hunting</p> : null}
+                  </div>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="mt-4 space-y-3">
+          <label className="block">
+            <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Item name / search phrase</span>
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Nike hat"
+              className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[14px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+            />
+          </label>
+          <div className="rounded-2xl bg-white p-3 ring-1 ring-violet-100">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Detailed search</p>
+                <p className="mt-0.5 text-[11px] font-semibold leading-snug text-zinc-500">
+                  Teach your pet exactly what counts as a match.
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full bg-violet-50 px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-[#4c1d95] ring-1 ring-violet-100">
+                Smarter
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <label className="block">
+                <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Brand / maker</span>
+                <input
+                  value={brand}
+                  onChange={(event) => setBrand(event.target.value)}
+                  placeholder="Nike, Seiko"
+                  className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+                />
+              </label>
+              <label className="block">
+                <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Fulfillment</span>
+                <select
+                  value={fulfillment}
+                  onChange={(event) => setFulfillment(event.target.value as PetHuntFulfillment)}
+                  className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+                >
+                  {(['Any', 'Pickup', 'Delivery', 'Same-day'] as const).map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <label className="block">
+                <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Must include</span>
+                <input
+                  value={mustInclude}
+                  onChange={(event) => setMustInclude(event.target.value)}
+                  placeholder="size 10, box"
+                  className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+                />
+              </label>
+              <label className="block">
+                <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Avoid words</span>
+                <input
+                  value={excludeTerms}
+                  onChange={(event) => setExcludeTerms(event.target.value)}
+                  placeholder="replica, damaged"
+                  className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+                />
+              </label>
+            </div>
+            <div className="mt-3">
+              <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Watch sources</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {(['Listings', 'Auctions', 'Live drops'] as const).map((source) => {
+                  const active = sources.includes(source)
+                  return (
+                    <button
+                      key={source}
+                      type="button"
+                      onClick={() => toggleSource(source)}
+                      className={[
+                        'rounded-xl px-2 py-2 text-[9px] font-black uppercase tracking-[0.05em]',
+                        active ? 'bg-[#7c3aed] text-white' : 'bg-violet-50 text-[#4c1d95] ring-1 ring-violet-100',
+                      ].join(' ')}
+                      aria-pressed={active}
+                    >
+                      {source}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="block">
+              <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Max price</span>
+              <input
+                value={maxPrice}
+                onChange={(event) => setMaxPrice(event.target.value)}
+                inputMode="decimal"
+                placeholder="$100"
+                className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+              />
+            </label>
+            <label className="block">
+              <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Radius</span>
+              <select
+                value={radiusKm}
+                onChange={(event) => setRadiusKm(Number(event.target.value))}
+                className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+              >
+                {[5, 10, 25, 50, 100].map((km) => (
+                  <option key={km} value={km}>{km} km</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <PetHuntOptionGroup label="Condition" value={condition} options={['Any', 'New', 'Used']} onChange={(next) => setCondition(next as PetHuntCondition)} />
+          <PetHuntOptionGroup label="Category" value={category} options={['Sneakers', 'Watches', 'Jewellery', 'Cards', 'Collectibles', 'Custom item']} onChange={setCategory} />
+          <PetHuntOptionGroup label="Alert type" value={alertType} options={['Instant', 'Daily summary']} onChange={(next) => setAlertType(next as PetHuntAlertType)} />
+
+          <div className="rounded-2xl bg-violet-50 p-3 ring-1 ring-violet-100">
+            <button
+              type="button"
+              onClick={() => setAutopilotEnabled((value) => !value)}
+              className="flex w-full items-center justify-between gap-3 text-left"
+              aria-pressed={autopilotEnabled}
+            >
+              <span>
+                <span className="block text-[10px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Autopilot mode</span>
+                <span className="mt-0.5 block text-[11px] font-semibold leading-snug text-zinc-500">
+                  Let your pet message, bid, or buy when a match appears.
+                </span>
+              </span>
+              <span
+                className={[
+                  'relative h-7 w-12 shrink-0 rounded-full transition-colors',
+                  autopilotEnabled ? 'bg-[#7c3aed]' : 'bg-zinc-300',
+                ].join(' ')}
+                aria-hidden
+              >
+                <span
+                  className={[
+                    'absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform',
+                    autopilotEnabled ? 'translate-x-6' : 'translate-x-1',
+                  ].join(' ')}
+                />
+              </span>
+            </button>
+            {autopilotEnabled ? (
+              <div className="mt-3 space-y-3">
+                <div>
+                  <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Autopilot actions</p>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {([
+                      ['message', 'Message'],
+                      ['bid', 'Bid'],
+                      ['buy', 'Buy'],
+                    ] as const).map(([action, label]) => {
+                      const active = autopilotActions.includes(action)
+                      return (
+                        <button
+                          key={action}
+                          type="button"
+                          onClick={() => toggleAutopilotAction(action)}
+                          className={[
+                            'rounded-xl px-2 py-2 text-[9px] font-black uppercase tracking-[0.05em]',
+                            active ? 'bg-[#7c3aed] text-white' : 'bg-white text-[#4c1d95] ring-1 ring-violet-100',
+                          ].join(' ')}
+                          aria-pressed={active}
+                        >
+                          {label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+                {autopilotActions.includes('bid') ? (
+                  <label className="block">
+                    <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Autopilot max bid</span>
+                    <input
+                      value={autopilotMaxBid}
+                      onChange={(event) => setAutopilotMaxBid(event.target.value)}
+                      inputMode="decimal"
+                      placeholder={maxPrice || '$80'}
+                      className="mt-1 w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+                    />
+                  </label>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        {limitReached ? (
+          <div className="mt-4 rounded-2xl bg-amber-50 px-3 py-2 text-[11px] font-bold leading-snug text-amber-800 ring-1 ring-amber-100">
+            You already have 3 hunts running. Finish or pause one before adding another item.
+          </div>
+        ) : selectedPetBusy ? (
+          <div className="mt-4 rounded-2xl bg-amber-50 px-3 py-2 text-[11px] font-bold leading-snug text-amber-800 ring-1 ring-amber-100">
+            {selectedPetName} is already hunting. Choose another pet for this item.
+          </div>
+        ) : trimmedQuery ? (
+          <div className={['mt-4 rounded-2xl px-3 py-2 text-[11px] font-semibold leading-snug ring-1', currentMatch ? 'bg-emerald-50 text-emerald-800 ring-emerald-100' : 'bg-violet-50 text-violet-800 ring-violet-100'].join(' ')}>
+            {currentMatch ? (
+              <>Strong match exists: {currentMatch.title}. Sending {selectedPetName} will alert you immediately.</>
+            ) : (
+              <>No {trimmedQuery} found yet. Send {selectedPetName} to watch new listings, auctions, and live drops.</>
+            )}
+          </div>
+        ) : null}
+
+        <div className="mt-4 grid grid-cols-[0.72fr_1fr] gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-2xl bg-zinc-100 px-4 py-3 text-[12px] font-black uppercase tracking-[0.06em] text-zinc-700 ring-1 ring-zinc-200 active:scale-[0.98]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={!canCreate}
+            onClick={() => {
+              if (!canCreate) return
+              onCreate({
+                petId: selectedPetId,
+                query: trimmedQuery,
+                category,
+                brand: brand.trim().slice(0, 40),
+                mustInclude: mustInclude.trim().slice(0, 120),
+                excludeTerms: excludeTerms.trim().slice(0, 120),
+                sources,
+                fulfillment,
+                maxPrice: normalizePetHuntPrice(maxPrice),
+                condition,
+                radiusKm,
+                alertType,
+                autopilotEnabled,
+                autopilotActions,
+                autopilotMaxBid: normalizePetHuntPrice(autopilotMaxBid),
+              })
+            }}
+            className={[
+              'rounded-2xl px-4 py-3 text-[12px] font-black uppercase tracking-[0.06em]',
+              canCreate
+                ? feed3dPurpleCta
+                : 'cursor-not-allowed border-b-[4px] border-b-zinc-300/80 bg-zinc-100 text-zinc-400 shadow-none',
+            ].join(' ')}
+          >
+            {limitReached ? '3 hunts max' : 'Send pet to hunt'}
+          </button>
+        </div>
+      </section>
+    </div>,
+    document.body,
+  )
+}
+
+function PetHuntOptionGroup({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string
+  value: string
+  options: readonly string[]
+  onChange: (next: string) => void
+}) {
+  return (
+    <div>
+      <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">{label}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((option) => {
+          const active = option === value
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => onChange(option)}
+              className={[
+                'rounded-full px-2.5 py-1.5 text-[10px] font-black transition-colors',
+                active
+                  ? 'bg-[#7c3aed] text-white'
+                  : 'bg-violet-50 text-[#4c1d95] ring-1 ring-violet-100 active:bg-violet-100',
+              ].join(' ')}
+              aria-pressed={active}
+            >
+              {option}
+            </button>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
@@ -1470,32 +3245,96 @@ function AdventureLevelUpCelebration({
   )
 }
 
-function BidWarsAdventurePromo({
-  onJoin,
-  bannerSrc,
+function HomeAdventureQuickActions({
+  onOpenLiveAuctions,
+  onOpenBidWars,
+  onOpenShop,
 }: {
-  onJoin?: () => void
-  bannerSrc: string
+  onOpenLiveAuctions: () => void
+  onOpenBidWars: () => void
+  onOpenShop: () => void
 }) {
   return (
-    <section className="px-2" aria-label="Bid Wars" data-fetch-tour-target="bidWar">
-      <div className="flex items-center gap-2.5 rounded-3xl bg-white p-2.5">
+    <section aria-label="Quick actions">
+      <div className="grid grid-cols-3 gap-2">
         <button
           type="button"
-          onClick={onJoin}
-          className="fetch-bid-war-btn-rumble relative flex h-[2.85rem] min-w-[9.5rem] shrink-0 items-center justify-center whitespace-nowrap rounded-2xl border border-violet-200/25 border-b-[4px] border-b-[#4c1d95] bg-gradient-to-b from-[#a78bfa] via-[#7c3aed] to-[#5b21b6] px-4 text-center text-[13px] font-black uppercase leading-none tracking-[0.04em] text-white shadow-none ring-1 ring-[#4c1d95]/50 transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-[2px] active:brightness-[1.08] sm:h-[3rem] sm:min-w-[10.25rem] sm:text-[14px]"
-          aria-label="Join a Bid War"
+          onClick={onOpenLiveAuctions}
+          className="relative flex min-h-[8.35rem] flex-col overflow-hidden rounded-[1.1rem] border border-violet-200/70 bg-white px-2 py-2 text-left text-[#1c1340] shadow-[0_14px_26px_-20px_rgba(76,29,149,0.55)] transition-colors active:bg-violet-50"
+          aria-label="Open live auctions"
         >
-          <span className="relative z-[1]">Join a Bid War</span>
+          <p className="relative z-[1] truncate text-[11px] font-black uppercase leading-none tracking-[0.04em]">Live</p>
+          <div className="pointer-events-none relative z-0 mt-1 flex min-h-[4.5rem] flex-1 items-start justify-center overflow-hidden">
+            <img
+              src={fetchitQuickLiveAuctionsUrl}
+              alt=""
+              aria-hidden
+              className="mt-0 h-[4.95rem] w-[4.95rem] object-contain mix-blend-multiply"
+              draggable={false}
+            />
+          </div>
+          <span
+            className={[
+              feed3dPurpleCta,
+              'relative z-[1] mt-1 flex w-full items-center justify-center rounded-xl px-2 py-2 text-[9px] font-black uppercase leading-none tracking-[0.06em]',
+            ].join(' ')}
+            aria-hidden
+          >
+            Browse auctions
+          </span>
         </button>
-        <div className="min-w-0 flex-1 overflow-hidden rounded-2xl bg-white">
-          <img
-            src={bannerSrc}
-            alt="Bid Wars. Compete. Bid. Win."
-            className="block aspect-[2/1] w-full select-none object-cover object-left"
-            draggable={false}
-          />
-        </div>
+        <button
+          type="button"
+          onClick={onOpenBidWars}
+          className="relative flex min-h-[8.35rem] flex-col overflow-hidden rounded-[1.1rem] border border-violet-200/70 bg-white px-2 py-2 text-left text-[#1c1340] shadow-[0_14px_26px_-20px_rgba(76,29,149,0.55)] transition-colors active:bg-violet-50"
+          aria-label="Open bid wars"
+        >
+          <p className="relative z-[1] truncate text-[11px] font-black uppercase leading-none tracking-[0.04em]">Bid wars</p>
+          <div className="pointer-events-none relative z-0 mt-1 flex min-h-[4.5rem] flex-1 items-center justify-center overflow-hidden">
+            <img
+              src={fetchitQuickBidWarsUrl}
+              alt=""
+              aria-hidden
+              className="h-[5.05rem] w-[5.05rem] object-contain mix-blend-multiply"
+              draggable={false}
+            />
+          </div>
+          <span
+            className={[
+              feed3dPurpleCta,
+              'relative z-[1] mt-1 flex w-full items-center justify-center rounded-xl px-2 py-2 text-[9px] font-black uppercase leading-none tracking-[0.06em]',
+            ].join(' ')}
+            aria-hidden
+          >
+            View battles
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={onOpenShop}
+          className="relative flex min-h-[8.35rem] flex-col overflow-hidden rounded-[1.1rem] border border-violet-200/70 bg-white px-2 py-2 text-left text-[#1c1340] shadow-[0_14px_26px_-20px_rgba(76,29,149,0.55)] transition-colors active:bg-violet-50"
+          aria-label="Open shop"
+        >
+          <p className="relative z-[1] truncate text-[11px] font-black uppercase leading-none tracking-[0.04em]">Shop</p>
+          <div className="pointer-events-none relative z-0 mt-1 flex min-h-[4.5rem] flex-1 items-center justify-center overflow-hidden">
+            <img
+              src={fetchitQuickShopUrl}
+              alt=""
+              aria-hidden
+              className="h-[5rem] w-[5rem] object-contain mix-blend-multiply"
+              draggable={false}
+            />
+          </div>
+          <span
+            className={[
+              feed3dPurpleCta,
+              'fetch-seq-cta-shine relative z-[1] mt-1 flex w-full items-center justify-center overflow-hidden rounded-xl px-2 py-2 text-[9px] font-black uppercase leading-none tracking-[0.06em]',
+            ].join(' ')}
+            aria-hidden
+          >
+            Open shop
+          </span>
+        </button>
       </div>
     </section>
   )
@@ -1601,16 +3440,24 @@ function DailyGemClaimFx({ amount, source, target, particleCount = 14, onImpact,
 
 function DailyRewardTaskCards({
   completed,
+  mysteryClaimed,
   onClaim,
+  onClaimMystery,
 }: {
   completed: readonly DailyRewardTaskId[]
+  mysteryClaimed: boolean
   onClaim: (id: DailyRewardTaskId, sourceEl?: HTMLElement | null) => void
+  onClaimMystery: (sourceEl?: HTMLElement | null) => void
 }) {
+  const showMysteryRow = allDailyRewardTasksComplete(completed)
+  const mysteryDone = mysteryClaimed
+
   return (
     <section className="px-2" aria-label="Daily gem tasks">
       <div className="grid grid-cols-1 gap-1.5">
         {DAILY_REWARD_TASKS.map((task) => {
           const done = completed.includes(task.id)
+          const rewardGems = dailyTaskRewardGems(task.id)
           return (
             <div
               key={task.id}
@@ -1621,7 +3468,7 @@ function DailyRewardTaskCards({
                   ? 'border-emerald-200 bg-emerald-50'
                   : 'border-violet-200/80 active:bg-violet-50',
               ].join(' ')}
-              aria-label={`${task.title}. Reward ${DAILY_REWARD_GEMS} gems. ${done ? 'Completed today' : 'Claim once per day'}`}
+              aria-label={`${task.title}. Reward ${rewardGems} gems. ${done ? 'Completed today' : 'Claim once per day'}`}
             >
               <span
                 className={[
@@ -1653,7 +3500,7 @@ function DailyRewardTaskCards({
                   draggable={false}
                   loading="lazy"
                 />
-                <span>{DAILY_REWARD_GEMS}</span>
+                <span>{rewardGems}</span>
               </span>
               {done ? (
                 <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-emerald-700">
@@ -1671,6 +3518,68 @@ function DailyRewardTaskCards({
             </div>
           )
         })}
+        {showMysteryRow ? (
+          <div
+            data-daily-mystery-card
+            className={[
+              'flex min-h-[3.75rem] w-full items-center gap-2 rounded-xl border bg-white px-2 py-1.5 text-left shadow-none transition-colors duration-150',
+              mysteryDone ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200/90 bg-gradient-to-br from-amber-50 via-white to-violet-50 active:bg-amber-50/80',
+            ].join(' ')}
+            aria-label={`Mystery unlock bonus. Reward ${DAILY_MYSTERY_UNLOCK_GEMS} gems. ${mysteryDone ? 'Claimed today' : 'Complete all daily tasks to claim'}`}
+          >
+            <span
+              className={[
+                'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#4c1d95] ring-1',
+                mysteryDone ? 'bg-emerald-100 ring-emerald-200' : 'bg-amber-100 ring-amber-200',
+              ].join(' ')}
+              aria-hidden
+            >
+              {mysteryDone ? (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12.5l4.2 4.2L19 7" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : (
+                <span className="text-[11px] font-black leading-none">?</span>
+              )}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[11px] font-black leading-none tracking-[-0.02em] text-[#1c1340]">
+                Mystery unlock
+              </div>
+              {!mysteryDone ? (
+                <div className="mt-0.5 truncate text-[9px] font-semibold leading-tight text-violet-600/90">
+                  Bonus for finishing every todo today
+                </div>
+              ) : null}
+            </div>
+            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-black text-[#4c1d95]">
+              <img
+                src={purpleGemIconUrl}
+                alt=""
+                aria-hidden
+                className="h-3 w-3 object-contain"
+                draggable={false}
+                loading="lazy"
+              />
+              <span>{DAILY_MYSTERY_UNLOCK_GEMS}</span>
+            </span>
+            {mysteryDone ? (
+              <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.06em] text-emerald-700">
+                Done
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={(e) =>
+                  onClaimMystery(e.currentTarget.closest('[data-daily-mystery-card]') as HTMLElement | null)
+                }
+                className="shrink-0 rounded-full bg-[#7c3aed] px-2 py-1 text-[9px] font-black uppercase tracking-[0.06em] leading-none text-white"
+              >
+                Claim
+              </button>
+            )}
+          </div>
+        ) : null}
       </div>
     </section>
   )
@@ -2202,171 +4111,6 @@ const HOME_LIVE_NOW_REELS: readonly HomeLiveNowReel[] = [
   },
 ]
 
-const HOME_SQUARE_LISTINGS = [
-  {
-    id: 'home-square-sneakers',
-    homeCategoryId: 'sneakers',
-    title: 'Fresh sneaker drops',
-    priceLabel: 'From $89',
-    imageUrl: searchRealSneakersShoesUrl,
-  },
-  {
-    id: 'home-square-cards',
-    homeCategoryId: 'cards',
-    title: 'Trading card packs',
-    priceLabel: 'From $12',
-    imageUrl: searchRealTradingCardGamesUrl,
-  },
-  {
-    id: 'home-square-jewellery',
-    homeCategoryId: 'luxury',
-    title: 'Jewellery finds',
-    priceLabel: 'From $45',
-    imageUrl: searchRealJewelleryWatchesUrl,
-  },
-  {
-    id: 'home-square-electronics',
-    homeCategoryId: 'tech',
-    title: 'Tech deals',
-    priceLabel: 'From $59',
-    imageUrl: searchRealElectronicsUrl,
-  },
-  {
-    id: 'home-square-watch',
-    homeCategoryId: 'watches',
-    title: 'Watch picks',
-    priceLabel: 'From $120',
-    imageUrl: searchRealJewelleryWatchesUrl,
-  },
-  {
-    id: 'home-square-collectibles',
-    homeCategoryId: 'collectibles',
-    title: 'Collectibles shelf',
-    priceLabel: 'From $18',
-    imageUrl: searchRealToysHobbiesUrl,
-  },
-] as const
-
-function CategoryChipIcon({ id, className = '' }: { id: string; className?: string }) {
-  const stroke = 'currentColor'
-  switch (id) {
-    case 'grid':
-      return (
-        <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <rect x="3" y="3" width="7" height="7" rx="1.6" stroke={stroke} strokeWidth="2" />
-          <rect x="14" y="3" width="7" height="7" rx="1.6" stroke={stroke} strokeWidth="2" />
-          <rect x="3" y="14" width="7" height="7" rx="1.6" stroke={stroke} strokeWidth="2" />
-          <rect x="14" y="14" width="7" height="7" rx="1.6" stroke={stroke} strokeWidth="2" />
-        </svg>
-      )
-    case 'sneaker':
-      return (
-        <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path
-            d="M3 17l1-4 4-1 3-3 4 1 5 3 1 3-1 2H4z"
-            stroke={stroke}
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          <path d="M8 12l2 2M11 9l3 3" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
-        </svg>
-      )
-    case 'cards':
-      return (
-        <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <rect x="5" y="3" width="11" height="15" rx="2" stroke={stroke} strokeWidth="2" />
-          <rect x="8" y="6" width="11" height="15" rx="2" stroke={stroke} strokeWidth="2" />
-        </svg>
-      )
-    case 'bag':
-      return (
-        <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M5 8h14l-1 12H6L5 8z" stroke={stroke} strokeWidth="2" strokeLinejoin="round" />
-          <path d="M9 8a3 3 0 116 0" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
-        </svg>
-      )
-    case 'bear':
-      return (
-        <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <circle cx="7" cy="6" r="2.2" stroke={stroke} strokeWidth="2" />
-          <circle cx="17" cy="6" r="2.2" stroke={stroke} strokeWidth="2" />
-          <circle cx="12" cy="13" r="6" stroke={stroke} strokeWidth="2" />
-          <circle cx="10" cy="12" r=".9" fill={stroke} />
-          <circle cx="14" cy="12" r=".9" fill={stroke} />
-          <path d="M10 16c.6.6 1.3.9 2 .9s1.4-.3 2-.9" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" />
-        </svg>
-      )
-    case 'tech':
-      return (
-        <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M5 5h11l3 3v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" stroke={stroke} strokeWidth="2" strokeLinejoin="round" />
-          <path d="M16 5v3h3" stroke={stroke} strokeWidth="2" strokeLinejoin="round" />
-          <path d="M7 11h6M7 14h8M7 17h5" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
-        </svg>
-      )
-    case 'watch':
-      return (
-        <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <rect x="6" y="6" width="12" height="12" rx="3" stroke={stroke} strokeWidth="2" />
-          <path d="M9 6V3h6v3M9 18v3h6v-3" stroke={stroke} strokeWidth="2" strokeLinejoin="round" />
-          <path d="M12 10v3l2 1" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )
-    default:
-      return null
-  }
-}
-
-function HomeCategoryChips({
-  value,
-  onChange,
-}: {
-  value: HomeCategoryChipId
-  onChange: (next: HomeCategoryChipId) => void
-}) {
-  return (
-    <nav
-      className="-mx-0.5 px-0.5"
-      role="tablist"
-      aria-label="Browse by category"
-    >
-      <div className="flex gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
-        {HOME_CATEGORY_CHIPS.map((c) => {
-          const active = c.id === value
-          return (
-            <button
-              key={c.id}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => onChange(c.id)}
-              className={[
-                'flex min-w-[5rem] shrink-0 flex-col items-center gap-1 rounded-2xl border-x border-t border-b-[3px] px-2.5 py-1.5 shadow-none transition-[transform,border-bottom-width,background-color,border-color,color] duration-150 active:translate-y-0.5 active:border-b-2',
-                active
-                  ? 'border-violet-300/90 border-b-violet-700/85 bg-gradient-to-b from-violet-100 to-violet-200/95 text-[#4c1d95]'
-                  : 'border-zinc-200 border-b-zinc-400/80 bg-gradient-to-b from-white to-zinc-50 text-zinc-700 hover:text-[#4c1d95]',
-              ].join(' ')}
-            >
-              {c.image ? (
-                <img
-                  src={c.image}
-                  alt=""
-                  aria-hidden
-                  loading="lazy"
-                  className="h-9 w-9 rounded-xl object-cover ring-1 ring-zinc-200/80"
-                />
-              ) : (
-                <CategoryChipIcon id={c.icon} className="h-9 w-9" />
-              )}
-              <span className="text-[10px] font-bold leading-none">{c.label}</span>
-            </button>
-          )
-        })}
-      </div>
-    </nav>
-  )
-}
-
 export type HomeShellForYouFeedProps = {
   onOpenDrops: () => void
   /** Live tiles on Explore — opens the Live tab + that stream (preferred over generic drops). */
@@ -2521,106 +4265,6 @@ function ExplorePeerListingCard({
   )
 }
 
-function HomeSquareListingCard({
-  title,
-  priceLabel,
-  imageUrl,
-  onOpen,
-}: {
-  title: string
-  priceLabel: string
-  imageUrl: string
-  onOpen: () => void
-}) {
-  const label = `${title}, ${priceLabel}`
-  const [notificationsOn, setNotificationsOn] = useState(false)
-  const [saved, setSaved] = useState(false)
-
-  return (
-    <div
-      className="flex min-w-0 flex-col overflow-hidden rounded-2xl border-x border-t border-violet-200/60 border-b-[4px] border-b-violet-400/55 bg-white text-left shadow-none transition-[transform,border-bottom-width,background-color] duration-150 active:translate-y-0.5 active:border-b-2 active:bg-violet-50"
-    >
-      <div className="relative aspect-square w-full overflow-hidden bg-violet-100">
-        <button
-          type="button"
-          aria-label={label}
-          onClick={onOpen}
-          className="absolute inset-0 z-[1] m-0 border-0 bg-transparent p-0"
-        />
-        <img
-          src={imageUrl}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-          loading="lazy"
-          draggable={false}
-        />
-        <div className="absolute right-1.5 top-1.5 z-[2] flex gap-1">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              setNotificationsOn((v) => !v)
-            }}
-            className={[
-              'flex h-7 w-7 items-center justify-center rounded-full border border-b-[3px] shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2',
-              notificationsOn
-                ? 'border-amber-200 border-b-amber-500 bg-amber-100 text-amber-700'
-                : 'border-zinc-200 border-b-zinc-400 bg-white text-[#4c1d95]',
-            ].join(' ')}
-            aria-label={notificationsOn ? `Notifications on for ${title}` : `Turn on notifications for ${title}`}
-            aria-pressed={notificationsOn}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M18 10a6 6 0 1 0-12 0c0 7-2.5 7-2.5 8h17S18 17 18 10Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-              <path d="M9.5 20a2.8 2.8 0 0 0 5 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              setSaved((v) => !v)
-            }}
-            className={[
-              'flex h-7 w-7 items-center justify-center rounded-full border border-b-[3px] shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2',
-              saved
-                ? 'border-violet-300 border-b-violet-700 bg-violet-100 text-[#4c1d95]'
-                : 'border-zinc-200 border-b-zinc-400 bg-white text-[#4c1d95]',
-            ].join(' ')}
-            aria-label={saved ? `Saved ${title}` : `Save ${title}`}
-            aria-pressed={saved}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} aria-hidden>
-              <path
-                d="M6 4.5A2.5 2.5 0 0 1 8.5 2h7A2.5 2.5 0 0 1 18 4.5V21l-6-3.5L6 21V4.5Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-      <button
-        type="button"
-        aria-label={label}
-        onClick={onOpen}
-        className="min-w-0 p-2 text-left"
-      >
-        <p className="line-clamp-2 text-[11.5px] font-black leading-tight tracking-[-0.02em] text-[#1c1528]">
-          {title}
-        </p>
-        <p className="mt-1 text-[11px] font-black tabular-nums text-violet-600">{priceLabel}</p>
-      </button>
-    </div>
-  )
-}
-
 /** Listing subtitle shown beside price in compact cards. */
 function peerListingFulfillmentLabel(_l: PeerListing): 'Pickup' {
   return 'Pickup'
@@ -2683,26 +4327,11 @@ function HomeShellForYouFeedInner({
     return allListings
   }, [browseCategory, allListings])
 
-  const [homeCategoryFilter, setHomeCategoryFilter] = useState<HomeCategoryChipId>('all')
-  const [homeListingsRefreshNonce, setHomeListingsRefreshNonce] = useState(0)
+  const homeCategoryFilter: HomeCategoryChipId = 'all'
   const homeLiveNowReels = useMemo<readonly DropReel[]>(
     () => HOME_LIVE_NOW_REELS.filter((reel) => reel.homeCategoryId === homeCategoryFilter),
     [homeCategoryFilter],
   )
-  const homeSquareListings = useMemo(
-    () => {
-      const base =
-        homeCategoryFilter === 'all'
-          ? [...HOME_SQUARE_LISTINGS]
-          : HOME_SQUARE_LISTINGS.filter((listing) => listing.homeCategoryId === homeCategoryFilter)
-      if (base.length <= 1) return base
-      const offset = homeListingsRefreshNonce % base.length
-      return [...base.slice(offset), ...base.slice(0, offset)].slice(0, 4)
-    },
-    [homeCategoryFilter, homeListingsRefreshNonce],
-  )
-  /** Default off so ambient stays chill until the user starts an adventure (see `ambientRegisterAdventure`). */
-  const [isAdventuring, setIsAdventuring] = useState(false)
   const [demoFundsCents, setDemoFundsCents] = useState(0)
   const [backpackStorageOpen, setBackpackStorageOpen] = useState(false)
   const [backpackItems, setBackpackItems] = useState<BackpackItem[]>(() => loadBackpackItems())
@@ -2711,6 +4340,7 @@ function HomeShellForYouFeedInner({
   )
   const [demoGems, setDemoGems] = useState(() => loadDemoGems())
   const [dailyRewardState, setDailyRewardState] = useState<DailyRewardState>(() => loadDailyRewardState())
+  const [dailyStreakCount] = useState<number>(() => (embedded ? loadAndBumpDailyStreakCount() : 1))
   const [dailyGemFx, setDailyGemFx] = useState<DailyGemFxState | null>(null)
   const [petProfile, setPetProfile] = useState<PetProfileState>(() => {
     const loaded = loadPetProfile()
@@ -2722,12 +4352,17 @@ function HomeShellForYouFeedInner({
   const [petEditorOpen, setPetEditorOpen] = useState(false)
   const [nowMs, setNowMs] = useState(() => Date.now())
   const [gemGamesOpen, setGemGamesOpen] = useState(false)
-  const [adventureRunSeq, setAdventureRunSeq] = useState(0)
-  const [adventureElapsedSeconds, setAdventureElapsedSeconds] = useState(0)
   const [petCelebrationSeq, setPetCelebrationSeq] = useState(0)
+  const [petHunts, setPetHunts] = useState<PetHunt[]>(() => loadPetHunts())
+  const [petHuntSheetOpen, setPetHuntSheetOpen] = useState(false)
+  const [petHuntPresetQuery, setPetHuntPresetQuery] = useState('')
+  const [petHuntToast, setPetHuntToast] = useState<{ huntId: string; message: string } | null>(null)
+  const [starterPetRevealed, setStarterPetRevealed] = useState(() => loadStarterPetRevealed())
+  const [starterUnlockRunning, setStarterUnlockRunning] = useState(false)
+  const [starterSkillsSheetOpen, setStarterSkillsSheetOpen] = useState(false)
   const demoGemsRef = useRef(demoGems)
   const rankUpLockRef = useRef(false)
-  const adventureGemMinuteRef = useRef(0)
+  const starterUnlockGuardRef = useRef(false)
   const gemsAnimRef = useRef<number | null>(null)
   const [firstGiftOpen, setFirstGiftOpen] = useState(false)
   const [levelUpOpen, setLevelUpOpen] = useState(false)
@@ -2740,6 +4375,45 @@ function HomeShellForYouFeedInner({
     return loadStoredHeroDisplayName() ?? 'Hayden'
   })
   const [heroGender, setHeroGender] = useState<HeroGender>(() => loadStoredHeroGender())
+  const [unlockedHomePetSlots, setUnlockedHomePetSlots] = useState(() => loadHomeUnlockedPetSlots())
+  const activePet = FETCH_HOME_PETS.find((pet) => pet.id === petProfile.selectedPetId) ?? FETCH_HOME_PETS[0]
+  const activePetName = petProfile.names[activePet.id]?.trim() || activePet.defaultName
+  const activePetRank = normalizePetRank(petProfile.ranks[activePet.id])
+  const handleOpenLiveAuctions = useCallback(() => {
+    const firstReel = homeLiveNowReels[0]
+    if (onOpenLiveStream && firstReel) {
+      onOpenLiveStream(firstReel)
+      return
+    }
+    onOpenDrops()
+  }, [homeLiveNowReels, onOpenDrops, onOpenLiveStream])
+  const benchPet = useMemo(() => {
+    if (FETCH_HOME_PETS.length < 2) return null
+    const idx = FETCH_HOME_PETS.findIndex((p) => p.id === petProfile.selectedPetId)
+    const ringAt = idx >= 0 ? idx : 0
+    return FETCH_HOME_PETS[(ringAt + 1) % FETCH_HOME_PETS.length] ?? null
+  }, [petProfile.selectedPetId])
+  const livePetHunts = useMemo(
+    () =>
+      [...petHunts]
+        .filter((hunt) => hunt.status === 'found' || hunt.status === 'active')
+        .sort((a, b) => b.updated_at - a.updated_at)
+        .slice(0, PET_HUNT_MAX_LIVE),
+    [petHunts],
+  )
+  const petHuntMatchesById = useMemo(() => {
+    const matches: Record<string, PeerListing | null> = {}
+    for (const hunt of livePetHunts) {
+      matches[hunt.id] = hunt.matched_listing_id
+        ? allListings.find((listing) => listing.id === hunt.matched_listing_id) ?? null
+        : null
+    }
+    return matches
+  }, [allListings, livePetHunts])
+  const defaultPetHuntPetId = useMemo(() => {
+    const busyPetIds = new Set(livePetHunts.map((hunt) => hunt.pet_id))
+    return FETCH_HOME_PETS.find((pet) => !busyPetIds.has(pet.id))?.id ?? petProfile.selectedPetId
+  }, [livePetHunts, petProfile.selectedPetId])
 
   function handleHeroDisplayNameChange(name: string) {
     const next = name.slice(0, 48)
@@ -2752,12 +4426,6 @@ function HomeShellForYouFeedInner({
     setHeroGender(next)
     persistHeroGender(next)
   }
-
-  useEffect(() => {
-    if (!embedded || !isAdventuring) return undefined
-    ambientRegisterAdventure(1)
-    return () => ambientRegisterAdventure(-1)
-  }, [embedded, isAdventuring])
 
   useEffect(
     () => () => {
@@ -2775,15 +4443,33 @@ function HomeShellForYouFeedInner({
     demoGemsRef.current = demoGems
   }, [demoGems])
 
-  function handleStartAdventure() {
-    setAdventureElapsedSeconds(0)
-    adventureGemMinuteRef.current = 0
-    setAdventureRunSeq((s) => s + 1)
-    setIsAdventuring(true)
-    playAdventureTrumpets()
-    if (!hasClaimedFirstAdventureGift()) {
-      setFirstGiftOpen(true)
+  useEffect(() => {
+    const next = petHunts.map((hunt) => {
+      if (hunt.status !== 'active') return hunt
+      const match = findPetHuntMatch(hunt, allListings)
+      if (!match) return hunt
+      return {
+        ...hunt,
+        status: 'found' as PetHuntStatus,
+        matched_listing_id: match.id,
+        updated_at: Date.now(),
+      }
+    })
+    if (next.some((hunt, idx) => hunt !== petHunts[idx])) {
+      setPetHunts(next)
+      savePetHunts(next)
+      const found = next.find((hunt, idx) => hunt !== petHunts[idx] && hunt.status === 'found')
+      if (found) {
+        const pet = FETCH_HOME_PETS.find((p) => p.id === found.pet_id)
+        const name = petProfile.names[found.pet_id]?.trim() || pet?.defaultName || 'Your pet'
+        setPetHuntToast({ huntId: found.id, message: `${name} found a ${found.query}.${petHuntAutopilotResultLabel(found)}` })
+        playUiFeedback('gems_collect')
+      }
     }
+  }, [allListings, petHunts, petProfile.names])
+
+  function handleStartPetHuntScan() {
+    playAdventureTrumpets()
   }
 
   function handleClaimFirstGift() {
@@ -2829,6 +4515,23 @@ function HomeShellForYouFeedInner({
     el.addEventListener('animationend', () => el.classList.remove('fetch-gems-impact-pulse'), { once: true })
   }, [])
 
+  const handleStarterUnlockClick = useCallback(() => {
+    if (starterPetRevealed || starterUnlockGuardRef.current) return
+    starterUnlockGuardRef.current = true
+    playUiFeedback('gems_collect')
+    setStarterUnlockRunning(true)
+    window.setTimeout(() => {
+      persistStarterPetRevealed()
+      setStarterPetRevealed(true)
+      setStarterUnlockRunning(false)
+      starterUnlockGuardRef.current = false
+      setStarterSkillsSheetOpen(true)
+      playConfettiPops()
+      setPetCelebrationSeq((seq) => seq + 1)
+      window.setTimeout(() => playWinFanfare(), 120)
+    }, 1460)
+  }, [starterPetRevealed])
+
   const spawnGemRewardFx = useCallback((amount: number, sourceEl?: HTMLElement | null, particleCount?: number) => {
     const chipRect = document.querySelector<HTMLElement>('[data-fetch-home-gems-chip]')?.getBoundingClientRect()
     const adventureRect = document
@@ -2855,10 +4558,135 @@ function HomeShellForYouFeedInner({
     const nextDaily: DailyRewardState = {
       date: todayKey(),
       completed: [...dailyRewardState.completed, id],
+      dailyMysteryClaimed: dailyRewardState.dailyMysteryClaimed,
     }
     setDailyRewardState(nextDaily)
     saveDailyRewardState(nextDaily)
-    spawnGemRewardFx(DAILY_REWARD_GEMS, sourceEl)
+    spawnGemRewardFx(dailyTaskRewardGems(id), sourceEl)
+  }
+
+  function handleClaimDailyMysteryBonus(sourceEl?: HTMLElement | null) {
+    if (dailyRewardState.dailyMysteryClaimed) return
+    if (!allDailyRewardTasksComplete(dailyRewardState.completed)) return
+    const nextDaily: DailyRewardState = {
+      date: todayKey(),
+      completed: dailyRewardState.completed,
+      dailyMysteryClaimed: true,
+    }
+    setDailyRewardState(nextDaily)
+    saveDailyRewardState(nextDaily)
+    spawnGemRewardFx(DAILY_MYSTERY_UNLOCK_GEMS, sourceEl)
+    playConfettiPops()
+  }
+
+  function openPetHuntSetup(preset?: string) {
+    setPetHuntPresetQuery(preset ?? '')
+    setPetHuntSheetOpen(true)
+  }
+
+  function handleCreatePetHunt(input: {
+    petId: FetchPetId
+    query: string
+    category: string
+    brand: string
+    mustInclude: string
+    excludeTerms: string
+    sources: PetHuntListingSource[]
+    fulfillment: PetHuntFulfillment
+    maxPrice: number | null
+    condition: PetHuntCondition
+    radiusKm: number
+    alertType: PetHuntAlertType
+    autopilotEnabled: boolean
+    autopilotActions: PetHuntAutopilotAction[]
+    autopilotMaxBid: number | null
+  }) {
+    const currentLiveHunts = petHunts.filter((hunt) => hunt.status === 'active' || hunt.status === 'found')
+    if (currentLiveHunts.length >= PET_HUNT_MAX_LIVE) return
+    if (currentLiveHunts.some((hunt) => hunt.pet_id === input.petId)) return
+    const now = Date.now()
+    const draft: PetHunt = {
+      id: `hunt_${now}_${Math.floor(Math.random() * 1000)}`,
+      user_id: loadSession()?.email?.trim() || 'local-demo-user',
+      pet_id: input.petId,
+      query: input.query.trim().slice(0, 80),
+      category: input.category,
+      brand: input.brand.trim().slice(0, 40),
+      must_include: input.mustInclude.trim().slice(0, 120),
+      exclude_terms: input.excludeTerms.trim().slice(0, 120),
+      sources: input.sources.length ? input.sources : ['Listings', 'Auctions', 'Live drops'],
+      fulfillment: input.fulfillment,
+      max_price: input.maxPrice,
+      condition: input.condition,
+      radius_km: input.radiusKm,
+      alert_type: input.alertType,
+      autopilot_enabled: input.autopilotEnabled,
+      autopilot_actions: input.autopilotActions,
+      autopilot_max_bid: input.autopilotMaxBid,
+      status: 'active',
+      matched_listing_id: null,
+      created_at: now,
+      updated_at: now,
+    }
+    const match = findPetHuntMatch(draft, allListings)
+    const nextHunt: PetHunt = match
+      ? { ...draft, status: 'found', matched_listing_id: match.id, updated_at: now }
+      : draft
+    const next = [nextHunt, ...petHunts]
+    setPetHunts(next)
+    savePetHunts(next)
+    setPetHuntSheetOpen(false)
+    if (!match) handleStartPetHuntScan()
+    else playUiFeedback('gems_collect')
+    if (match) {
+      const pet = FETCH_HOME_PETS.find((p) => p.id === input.petId)
+      const petName = petProfile.names[input.petId]?.trim() || pet?.defaultName || 'Your pet'
+      setPetHuntToast({ huntId: nextHunt.id, message: `${petName} found a ${input.query}.${petHuntAutopilotResultLabel(nextHunt)}` })
+    }
+  }
+
+  function getPetHuntListingMatch(huntId: string): PeerListing | null {
+    const fromCard = petHuntMatchesById[huntId]
+    if (fromCard) return fromCard
+    const hunt = petHunts.find((item) => item.id === huntId)
+    if (!hunt?.matched_listing_id) return null
+    return allListings.find((listing) => listing.id === hunt.matched_listing_id) ?? null
+  }
+
+  function handleViewPetHunt(huntId: string) {
+    const hunt = petHunts.find((item) => item.id === huntId)
+    setPetHuntPresetQuery(hunt?.query ?? '')
+    setPetHuntSheetOpen(true)
+  }
+
+  function handleViewPetHuntListing(huntId: string) {
+    const match = getPetHuntListingMatch(huntId)
+    if (!match) return
+    setPetHuntToast(null)
+    onOpenPeerListing(match.id)
+  }
+
+  function handleMessagePetHuntListing(huntId: string) {
+    const match = getPetHuntListingMatch(huntId)
+    const hunt = petHunts.find((item) => item.id === huntId)
+    if (!match || !hunt) return
+    setPetHuntToast({ huntId, message: `Autopilot message ready for ${hunt.query}.` })
+    onOpenPeerListing(match.id)
+  }
+
+  function handleBuyPetHuntListing(huntId: string) {
+    const match = getPetHuntListingMatch(huntId)
+    if (!match) return
+    setPetHuntToast(null)
+    if (onQuickBuyPeerListing) onQuickBuyPeerListing(match.id)
+    else onOpenPeerListing(match.id)
+  }
+
+  function handleBidPetHuntListing(huntId: string) {
+    const match = getPetHuntListingMatch(huntId)
+    if (!match) return
+    setPetHuntToast(null)
+    onOpenPeerListing(match.id)
   }
 
   function handlePetEditorNameChange(petId: FetchPetId, name: string) {
@@ -2888,9 +4716,8 @@ function HomeShellForYouFeedInner({
     playUiFeedback('coin_hit')
   }
 
-  function handlePetRankUpSelectedPet() {
+  function handlePetRankUpPet(petId: FetchPetId) {
     if (rankUpLockRef.current) return
-    const petId = petProfile.selectedPetId
     const currentRank = normalizePetRank(petProfile.ranks[petId])
     if (currentRank >= PET_RANK_MAX) return
     const cost = petRankUpGemCost(currentRank)
@@ -2920,6 +4747,20 @@ function HomeShellForYouFeedInner({
     })
   }
 
+  function handleUnlockHomePetSlot() {
+    const cost = nextHomePetSlotUnlockGemCost(unlockedHomePetSlots)
+    if (cost == null || demoGemsRef.current < cost) return
+    const nextGems = demoGemsRef.current - cost
+    demoGemsRef.current = nextGems
+    setDemoGems(nextGems)
+    saveDemoGems(nextGems)
+    const nextSlots = Math.min(MAX_HOME_PET_SLOTS, unlockedHomePetSlots + 1)
+    setUnlockedHomePetSlots(nextSlots)
+    saveHomeUnlockedPetSlots(nextSlots)
+    playUiFeedback('coin_hit')
+    pulseHomeGemIcon()
+  }
+
   function handleFeedPet() {
     if (petProfile.fedUntil > nowMs) return
     const currentPet = FETCH_HOME_PETS.find((pet) => pet.id === petProfile.selectedPetId) ?? FETCH_HOME_PETS[0]
@@ -2946,27 +4787,6 @@ function HomeShellForYouFeedInner({
   const petHungrySinceMs = petProfile.lastFedAt > 0 ? Math.max(petProfile.lastFedAt, petProfile.fedUntil) : nowMs
   const petHungerStage: 'hungry' | 'risk' =
     !isPetFed && nowMs - petHungrySinceMs >= PET_STARVATION_RISK_AFTER_MS ? 'risk' : 'hungry'
-  const activePet = FETCH_HOME_PETS.find((pet) => pet.id === petProfile.selectedPetId) ?? FETCH_HOME_PETS[0]
-  const activePetName = petProfile.names[activePet.id]?.trim() || activePet.defaultName
-  const activePetRank = normalizePetRank(petProfile.ranks[activePet.id])
-  const useWomenHomeBanner = heroGender === 'female' && !isAdventuring
-  const heroPetFedBannerUrl = useWomenHomeBanner ? fetchitHomeWomenBannerUrl : activePet.fedBannerUrl
-  const heroPetHungryBannerUrl = useWomenHomeBanner ? fetchitHomeWomenHungryBannerUrl : activePet.hungryBannerUrl
-
-  useEffect(() => {
-    if (!embedded || !isAdventuring) return
-    const completedMinute = Math.floor(adventureElapsedSeconds / 60)
-    if (completedMinute <= 0 || completedMinute <= adventureGemMinuteRef.current) return
-    adventureGemMinuteRef.current = completedMinute
-    const adventureEl = document.querySelector<HTMLElement>('[data-fetch-tour-target="adventure"]')
-      spawnGemRewardFx(1, adventureEl, 1)
-  }, [adventureElapsedSeconds, embedded, isAdventuring, spawnGemRewardFx])
-
-  useEffect(() => {
-    if (isAdventuring) return
-    adventureGemMinuteRef.current = 0
-  }, [isAdventuring])
-
   function getBackpackRect(): DOMRect | null {
     const root = heroRef.current
     if (!root) return null
@@ -2988,24 +4808,27 @@ function HomeShellForYouFeedInner({
         <div ref={heroRef} className="relative w-full overflow-visible">
           <FetchitWelcomeHero
             displayName={heroDisplayName}
-            isAdventuring={isAdventuring}
+            dailyStreakCount={dailyStreakCount}
             adventureLevel={adventureProgress.level}
             adventureXp={adventureProgress.xp}
             fundsLabel={demoFundsLabel}
             gemsCount={demoGems}
             notificationsCount={1}
             petName={activePetName}
-            petId={activePet.id}
-            heroGender={heroGender}
-            petAvatarUrl={activePet.avatarUrl}
-            petFedBannerUrl={heroPetFedBannerUrl}
-            petHungryBannerUrl={heroPetHungryBannerUrl}
             petFeedTimerLabel={petFeedTimerLabel}
             petRank={activePetRank}
             petHungerStage={petHungerStage}
             isPetFed={isPetFed}
             canFeedPet={!isPetFed}
             petCelebrationSeq={petCelebrationSeq}
+            unlockedHomePetSlots={unlockedHomePetSlots}
+            rosterActivePet={activePet}
+            benchPet={benchPet}
+            petNames={petProfile.names}
+            petRanks={petProfile.ranks}
+            starterPetRevealed={starterPetRevealed}
+            starterUnlockRunning={starterUnlockRunning}
+            onStarterUnlockClick={handleStarterUnlockClick}
             onAddDemoFunds={() => setDemoFundsCents((cents) => cents + 1000)}
             onViewBackpack={() => setBackpackStorageOpen(true)}
             onOpenGemGames={() => setGemGamesOpen(true)}
@@ -3013,31 +4836,29 @@ function HomeShellForYouFeedInner({
             onFeedPet={handleFeedPet}
           />
           <div className="mt-3 px-2 sm:px-3">
-            {isAdventuring ? (
-              <AdventureReturnBar
-                key={adventureRunSeq}
-                isPetFed={isPetFed}
-                petName={activePetName}
-                canEndEarly={demoFundsCents >= EARLY_ADVENTURE_END_COST_CENTS}
-                onElapsedSeconds={setAdventureElapsedSeconds}
-                onEndEarly={() => {
-                  if (demoFundsCents < EARLY_ADVENTURE_END_COST_CENTS) return
-                  setDemoFundsCents((cents) => Math.max(0, cents - EARLY_ADVENTURE_END_COST_CENTS))
-                  setAdventureElapsedSeconds(0)
-                  setIsAdventuring(false)
-                }}
-                onComplete={() => {
-                  setAdventureElapsedSeconds(0)
-                  setIsAdventuring(false)
-                }}
-              />
-            ) : (
-              <StartAdventureBar
-                canStartMission={isPetFed}
-                petName={activePetName}
-                onStart={handleStartAdventure}
-              />
-            )}
+            <PetHuntMissionCard
+              hunts={livePetHunts}
+              matchesByHuntId={petHuntMatchesById}
+              petNames={petProfile.names}
+              petRanks={petProfile.ranks}
+              fallbackPetName={activePetName}
+              nowMs={nowMs}
+              canStartHunt={isPetFed && starterPetRevealed}
+              starterLocked={!starterPetRevealed}
+              onStartHunt={openPetHuntSetup}
+              onViewHunt={handleViewPetHunt}
+              onViewListing={handleViewPetHuntListing}
+              onMessage={handleMessagePetHuntListing}
+              onBid={handleBidPetHuntListing}
+              onBuyNow={handleBuyPetHuntListing}
+            />
+          </div>
+          <div className="mt-2 px-2 sm:px-3">
+            <HomeAdventureQuickActions
+              onOpenLiveAuctions={handleOpenLiveAuctions}
+              onOpenBidWars={onJoinBidWar ?? onOpenMarketplace}
+              onOpenShop={onOpenMarketplace}
+            />
           </div>
         </div>
         <PetEditSheet
@@ -3051,82 +4872,56 @@ function HomeShellForYouFeedInner({
           gemsCount={demoGems}
           isPetFed={isPetFed}
           petFeedTimerLabel={petFeedTimerLabel}
+          homeUnlockedPetSlots={unlockedHomePetSlots}
           onSelectPet={handleSelectPet}
           onPetNameChange={handlePetEditorNameChange}
           onUserDisplayNameChange={handleHeroDisplayNameChange}
           onHeroGenderChange={handleHeroGenderChange}
-          onRankUpSelectedPet={handlePetRankUpSelectedPet}
+          onRankUpPet={handlePetRankUpPet}
+          onUnlockHomePetSlot={handleUnlockHomePetSlot}
           onClose={() => setPetEditorOpen(false)}
+          onSave={() => {
+            playUiFeedback('coin_hit')
+            setPetEditorOpen(false)
+          }}
+        />
+        <StarterPetSkillsSheet
+          open={starterSkillsSheetOpen}
+          petDisplayName={activePetName}
+          onClose={() => setStarterSkillsSheetOpen(false)}
+        />
+        <PetHuntSetupSheet
+          open={petHuntSheetOpen}
+          pets={FETCH_HOME_PETS}
+          petNames={petProfile.names}
+          petRanks={petProfile.ranks}
+          liveHunts={livePetHunts}
+          defaultPetId={defaultPetHuntPetId}
+          presetQuery={petHuntPresetQuery}
+          listings={allListings}
+          onClose={() => setPetHuntSheetOpen(false)}
+          onCreate={handleCreatePetHunt}
         />
         <div className="mt-3">
-          <DailyRewardTaskCards completed={dailyRewardState.completed} onClaim={handleCompleteDailyRewardTask} />
-        </div>
-        <div className="mt-2">
-          <BidWarsAdventurePromo
-            onJoin={onJoinBidWar ?? onOpenMarketplace}
-            bannerSrc={heroGender === 'female' ? fetchitBidWarsBannerFemaleUrl : fetchitBidWarsBannerUrl}
+          <DailyRewardTaskCards
+            completed={dailyRewardState.completed}
+            mysteryClaimed={dailyRewardState.dailyMysteryClaimed === true}
+            onClaim={handleCompleteDailyRewardTask}
+            onClaimMystery={handleClaimDailyMysteryBonus}
           />
         </div>
-        <div className="mt-3 flex flex-col gap-3 px-2 pt-1">
-          <div className="h-px w-full bg-violet-200/70" aria-hidden />
-          <HomeCategoryChips value={homeCategoryFilter} onChange={setHomeCategoryFilter} />
-          <section className="flex flex-col gap-2" aria-label="Live now" data-fetch-tour-target="liveStreams">
-            <LiveNowGrid
-              reels={homeLiveNowReels}
-              onOpenDrops={onOpenDrops}
-              onOpenLive={onOpenLiveStream}
-              heroGender={heroGender}
-            />
-          </section>
-          <div className="h-px w-full bg-violet-200/70" aria-hidden />
-          <section className="min-w-0" aria-labelledby="fetch-home-live-listings-heading">
-            <div className="mb-2 flex items-center justify-between gap-2 rounded-2xl bg-white px-3 py-2 ring-1 ring-violet-100">
-              <h3
-                id="fetch-home-live-listings-heading"
-                className="text-[15px] font-black leading-none tracking-[-0.04em] text-[#1c1340]"
-              >
-                {homeCategoryFilter === 'all'
-                  ? 'Featured listings'
-                  : `${HOME_CATEGORY_CHIPS.find((c) => c.id === homeCategoryFilter)?.label ?? 'Category'} listings`}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setHomeListingsRefreshNonce((n) => n + 1)}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[#4c1d95] shadow-none transition-colors active:bg-violet-200"
-                aria-label="Refresh listings"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <path
-                    d="M20 6v5h-5M4 18v-5h5M18.2 9A7 7 0 0 0 6.4 6.4L4 8.8M5.8 15a7 7 0 0 0 11.8 2.6L20 15.2"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {homeSquareListings.map((listing) => (
-                <HomeSquareListingCard
-                  key={listing.id}
-                  title={listing.title}
-                  priceLabel={listing.priceLabel}
-                  imageUrl={listing.imageUrl}
-                  onOpen={onOpenMarketplace}
-                />
-              ))}
-            </div>
-          </section>
-          {browseCategory ? (
-            <ExploreCategoryBrowse
-              categoryTitle={browseCategory.title}
-              listings={browseCategoryListings}
-              onClose={() => setBrowseCategory(null)}
-              onAddToCart={onQuickBuyPeerListing}
-            />
-          ) : null}
-        </div>
+        {petHuntToast ? (
+          <button
+            type="button"
+            onClick={() => handleViewPetHuntListing(petHuntToast.huntId)}
+            className="fixed left-1/2 top-[max(0.75rem,env(safe-area-inset-top,0px)+0.5rem)] z-[95] w-[min(23rem,calc(100%-1.5rem))] -translate-x-1/2 rounded-2xl bg-white px-3 py-2 text-left text-[#1c1340] shadow-[0_18px_42px_-20px_rgba(30,15,80,0.6)] ring-1 ring-emerald-200"
+            aria-label={petHuntToast.message}
+          >
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-600">Pet Hunt alert</p>
+            <p className="mt-0.5 text-[13px] font-black leading-tight">{petHuntToast.message}</p>
+            <p className="mt-0.5 text-[10px] font-semibold text-zinc-500">Tap to open the listing.</p>
+          </button>
+        ) : null}
         <BackpackStoragePage
           open={backpackStorageOpen}
           onClose={() => setBackpackStorageOpen(false)}

@@ -13059,6 +13059,28 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   animation: fetch-gems-coin-impact 0.22s ease-out;
 }
 
+/* Explore home banner: air pet bob — composited keyed sprite */
+@keyframes fetch-banner-air-pet-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -0.5rem, 0);
+  }
+}
+
+.fetch-banner-air-pet-float {
+  animation: fetch-banner-air-pet-float 2.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fetch-banner-air-pet-float {
+    animation: none;
+  }
+}
+
 .fetch-daily-gem-drop {
   position: fixed;
   right: 0.75rem;
