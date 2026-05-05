@@ -108,7 +108,7 @@ function CountdownRing({ endsInSec, compact = false }: { endsInSec: number; comp
   )
 }
 
-const LiveFeedCard = memo(function LiveFeedCard({
+export const LiveFeedCard = memo(function LiveFeedCard({
   stream,
   onJoin,
 }: {
@@ -141,13 +141,13 @@ const LiveFeedCard = memo(function LiveFeedCard({
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" aria-hidden />
 
-        <div className="pointer-events-none absolute left-2 top-2 z-[1] flex items-center gap-1 rounded-full bg-[#00ff6a] px-2 py-[3px] shadow-sm">
-          <span className="relative flex h-[5px] w-[5px] shrink-0 items-center justify-center">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-black/35 opacity-45" />
-            <span className="fetch-live-feed-dot-pulse relative inline-flex h-[4px] w-[4px] rounded-full bg-black" />
+        <div className="pointer-events-none absolute left-2 top-2 z-[1] flex items-center gap-1.5 rounded-full bg-red-600 px-2.5 py-[5px] shadow-sm ring-1 ring-red-500/40">
+          <span className="relative flex h-[6px] w-[6px] shrink-0 items-center justify-center">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/45 opacity-75" />
+            <span className="fetch-live-feed-dot-pulse relative inline-flex h-[5px] w-[5px] rounded-full bg-white" />
           </span>
-          <span className="text-[7px] font-bold uppercase tracking-wide text-[#000000]">Live</span>
-          <span className="text-[8px] font-semibold tabular-nums text-[#000000]">{stream.watchersLabel}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wide text-white">Live</span>
+          <span className="text-[11px] font-semibold tabular-nums text-white">{stream.watchersLabel}</span>
         </div>
 
         {tagLabel(stream.tag) ? (
@@ -558,7 +558,7 @@ function LiveCommentsFeed() {
   )
 }
 
-function LiveVideoAuction({
+export function LiveVideoAuction({
   stream,
   onClose,
   onOpenListing,
@@ -631,13 +631,13 @@ function LiveVideoAuction({
           <p className="text-[11px] font-medium text-white/70">{stream.location}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <div className="flex items-center gap-1 rounded-full bg-[#00ff6a] px-2 py-[3px]">
-            <span className="relative flex h-[5px] w-[5px] shrink-0 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-black/35 opacity-45" />
-              <span className="fetch-live-feed-dot-pulse relative inline-flex h-[4px] w-[4px] rounded-full bg-black" />
+          <div className="flex items-center gap-1.5 rounded-full bg-red-600 px-2.5 py-1 shadow-sm ring-1 ring-red-500/40">
+            <span className="relative flex h-[6px] w-[6px] shrink-0 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/45 opacity-75" />
+              <span className="fetch-live-feed-dot-pulse relative inline-flex h-[5px] w-[5px] rounded-full bg-white" />
             </span>
-            <span className="text-[8px] font-bold uppercase text-[#000000]">Live</span>
-            <span className="text-[8px] font-semibold tabular-nums text-[#000000]">{stream.watchersLabel}</span>
+            <span className="text-[11px] font-bold uppercase text-white">Live</span>
+            <span className="text-[11px] font-semibold tabular-nums text-white">{stream.watchersLabel}</span>
           </div>
           <button
             type="button"

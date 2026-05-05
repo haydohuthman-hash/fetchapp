@@ -20,6 +20,7 @@ import { useFetchProducts } from '../lib/useFetchProducts'
 import { formatDropHandle } from '../lib/drops/profileStore'
 import { syncCustomerSessionCookie } from '../lib/fetchServerSession'
 import { loadSession } from '../lib/fetchUserSession'
+import { useWalletBalanceCents } from '../lib/data'
 import { MARKETPLACE_MOCK_PEER_LISTINGS } from '../lib/marketplaceMockPeerListings'
 import {
   checkoutListing,
@@ -35,8 +36,73 @@ import type { BuySellDropsListingHandoff } from './HomeShellBuySellPage'
 import { HomeShellBuySellPage } from './HomeShellBuySellPage'
 import type { HomeShellTab } from './FetchHomeBookingSheet'
 import { FetchStripePaymentElement } from './FetchStripePaymentElement'
-import type { LiveFeedStream } from '../lib/liveFeedDemo'
-import { LiveFeedPage } from './LiveFeedPage'
+import {
+  buildLiveFeedStreams,
+  LIVE_FEED_FILTER_CHIPS,
+  type LiveFeedCategory,
+  type LiveFeedStream,
+} from '../lib/liveFeedDemo'
+import { LiveFeedCard, LiveVideoAuction } from './LiveFeedPage'
+import fetchitQuickLiveTile from '../assets/fetchit-quick-live-auctions.png'
+import imgLiveCatHome from '../assets/fetchit-home-living-room-hero.png'
+import imgLiveCatElectronics from '../assets/search-categories-real/electronics.png'
+import imgLiveCatFashion from '../assets/search-categories-real/womens-fashion.png'
+import imgLiveCatCollectibles from '../assets/search-categories-real/trading-card-games.png'
+import imgLiveCatFree from '../assets/search-categories-real/coins-money.png'
+import imgLiveCatEnding from '../assets/search-categories-real/sports-cards.png'
+
+function peerListingCategoryChipToFilterCategory(
+  id: LiveFeedCategory,
+): string | undefined {
+  if (id === 'all') return undefined
+  if (id === 'free') return 'free'
+  if (id === 'ending_soon') return undefined
+  return id
+}
+
+const BROWSE_SEGMENT_STORAGE_KEY = 'fetch-mp-browse-segment'
+
+function loadStoredBrowseSegment(): 'auctions' | 'shop' {
+  if (typeof window === 'undefined') return 'auctions'
+  try {
+    const v = window.localStorage.getItem(BROWSE_SEGMENT_STORAGE_KEY)
+    return v === 'shop' ? 'shop' : 'auctions'
+  } catch {
+    return 'auctions'
+  }
+}
+
+function storeBrowseSegment(segment: 'auctions' | 'shop'): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(BROWSE_SEGMENT_STORAGE_KEY, segment)
+  } catch {
+    /* storage may be disabled */
+  }
+}
+
+type ListingSort = 'newest' | 'price_asc' | 'price_desc'
+type AuctionSort = 'viewers' | 'ending_soon' | 'price_low'
+
+const LISTING_SORT_OPTIONS: { id: ListingSort; label: string }[] = [
+  { id: 'newest', label: 'Newest' },
+  { id: 'price_asc', label: 'Price: low to high' },
+  { id: 'price_desc', label: 'Price: high to low' },
+]
+
+const AUCTION_SORT_OPTIONS: { id: AuctionSort; label: string }[] = [
+  { id: 'viewers', label: 'Most viewers' },
+  { id: 'ending_soon', label: 'Ending soonest' },
+  { id: 'price_low', label: 'Price: low to high' },
+]
+
+const SHOP_PRICE_PRESETS: { id: string; label: string; cents: number | null }[] = [
+  { id: 'any', label: 'Any price', cents: null },
+  { id: 'p25', label: 'Under $25', cents: 2500 },
+  { id: 'p50', label: 'Under $50', cents: 5000 },
+  { id: 'p100', label: 'Under $100', cents: 10000 },
+  { id: 'p250', label: 'Under $250', cents: 25000 },
+]
 
 export type MarketplaceDropsProductHandoff = {
   productId: string
@@ -56,6 +122,12 @@ export type MarketplaceSellerHubHandoff = {
   id: number
   /** First screen inside seller overlay (default feed). */
   panel: 'feed' | 'create'
+}
+
+export type MarketplaceSegmentHandoff = {
+  id: number
+  /** Which marketplace “page” to show after switching to this tab. */
+  segment: 'auctions' | 'shop'
 }
 
 export type HomeShellMarketplacePageProps = {
@@ -81,6 +153,21 @@ export type HomeShellMarketplacePageProps = {
   /** Explore / feed: jump into Live viewer for this stream. */
   liveJoinStreamHandoff?: LiveFeedStream | null
   onLiveJoinStreamHandoffConsumed?: () => void
+  /** Opens Fetch wallet (e.g. Bidwars hub wallet). */
+  onOpenWallet?: () => void
+  /** For You quick tiles: land on live grid vs static shop. */
+  segmentHandoff?: MarketplaceSegmentHandoff | null
+  onSegmentHandoffConsumed?: () => void
+}
+
+const LIVE_CATEGORY_COVER: Record<LiveFeedCategory, string> = {
+  all: fetchitQuickLiveTile,
+  furniture: imgLiveCatHome,
+  electronics: imgLiveCatElectronics,
+  fashion: imgLiveCatFashion,
+  collectibles: imgLiveCatCollectibles,
+  free: imgLiveCatFree,
+  ending_soon: imgLiveCatEnding,
 }
 
 function formatAud(n: number): string {
@@ -190,30 +277,68 @@ function MarketplaceBrowseBootSkeleton() {
       className="fetch-home-marketplace-body pointer-events-none flex min-h-0 flex-1 flex-col bg-white select-none"
       aria-hidden
     >
-      <div className="mx-auto flex w-full max-w-[min(100%,430px)] min-h-0 flex-1 flex-col">
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="flex shrink-0 items-center justify-between px-4 pb-2 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
-            <div className="h-5 w-16 rounded-md bg-zinc-200 animate-pulse" />
-            <div className="flex gap-2">
-              <div className="h-9 w-9 rounded-full bg-zinc-100" />
-              <div className="h-9 w-9 rounded-full bg-zinc-100" />
+      <div className="flex shrink-0 flex-col border-b border-zinc-100">
+        <div className="flex items-center gap-2 px-3 pb-3 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
+          <div className="h-11 min-w-0 flex-1 rounded-xl bg-zinc-100 animate-pulse" />
+          <div className="h-11 w-[4.75rem] shrink-0 rounded-xl bg-zinc-100 animate-pulse" />
+          <div className="h-11 w-11 shrink-0 rounded-full bg-zinc-100 animate-pulse" />
+        </div>
+        <div className="flex gap-2 overflow-hidden px-3 pb-2">
+          <div className="h-8 w-14 shrink-0 rounded-full bg-zinc-100 animate-pulse" />
+          <div className="h-8 w-20 shrink-0 rounded-full bg-zinc-100 animate-pulse" />
+          <div className="h-8 w-24 shrink-0 rounded-full bg-zinc-100 animate-pulse" />
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 overflow-hidden px-3 pt-3">
+        <div className="grid grid-cols-2 gap-2.5">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <div className="aspect-[9/16] w-full rounded-[1.15rem] bg-zinc-100 animate-pulse" />
+              <div className="h-4 w-[75%] rounded-md bg-zinc-100 animate-pulse" />
             </div>
-          </div>
-          <div className="flex gap-2 overflow-hidden px-4 pb-3">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-8 w-20 shrink-0 rounded-full bg-zinc-100 animate-pulse" />
-            ))}
-          </div>
-          <div className="min-h-0 flex-1 overflow-hidden px-3 pb-4">
-            <div className="grid grid-cols-2 gap-2.5">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="aspect-[3/5] rounded-[1.15rem] bg-zinc-100 animate-pulse" />
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>
+  )
+}
+
+function MarketplaceSearchIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+      <path d="M20 20l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function MarketplaceCartIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M9 8.5V6a3 3 0 013-3h0a3 3 0 013 3v2.5M5 8.5h14l-1.2 10.2a2 2 0 01-2 1.8H8.2a2 2 0 01-2-1.8L5 8.5z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function MarketplaceWalletIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M18 8.25V6a2 2 0 00-2-2H6.5A2.5 2.5 0 004 6.5v11A2.5 2.5 0 006.5 20H16a2 2 0 002-2v-2.25"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <rect x="14" y="8.25" width="6.5" height="7.5" rx="1.25" stroke="currentColor" strokeWidth="1.9" />
+      <circle cx="17.25" cy="12" r="0.85" fill="currentColor" />
+    </svg>
   )
 }
 
@@ -242,6 +367,42 @@ const SupplyProductThumb = memo(function SupplyProductThumb({
   )
 })
 
+const MarketplacePeerListingGridCard = memo(function MarketplacePeerListingGridCard({
+  listing,
+  onOpen,
+}: {
+  listing: PeerListing
+  onOpen: () => void
+}) {
+  const raw = listing.images?.[0]?.url?.trim()
+  const src = raw ? listingImageAbsoluteUrl(raw) : ''
+  const price = formatAudFromCents(listing.priceCents ?? 0)
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="group flex min-w-0 flex-col gap-1.5 rounded-2xl border border-zinc-100 bg-white p-2 text-left shadow-[0_1px_3px_rgba(0,0,0,0.05)] ring-1 ring-zinc-100/80 transition-transform active:scale-[0.98]"
+      aria-label={`View listing ${listing.title}`}
+    >
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-zinc-100">
+        {src ? (
+          <SupplyProductThumb
+            src={src}
+            alt=""
+            className="h-full w-full object-cover transition-transform duration-300 group-active:scale-[1.02]"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-[11px] text-zinc-400">No photo</div>
+        )}
+      </div>
+      <p className="line-clamp-2 min-h-[2.5rem] pl-0.5 text-[12px] font-semibold leading-snug text-zinc-900">
+        {listing.title}
+      </p>
+      <p className="pl-0.5 text-[1.05rem] font-bold tabular-nums leading-none text-zinc-900">{price}</p>
+    </button>
+  )
+})
+
 type MarketplaceSubView = 'browse' | 'cart' | 'checkout' | 'orderComplete'
 
 function HomeShellMarketplacePageInner({
@@ -260,8 +421,11 @@ function HomeShellMarketplacePageInner({
   onBrowseHandoffConsumed,
   sellerHubHandoff = null,
   onSellerHubHandoffConsumed,
-  liveJoinStreamHandoff = null,
-  onLiveJoinStreamHandoffConsumed,
+  liveJoinStreamHandoff: _liveJoinStreamHandoff = null,
+  onLiveJoinStreamHandoffConsumed: _onLiveJoinStreamHandoffConsumed,
+  onOpenWallet,
+  segmentHandoff = null,
+  onSegmentHandoffConsumed,
 }: HomeShellMarketplacePageProps) {
   const { loading: productsApiLoading, products: apiProductList } = useFetchProducts()
   const [subView, setSubView] = useState<MarketplaceSubView>('browse')
@@ -301,6 +465,75 @@ function HomeShellMarketplacePageInner({
   }>({})
   const lastBrowseHandoffIdRef = useRef<number | null>(null)
   const dropsListingHandoffDoneRef = useRef<string | null>(null)
+  const lastSegmentHandoffIdRef = useRef<number | null>(null)
+
+  const walletBalanceCents = useWalletBalanceCents()
+  const walletBalanceLabel = formatAudFromCents(walletBalanceCents)
+
+  const [browseSegment, setBrowseSegment] = useState<'auctions' | 'shop'>(loadStoredBrowseSegment)
+  useEffect(() => {
+    storeBrowseSegment(browseSegment)
+  }, [browseSegment])
+  const [liveCategory, setLiveCategory] = useState<LiveFeedCategory>('all')
+  const [listingCategory, setListingCategory] = useState<LiveFeedCategory>('all')
+  const [auctionSort, setAuctionSort] = useState<AuctionSort>('viewers')
+  const [listingSort, setListingSort] = useState<ListingSort>('newest')
+  const [activeLiveStream, setActiveLiveStream] = useState<LiveFeedStream | null>(null)
+
+  const liveStreams = useMemo(() => buildLiveFeedStreams(), [])
+
+  const filteredLiveStreams = useMemo(() => {
+    let s = liveStreams
+    if (liveCategory === 'ending_soon') {
+      s = s.filter((x) => x.tag === 'ending_soon')
+    } else if (liveCategory !== 'all') {
+      s = s.filter((x) => x.category === liveCategory)
+    }
+    const q = peerListFilter.q?.trim().toLowerCase()
+    if (q) {
+      s = s.filter((x) =>
+        `${x.title} ${x.seller} ${x.streamTitle} ${x.location}`.toLowerCase().includes(q),
+      )
+    }
+    const sorted = [...s]
+    if (auctionSort === 'viewers') {
+      sorted.sort((a, b) => b.watchers - a.watchers)
+    } else if (auctionSort === 'ending_soon') {
+      sorted.sort((a, b) => a.endsInSec - b.endsInSec)
+    } else if (auctionSort === 'price_low') {
+      sorted.sort((a, b) => a.priceCents - b.priceCents)
+    }
+    return sorted
+  }, [liveStreams, liveCategory, peerListFilter.q, auctionSort])
+
+  const onListingBrowseCategory = useCallback((id: LiveFeedCategory) => {
+    setListingCategory(id)
+    const cat = peerListingCategoryChipToFilterCategory(id)
+    setPeerListFilter((prev) => ({ ...prev, category: cat }))
+  }, [])
+
+  const liveCategoryChipsDisplay = useMemo(
+    () =>
+      LIVE_FEED_FILTER_CHIPS.map(({ id, label }) => ({
+        id,
+        label,
+        imageSrc: LIVE_CATEGORY_COVER[id],
+      })),
+    [],
+  )
+
+  const openListingFromLive = useCallback(async (listingId: string) => {
+    setActiveLiveStream(null)
+    const id = listingId.trim()
+    if (!id) return
+    try {
+      const listing = await fetchListing(id)
+      setPeerListingSheet(listing)
+      setPeerListings((prev) => (prev.some((x) => x.id === listing.id) ? prev : [listing, ...prev]))
+    } catch {
+      /* demo */
+    }
+  }, [])
 
   const sessionEmail = loadSession()?.email?.trim() ?? ''
 
@@ -328,6 +561,28 @@ function HomeShellMarketplacePageInner({
     },
     [peerListFilter.category, peerListFilter.maxPriceCents, peerListFilter.q],
   )
+
+  const filteredPeerListingsForGrid = useMemo(() => {
+    let list = applyPeerListClientFilters(peerListings)
+    if (listingCategory === 'ending_soon') {
+      const now = Date.now()
+      list = list.filter(
+        (l) =>
+          l.saleMode === 'auction' &&
+          typeof l.auctionEndsAt === 'number' &&
+          l.auctionEndsAt > now,
+      )
+    }
+    const sorted = [...list]
+    if (listingSort === 'newest') {
+      sorted.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+    } else if (listingSort === 'price_asc') {
+      sorted.sort((a, b) => (a.priceCents ?? 0) - (b.priceCents ?? 0))
+    } else if (listingSort === 'price_desc') {
+      sorted.sort((a, b) => (b.priceCents ?? 0) - (a.priceCents ?? 0))
+    }
+    return sorted
+  }, [peerListings, applyPeerListClientFilters, listingCategory, listingSort])
 
   const loadPeerListings = useCallback(async () => {
     const catRaw = peerListFilter.category?.trim()
@@ -374,6 +629,14 @@ function HomeShellMarketplacePageInner({
     })
     onBrowseHandoffConsumed?.()
   }, [browseHandoff, onBrowseHandoffConsumed])
+
+  useEffect(() => {
+    if (!segmentHandoff) return
+    if (segmentHandoff.id === lastSegmentHandoffIdRef.current) return
+    lastSegmentHandoffIdRef.current = segmentHandoff.id
+    setBrowseSegment(segmentHandoff.segment)
+    onSegmentHandoffConsumed?.()
+  }, [segmentHandoff, onSegmentHandoffConsumed])
 
   useEffect(() => {
     if (!sellerHubHandoff) return
@@ -568,27 +831,6 @@ function HomeShellMarketplacePageInner({
     void run()
   }, [dropsListingHandoff, peerListings, onDropsListingHandoffConsumed, startPeerBuy])
 
-  const openBuySellListingFromRail = useCallback(
-    (listingId: string) => {
-      setProductSheet(null)
-      const listing = peerListings.find((l) => l.id === listingId)
-      if (listing) {
-        setPeerListingSheet(listing)
-        return
-      }
-      void (async () => {
-        try {
-          const fetched = await fetchListing(listingId)
-          setPeerListings((prev) => (prev.some((x) => x.id === fetched.id) ? prev : [fetched, ...prev]))
-          setPeerListingSheet(fetched)
-        } catch {
-          /* listing unavailable */
-        }
-      })()
-    },
-    [peerListings],
-  )
-
   const goCheckout = useCallback(() => setSubView('checkout'), [])
 
   const placeStoreOrder = useCallback(async () => {
@@ -706,7 +948,7 @@ function HomeShellMarketplacePageInner({
         browseShellClass,
       ].join(' ')}
       role="main"
-      aria-label="Auctions"
+      aria-label="Marketplace"
       aria-busy={marketplaceBootLoading}
     >
         {marketplaceBootLoading ? (
@@ -721,12 +963,12 @@ function HomeShellMarketplacePageInner({
         >
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             {subView === 'browse' ? null : subView === 'cart' ? (
-              <header className="shrink-0 border-b border-zinc-200/80 bg-white px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
-                <div className="flex items-center gap-2">
+              <header className="shrink-0 border-b border-zinc-100 bg-white px-3 py-2.5 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
+                <div className="flex items-center gap-1">
                   <button
                     type="button"
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-800 active:bg-zinc-100"
-                    aria-label="Back to auctions"
+                    aria-label="Back to shop"
                     onClick={goBrowse}
                   >
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -739,16 +981,6 @@ function HomeShellMarketplacePageInner({
                       />
                     </svg>
                   </button>
-                  <h1 className="min-h-[1.75rem] min-w-0 flex-1 text-[1.2rem] font-bold tracking-[-0.03em] text-zinc-900">
-                    {cartEnterLoading ? (
-                      <span
-                        className="mt-0.5 inline-block h-[1.35rem] w-[4.25rem] rounded-md bg-zinc-200/85 animate-pulse"
-                        aria-hidden
-                      />
-                    ) : (
-                      'Cart'
-                    )}
-                  </h1>
                 </div>
               </header>
             ) : subView === 'checkout' ? (
@@ -782,18 +1014,269 @@ function HomeShellMarketplacePageInner({
             )}
 
             {subView === 'browse' ? (
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-                <div className="mx-auto flex w-full max-w-[min(100%,430px)] min-h-0 flex-1 flex-col">
-                  <LiveFeedPage
-                    onOpenListing={openBuySellListingFromRail}
-                    joinStreamHandoff={liveJoinStreamHandoff}
-                    onJoinStreamHandoffConsumed={onLiveJoinStreamHandoffConsumed}
-                    onGoLive={() => {
-                      setSellerOverlayLanding('feed')
-                      setSellerOverlayMountKey((k) => k + 1)
-                      setSellerToolsOpen(true)
-                    }}
-                  />
+              <div className="flex min-h-0 flex-1 flex-col bg-white">
+                <header className="shrink-0 border-b border-zinc-100 bg-white px-3 pb-3 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
+                  <div className="mx-auto flex w-full max-w-[min(100%,430px)] items-center gap-2">
+                    <div
+                      role="search"
+                      aria-label="Search marketplace"
+                      className="min-w-0 flex-1"
+                    >
+                      <label className="flex min-h-[2.75rem] min-w-0 items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50/90 px-3">
+                        <MarketplaceSearchIcon className="shrink-0 text-zinc-400" />
+                        <input
+                          type="search"
+                          value={peerListFilter.q ?? ''}
+                          onChange={(e) =>
+                            setPeerListFilter((prev) => ({
+                              ...prev,
+                              q: e.target.value,
+                            }))
+                          }
+                          placeholder="Search"
+                          autoComplete="off"
+                          enterKeyHint="search"
+                          className="min-w-0 flex-1 bg-transparent text-[15px] text-zinc-900 outline-none placeholder:text-zinc-400"
+                        />
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onOpenWallet}
+                      className="flex h-11 max-w-[38%] shrink-0 items-center gap-1.5 rounded-xl border border-zinc-200 bg-zinc-50/90 px-2.5 text-left transition-colors active:bg-zinc-100 min-[380px]:px-3"
+                      aria-label={`Wallet, balance ${walletBalanceLabel}`}
+                    >
+                      <MarketplaceWalletIcon className="shrink-0 text-emerald-700" />
+                      <span className="min-w-0 truncate text-[13px] font-semibold tabular-nums tracking-tight text-zinc-900">
+                        {walletBalanceLabel}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={goCart}
+                      className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-zinc-800 transition-colors active:bg-zinc-100"
+                      aria-label={cartItemCount > 0 ? `Open cart, ${cartItemCount} items` : 'Open cart'}
+                    >
+                      <MarketplaceCartIcon className="text-zinc-800" />
+                      {cartItemCount > 0 ? (
+                        <span className="absolute -right-0.5 -top-0.5 flex h-[1.1rem] min-w-[1.1rem] items-center justify-center rounded-full bg-zinc-900 px-1 text-[10px] font-bold tabular-nums text-white ring-2 ring-white">
+                          {cartItemCount > 99 ? '99+' : cartItemCount}
+                        </span>
+                      ) : null}
+                    </button>
+                  </div>
+                </header>
+                <div
+                  className="flex min-h-0 flex-1 flex-col bg-white"
+                  role="region"
+                  aria-label={browseSegment === 'auctions' ? 'Live auctions' : 'Local listings'}
+                >
+                  <div className="shrink-0 border-b border-zinc-50 bg-white">
+                    <div className="mx-auto flex w-full max-w-[min(100%,430px)] items-center gap-2 px-3 pt-2.5">
+                      <div
+                        role="tablist"
+                        aria-label="Marketplace segment"
+                        className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-zinc-100 p-0.5"
+                      >
+                        {(['auctions', 'shop'] as const).map((seg) => {
+                          const active = browseSegment === seg
+                          return (
+                            <button
+                              key={seg}
+                              type="button"
+                              role="tab"
+                              aria-selected={active}
+                              onClick={() => setBrowseSegment(seg)}
+                              className={[
+                                'rounded-full px-3.5 py-1.5 text-[12px] font-bold tracking-tight transition-colors',
+                                active
+                                  ? 'bg-white text-zinc-900 shadow-[0_1px_3px_rgba(0,0,0,0.08)] ring-1 ring-zinc-200/80'
+                                  : 'text-zinc-500 active:bg-zinc-200/70',
+                              ].join(' ')}
+                            >
+                              {seg === 'auctions' ? 'Auctions' : 'Shop'}
+                            </button>
+                          )
+                        })}
+                      </div>
+                      <div className="ml-auto shrink-0">
+                        {browseSegment === 'auctions' ? (
+                          <label className="relative flex h-9 items-center rounded-full bg-zinc-100 pl-3 pr-7 text-[12px] font-semibold text-zinc-700">
+                            <span className="sr-only">Sort auctions</span>
+                            <select
+                              value={auctionSort}
+                              onChange={(e) => setAuctionSort(e.target.value as AuctionSort)}
+                              className="appearance-none bg-transparent pr-1 outline-none"
+                            >
+                              {AUCTION_SORT_OPTIONS.map((o) => (
+                                <option key={o.id} value={o.id}>
+                                  {o.label}
+                                </option>
+                              ))}
+                            </select>
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              aria-hidden
+                              className="pointer-events-none absolute right-2.5 text-zinc-500"
+                            >
+                              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </label>
+                        ) : (
+                          <label className="relative flex h-9 items-center rounded-full bg-zinc-100 pl-3 pr-7 text-[12px] font-semibold text-zinc-700">
+                            <span className="sr-only">Sort listings</span>
+                            <select
+                              value={listingSort}
+                              onChange={(e) => setListingSort(e.target.value as ListingSort)}
+                              className="appearance-none bg-transparent pr-1 outline-none"
+                            >
+                              {LISTING_SORT_OPTIONS.map((o) => (
+                                <option key={o.id} value={o.id}>
+                                  {o.label}
+                                </option>
+                              ))}
+                            </select>
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              aria-hidden
+                              className="pointer-events-none absolute right-2.5 text-zinc-500"
+                            >
+                              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                    {browseSegment === 'shop' ? (
+                      <div
+                        className="mx-auto flex w-full max-w-[min(100%,430px)] gap-1.5 overflow-x-auto px-3 pt-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                        role="group"
+                        aria-label="Maximum price"
+                      >
+                        {SHOP_PRICE_PRESETS.map((p) => {
+                          const active =
+                            (peerListFilter.maxPriceCents ?? null) ===
+                            (p.cents == null ? null : p.cents)
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() =>
+                                setPeerListFilter((prev) => ({
+                                  ...prev,
+                                  maxPriceCents: p.cents ?? undefined,
+                                }))
+                              }
+                              className={[
+                                'shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold transition-colors',
+                                active
+                                  ? 'bg-[#4c1d95] text-white'
+                                  : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200',
+                              ].join(' ')}
+                            >
+                              {p.label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    ) : null}
+                    <div
+                      className="mx-auto flex w-full max-w-[min(100%,430px)] gap-2.5 overflow-x-auto px-3 pb-3 pt-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      role="group"
+                      aria-label={
+                        browseSegment === 'auctions' ? 'Live categories' : 'Listing categories'
+                      }
+                    >
+                      {liveCategoryChipsDisplay.map(({ id, label, imageSrc }) => {
+                        const selected =
+                          browseSegment === 'auctions'
+                            ? liveCategory === id
+                            : listingCategory === id
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() =>
+                              browseSegment === 'auctions'
+                                ? setLiveCategory(id)
+                                : onListingBrowseCategory(id)
+                            }
+                            className="flex w-[4.65rem] shrink-0 flex-col items-center gap-1.5"
+                          >
+                            <span
+                              className={[
+                                'relative h-[3.6rem] w-[3.6rem] overflow-hidden rounded-2xl bg-zinc-100 transition-shadow',
+                                selected
+                                  ? 'ring-[3px] ring-[#4c1d95] shadow-md'
+                                  : 'ring-1 ring-zinc-200/90',
+                              ].join(' ')}
+                            >
+                              <img
+                                src={imageSrc}
+                                alt=""
+                                draggable={false}
+                                className="h-full w-full object-cover"
+                              />
+                            </span>
+                            <span
+                              className={[
+                                'max-w-full truncate text-center text-[10px] font-semibold leading-tight',
+                                selected ? 'text-zinc-900' : 'text-zinc-600',
+                              ].join(' ')}
+                            >
+                              {label}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+                    {browseSegment === 'auctions' ? (
+                      filteredLiveStreams.length === 0 ? (
+                        <div className="mx-auto max-w-[18rem] px-6 py-14 text-center">
+                          <p className="text-[15px] font-semibold text-zinc-700">No live streams match</p>
+                          <p className="mt-1 text-[13px] text-zinc-500">
+                            Try a different category, clear your search, or check back when more sellers go live.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="mx-auto grid w-full max-w-[min(100%,430px)] grid-cols-2 gap-2.5 px-3 pb-[max(5rem,env(safe-area-inset-bottom,0px)+4rem)] pt-3">
+                          {filteredLiveStreams.map((stream) => (
+                            <LiveFeedCard
+                              key={stream.id}
+                              stream={stream}
+                              onJoin={() => setActiveLiveStream(stream)}
+                            />
+                          ))}
+                        </div>
+                      )
+                    ) : filteredPeerListingsForGrid.length === 0 ? (
+                      <div className="mx-auto max-w-[18rem] px-6 py-14 text-center">
+                        <p className="text-[15px] font-semibold text-zinc-700">No listings match</p>
+                        <p className="mt-1 text-[13px] text-zinc-500">
+                          Try a different category, raise the price ceiling, or clear your search.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="mx-auto grid w-full max-w-[min(100%,430px)] grid-cols-2 gap-2.5 px-3 pb-[max(5rem,env(safe-area-inset-bottom,0px)+4rem)] pt-3">
+                        {filteredPeerListingsForGrid.map((listing) => (
+                          <MarketplacePeerListingGridCard
+                            key={listing.id}
+                            listing={listing}
+                            onOpen={() => setPeerListingSheet(listing)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : subView === 'cart' ? (
@@ -1424,7 +1907,10 @@ function HomeShellMarketplacePageInner({
             onMenuAccount={onMenuAccount}
             onOpenListingChat={onOpenListingChat}
             onRequestHomeShellTab={onRequestHomeShellTab}
+            dropsListingHandoff={dropsListingHandoff}
+            onDropsListingHandoffConsumed={onDropsListingHandoffConsumed}
             onBookDriver={onBookDriver}
+            syncBrowseFilter={peerListFilter}
             overlayMode
             overlayLandingPanel={sellerOverlayLanding}
             onOverlayClose={() => {
@@ -1433,6 +1919,14 @@ function HomeShellMarketplacePageInner({
             }}
           />
         </div>
+      ) : null}
+
+      {activeLiveStream ? (
+        <LiveVideoAuction
+          stream={activeLiveStream}
+          onClose={() => setActiveLiveStream(null)}
+          onOpenListing={(id) => void openListingFromLive(id)}
+        />
       ) : null}
     </div>
   )

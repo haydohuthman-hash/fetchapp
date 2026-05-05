@@ -17,6 +17,9 @@ export type ServicesExploreHomePanelProps = {
   /** User tapped a “live now” tile — open the Live floor + player for that stream. */
   onOpenLiveStream?: (reel: DropReel) => void
   onOpenMarketplace: () => void
+  /** Match For You quick tiles: Live vs Shop entry points. */
+  onOpenMarketplaceAuctions?: () => void
+  onOpenMarketplaceShop?: () => void
   onOpenSearch?: () => void
   onOpenMarketplaceBrowse?: (filter: MarketplacePeerBrowseFilter) => void
   onOpenPeerListing: (listingId: string) => void
@@ -25,10 +28,6 @@ export type ServicesExploreHomePanelProps = {
   onViewBackpack?: () => void
   /** Opens the Bid Wars hub from the adventure promo. */
   onJoinBidWar?: () => void
-  /** Opens Prize Spin from the home gem games picker. */
-  onOpenSpinWheel?: () => void
-  /** Opens Mystery Flip from the home gem games picker. */
-  onOpenMysteryFlip?: () => void
   intentOrbHintBubble: boolean
   intentOrbHintCopy: string
   fetchDogEarsActive: boolean
@@ -66,14 +65,14 @@ export function ServicesExploreHomePanel({
   onOpenDrops,
   onOpenLiveStream,
   onOpenMarketplace,
+  onOpenMarketplaceAuctions,
+  onOpenMarketplaceShop,
   onOpenSearch,
   onOpenMarketplaceBrowse,
   onOpenPeerListing,
   onQuickBuyPeerListing,
   onViewBackpack,
   onJoinBidWar,
-  onOpenSpinWheel,
-  onOpenMysteryFlip,
   intentOrbHintBubble: _intentOrbHintBubble,
   intentOrbHintCopy: _intentOrbHintCopy,
   fetchDogEarsActive: _fetchDogEarsActive,
@@ -142,14 +141,14 @@ export function ServicesExploreHomePanel({
           onOpenDrops={onOpenDrops}
           onOpenLiveStream={onOpenLiveStream}
           onOpenMarketplace={onOpenMarketplace}
+          onOpenMarketplaceAuctions={onOpenMarketplaceAuctions ?? onOpenMarketplace}
+          onOpenMarketplaceShop={onOpenMarketplaceShop ?? onOpenMarketplace}
           onOpenSearch={onOpenSearch}
           onOpenMarketplaceBrowse={onOpenMarketplaceBrowse}
           onOpenPeerListing={onOpenPeerListing}
           onQuickBuyPeerListing={onQuickBuyPeerListing}
           onViewBackpack={onViewBackpack}
           onJoinBidWar={onJoinBidWar}
-          onOpenSpinWheel={onOpenSpinWheel}
-          onOpenMysteryFlip={onOpenMysteryFlip}
         />
       </div>
 

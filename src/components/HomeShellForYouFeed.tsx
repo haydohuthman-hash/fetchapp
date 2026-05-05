@@ -40,11 +40,18 @@ import fetchitQuickLiveAuctionsUrl from '../assets/fetchit-quick-live-auctions.p
 import fetchitQuickShopUrl from '../assets/fetchit-quick-shop.png'
 import heroWalletCashUrl from '../assets/hero-wallet-cash.png'
 import purpleGemIconUrl from '../assets/pokies-icons/gem.png'
-import searchRealSneakersShoesUrl from '../assets/search-categories-real/sneakers-shoes.png'
-import searchRealTradingCardGamesUrl from '../assets/search-categories-real/trading-card-games.png'
-import searchRealJewelleryWatchesUrl from '../assets/search-categories-real/jewellery-watches.png'
-import searchRealToysHobbiesUrl from '../assets/search-categories-real/toys-hobbies.png'
+import searchRealBabyKidsUrl from '../assets/search-categories-real/baby-kids.png'
+import searchRealCoinsMoneyUrl from '../assets/search-categories-real/coins-money.png'
 import searchRealElectronicsUrl from '../assets/search-categories-real/electronics.png'
+import searchRealEventsUrl from '../assets/search-categories-real/events.png'
+import searchRealJewelleryWatchesUrl from '../assets/search-categories-real/jewellery-watches.png'
+import searchRealMensFashionUrl from '../assets/search-categories-real/mens-fashion.png'
+import searchRealRocksCrystalsUrl from '../assets/search-categories-real/rocks-crystals.png'
+import searchRealSneakersShoesUrl from '../assets/search-categories-real/sneakers-shoes.png'
+import searchRealSportsCardsUrl from '../assets/search-categories-real/sports-cards.png'
+import searchRealToysHobbiesUrl from '../assets/search-categories-real/toys-hobbies.png'
+import searchRealTradingCardGamesUrl from '../assets/search-categories-real/trading-card-games.png'
+import searchRealWomensFashionUrl from '../assets/search-categories-real/womens-fashion.png'
 import { playAdventureTrumpets, playConfettiPops, playWinFanfare } from '../lib/fetchBattleSounds'
 import { depositWallet, useWalletBalanceCents } from '../lib/data'
 import { playUiFeedback } from '../voice/fetchFeedback'
@@ -64,6 +71,34 @@ const HOME_PET_SLOTS_KEY = 'fetch.home.unlockedPetSlots.v1'
 const STARTER_PET_REVEALED_KEY = 'fetch.home.starterPetRevealed.v1'
 const PET_HUNTS_STORAGE_KEY = 'fetch.home.petHunts.v1'
 const PET_HUNT_MAX_LIVE = 3
+/** Minimum adventure level to open Bid Wars from the Explore quick-action card */
+const BID_WARS_UNLOCK_ADVENTURE_LEVEL = 10
+/** Same tiles as `WHATNOT_SEARCH_CATEGORIES` in HomeView (Search), plus Custom item. */
+const PET_HUNT_CATEGORY_CAROUSEL_ITEMS: ReadonlyArray<{ label: string; image: string }> = [
+  { label: 'Events', image: searchRealEventsUrl },
+  { label: "Men's Fashion", image: searchRealMensFashionUrl },
+  { label: 'Trading Card Games', image: searchRealTradingCardGamesUrl },
+  { label: 'Jewellery & Watches', image: searchRealJewelleryWatchesUrl },
+  { label: 'Sneakers & Shoes', image: searchRealSneakersShoesUrl },
+  { label: 'Electronics', image: searchRealElectronicsUrl },
+  { label: "Women's Fashion", image: searchRealWomensFashionUrl },
+  { label: 'Baby & Kids', image: searchRealBabyKidsUrl },
+  { label: 'Rocks & Crystals', image: searchRealRocksCrystalsUrl },
+  { label: 'Toys & Hobbies', image: searchRealToysHobbiesUrl },
+  { label: 'Coins & Money', image: searchRealCoinsMoneyUrl },
+  { label: 'Sports Cards', image: searchRealSportsCardsUrl },
+  { label: 'Custom item', image: fetchitMysteryStarterPodUrl },
+]
+
+const PH_SHEET =
+  'relative z-[1] max-h-[min(44rem,calc(100dvh-1.5rem))] w-full max-w-[400px] overflow-y-auto rounded-t-[1.85rem] bg-gradient-to-b from-[#faf8ff] via-white to-[#f7f5ff] px-5 pb-6 pt-3 text-[#1c1340] shadow-[0_-24px_56px_-20px_rgba(49,16,95,0.42)] ring-1 ring-violet-200/45 [-webkit-overflow-scrolling:touch] sm:rounded-[1.85rem]'
+const PH_CARD =
+  'rounded-2xl border border-violet-100/85 bg-white/95 p-4 shadow-[0_14px_36px_-24px_rgba(76,29,149,0.28)]'
+const PH_FIELD =
+  'mt-1.5 w-full rounded-2xl border border-violet-100 bg-white px-3.5 py-3 text-[15px] font-black tracking-[-0.02em] text-[#1c1340] shadow-[inset_0_1px_3px_rgba(124,58,237,0.07)] outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-[#7c3aed]/12'
+const PH_FIELD_SM =
+  'mt-1.5 w-full rounded-xl border border-violet-100 bg-white px-3 py-2.5 text-[13px] font-black text-[#1c1340] shadow-[inset_0_1px_2px_rgba(124,58,237,0.06)] outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-[#7c3aed]/20'
+
 /** Persisted roster of which pals stay “included” when reopening Home & pet. */
 const PET_EDITOR_INCLUDED_IDS_KEY = 'fetch.home.petEditorIncludedIds.v1'
 const MAX_HOME_PET_SLOTS = 3
@@ -132,7 +167,6 @@ type PetHuntAlertType = 'Instant' | 'Daily summary'
 type PetHuntStatus = 'active' | 'found' | 'paused' | 'expired'
 type PetHuntAutopilotAction = 'message' | 'bid' | 'buy'
 type PetHuntListingSource = 'Listings' | 'Auctions' | 'Live drops'
-type PetHuntFulfillment = 'Any' | 'Pickup' | 'Delivery' | 'Same-day'
 
 type PetHunt = {
   id: string
@@ -144,10 +178,8 @@ type PetHunt = {
   must_include: string
   exclude_terms: string
   sources: PetHuntListingSource[]
-  fulfillment: PetHuntFulfillment
   max_price: number | null
   condition: PetHuntCondition
-  radius_km: number
   alert_type: PetHuntAlertType
   autopilot_enabled: boolean
   autopilot_actions: PetHuntAutopilotAction[]
@@ -523,11 +555,6 @@ function parsePetHuntListingSources(value: unknown): PetHuntListingSource[] {
   return seen.size ? [...seen] : ['Listings', 'Auctions', 'Live drops']
 }
 
-function parsePetHuntFulfillment(value: unknown): PetHuntFulfillment {
-  if (value === 'Pickup' || value === 'Delivery' || value === 'Same-day') return value
-  return 'Any'
-}
-
 function normalizePetHuntPrice(value: unknown): number | null {
   const n = typeof value === 'number' ? value : Number.parseFloat(String(value ?? '').replace(/[^0-9.]/g, ''))
   if (!Number.isFinite(n) || n <= 0) return null
@@ -554,10 +581,8 @@ function loadPetHunts(): PetHunt[] {
           must_include: typeof hunt.must_include === 'string' && hunt.must_include.trim() ? hunt.must_include.trim().slice(0, 120) : '',
           exclude_terms: typeof hunt.exclude_terms === 'string' && hunt.exclude_terms.trim() ? hunt.exclude_terms.trim().slice(0, 120) : '',
           sources: parsePetHuntListingSources(hunt.sources),
-          fulfillment: parsePetHuntFulfillment(hunt.fulfillment),
           max_price: typeof hunt.max_price === 'number' && Number.isFinite(hunt.max_price) ? Math.max(0, Math.round(hunt.max_price)) : null,
           condition: parsePetHuntCondition(hunt.condition),
-          radius_km: typeof hunt.radius_km === 'number' && Number.isFinite(hunt.radius_km) ? Math.max(1, Math.round(hunt.radius_km)) : 25,
           alert_type: parsePetHuntAlertType(hunt.alert_type),
           autopilot_enabled: hunt.autopilot_enabled === true,
           autopilot_actions: parsePetHuntAutopilotActions(hunt.autopilot_actions),
@@ -603,24 +628,27 @@ function petHuntMatchesListing(hunt: PetHunt, listing: PeerListing): boolean {
   if (hunt.condition === 'Used' && listing.condition.toLowerCase() === 'new') return false
   if (listing.saleMode === 'auction' && !hunt.sources.includes('Auctions')) return false
   if (listing.saleMode !== 'auction' && !hunt.sources.includes('Listings') && !hunt.sources.includes('Live drops')) return false
-  if (hunt.fulfillment === 'Delivery' && !listing.fetchDelivery && !listing.sameDayDelivery) return false
-  if (hunt.fulfillment === 'Same-day' && !listing.sameDayDelivery) return false
 
   const query = normalizeHuntText(hunt.query)
   const brand = normalizeHuntText(hunt.brand)
   const category = normalizeHuntText(hunt.category)
   const haystack = normalizeHuntText([listing.title, listing.category, listing.keywords ?? '', listing.description].join(' '))
-  const queryWords = query.split(/\s+/).filter((word) => word.length >= 3)
-  const queryHit = query.length >= 3 && (haystack.includes(query) || queryWords.some((word) => haystack.includes(word)))
+  /** 2+ chars so short phrases like “ps5”, “tv”, “grail” still match demo listings. */
+  const queryWords = huntTextTokens(hunt.query).filter((word) => word.length >= 2)
+  const queryHit =
+    query.length >= 2 &&
+    (haystack.includes(query) ||
+      queryWords.some((word) => word.length >= 2 && haystack.includes(word)))
   const brandHit = !brand || haystack.includes(brand)
   const mustIncludeTokens = huntTextTokens(hunt.must_include)
   const mustIncludeHit = mustIncludeTokens.every((word) => haystack.includes(word))
   const excludeHit = huntTextTokens(hunt.exclude_terms).some((word) => haystack.includes(word))
+  const categoryStem = category.replace(/s$/, '')
   const categoryHit =
     category.length >= 3 &&
     category !== 'custom item' &&
     category !== 'any' &&
-    haystack.includes(category.replace(/s$/, ''))
+    (haystack.includes(categoryStem) || haystack.includes(category))
 
   if (!brandHit || !mustIncludeHit || excludeHit) return false
   return queryHit || categoryHit || Boolean(brand && haystack.includes(brand))
@@ -634,12 +662,12 @@ function petHuntDisplayPrice(cents: number | null): string {
   return cents == null ? 'Any price' : `Max ${formatAudFromCents(cents)}`
 }
 
-function petHuntDetailLabel(hunt: Pick<PetHunt, 'category' | 'max_price' | 'alert_type' | 'sources' | 'fulfillment'>): string {
+function petHuntDetailLabel(hunt: Pick<PetHunt, 'category' | 'max_price' | 'alert_type' | 'sources'>): string {
   const sourceLabel =
     hunt.sources.length >= 3
       ? 'All drops'
       : hunt.sources.join(' + ')
-  return `${hunt.category} · ${sourceLabel} · ${hunt.fulfillment} · ${petHuntDisplayPrice(hunt.max_price)} · ${hunt.alert_type}`
+  return `${hunt.category} · ${sourceLabel} · ${petHuntDisplayPrice(hunt.max_price)} · ${hunt.alert_type}`
 }
 
 function petHuntAutopilotLabel(hunt: Pick<PetHunt, 'autopilot_enabled' | 'autopilot_actions'>): string {
@@ -1095,8 +1123,8 @@ function HeroMyPetsRosterCard({
     unlockedSlots >= 3 && benchPet && !starterMysteryActive ? rosterPetBehindLeader(rosterActivePet) : null
   const trailName = trailPet ? petNames[trailPet.id]?.trim() || trailPet.defaultName : ''
   const showTripleRosterRows = !!trailPet && !!benchPet && unlockedSlots >= 3 && !starterMysteryActive
-  const nextSlotCost =
-    unlockedSlots >= MAX_HOME_PET_SLOTS ? null : nextHomePetSlotUnlockGemCost(unlockedSlots)
+  const nextUnlockGems = nextHomePetSlotUnlockGemCost(unlockedSlots)
+  const trailUnlockGems = unlockedSlots === 2 ? nextHomePetSlotUnlockGemCost(2) : null
   const leadLabel = starterMysteryActive ? '???' : leaderName
 
   function rosterRow(
@@ -1141,17 +1169,6 @@ function HeroMyPetsRosterCard({
       className="pointer-events-auto absolute bottom-2.5 left-2 z-[3] w-[7.5rem] max-w-[calc(100%-0.85rem)] rounded-lg bg-white px-[3px] py-0.5 text-left text-[#1c1340] shadow-[0_12px_28px_-16px_rgba(0,0,0,0.18)] ring-1 ring-zinc-200 sm:bottom-3.5 sm:left-3 sm:w-[7.85rem]"
       data-fetch-home-my-pets-card
     >
-      <button
-        type="button"
-        onClick={onOpenPetEdit}
-        className="absolute -top-8 left-0 z-[4] flex h-7 w-7 items-center justify-center rounded-full bg-white text-zinc-800 shadow-[0_6px_14px_-4px_rgba(0,0,0,0.2)] ring-2 ring-zinc-200 transition-[transform,filter] active:scale-[0.94]"
-        aria-label="Edit home and pet"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="m4 16.5-.7 4.2 4.2-.7L18.7 8.8l-3.5-3.5L4 16.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-          <path d="m14.5 6 3.5 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </svg>
-      </button>
       <div className="flex items-baseline justify-between gap-1 border-b border-zinc-200 px-[3px] pb-[3px] pt-px">
         <span className="flex min-w-0 items-center gap-0.5 text-[7px] font-black uppercase leading-none tracking-[0.1em] text-zinc-950">
           <span aria-hidden className="inline-block shrink-0 text-[8px]">
@@ -1178,17 +1195,22 @@ function HeroMyPetsRosterCard({
             onClick={onOpenPetEdit}
             className="flex min-h-[1.65rem] w-full items-center gap-1 rounded-md bg-zinc-50 px-[3px] py-[2px] text-left ring-1 ring-zinc-200 transition-colors active:bg-zinc-100"
             aria-label={
-              nextSlotCost != null
-                ? `Pet slot locked. Unlock for ${nextSlotCost} gems in Home and pet`
+              nextUnlockGems != null
+                ? `Unlock second roster slot (bench) for ${nextUnlockGems} gems — opens in Home and pet`
                 : 'Pet slot locked. Open Home and pet'
             }
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-300/95 text-[#52525c] shadow-inner ring-2 ring-white">
               <HeroMyPetsRosterMiniIconLock className="text-zinc-600" />
             </span>
-            <span className="text-[9px] font-black uppercase tracking-[0.06em] text-zinc-600">Locked</span>
-            <span className="ml-auto shrink-0 text-[10px] opacity-55" aria-hidden>
-              🔒
+            <span className="min-w-0 flex-1">
+              <span className="block text-[9px] font-black uppercase tracking-[0.06em] text-zinc-600">Bench locked</span>
+              {nextUnlockGems != null ? (
+                <span className="mt-0.5 flex items-center gap-0.5 text-[8.5px] font-black tabular-nums text-[#7c3aed]">
+                  <img src={purpleGemIconUrl} alt="" aria-hidden className="h-3 w-3 object-contain" draggable={false} />
+                  {nextUnlockGems}
+                </span>
+              ) : null}
             </span>
           </button>
         )}
@@ -1206,18 +1228,23 @@ function HeroMyPetsRosterCard({
             className="flex min-h-[1.65rem] w-full items-center gap-1 rounded-md bg-zinc-50 px-[3px] py-[2px] text-left ring-1 ring-zinc-200 transition-colors active:bg-zinc-100"
             aria-label={
               unlockedSlots <= 1
-                ? 'Third roster slot locked. Unlock slot two first in Home and pet'
-                : nextHomePetSlotUnlockGemCost(unlockedSlots) != null
-                  ? `Third roster slot locked. Unlock for ${nextHomePetSlotUnlockGemCost(unlockedSlots)} gems in Home and pet`
-                  : 'Third roster slot locked. Open Home and pet'
+                ? 'Trail roster slot locked. Unlock the bench slot first in Home and pet'
+                : trailUnlockGems != null
+                  ? `Unlock third roster slot (trail) for ${trailUnlockGems} gems in Home and pet`
+                  : 'Trail roster slot locked. Open Home and pet'
             }
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-300/95 text-[#52525c] shadow-inner ring-2 ring-white">
               <HeroMyPetsRosterMiniIconLock className="text-zinc-600" />
             </span>
-            <span className="text-[9px] font-black uppercase tracking-[0.06em] text-zinc-600">Locked</span>
-            <span className="ml-auto shrink-0 text-[10px] opacity-55" aria-hidden>
-              🔒
+            <span className="min-w-0 flex-1">
+              <span className="block text-[9px] font-black uppercase tracking-[0.06em] text-zinc-600">Trail locked</span>
+              {unlockedSlots > 1 && trailUnlockGems != null ? (
+                <span className="mt-0.5 flex items-center gap-0.5 text-[8.5px] font-black tabular-nums text-[#7c3aed]">
+                  <img src={purpleGemIconUrl} alt="" aria-hidden className="h-3 w-3 object-contain" draggable={false} />
+                  {trailUnlockGems}
+                </span>
+              ) : null}
             </span>
           </button>
         )}
@@ -1225,13 +1252,14 @@ function HeroMyPetsRosterCard({
       <button
         type="button"
         onClick={onOpenPetEdit}
-        className="mt-[3px] w-full text-center text-[6.75px] font-black uppercase tracking-[0.11em] text-[#7c3aed]"
+        className="mt-[5px] w-full text-center text-[11px] font-black uppercase tracking-[0.1em] text-[#7c3aed] sm:text-[12px]"
+        aria-label="View all pets"
       >
-        View all pets &gt;
+        View all pets
       </button>
       <div className="my-1 h-px w-full bg-zinc-100" aria-hidden />
       <p className="mb-[3px] flex items-center justify-between px-[3px] text-[7.75px] font-black uppercase tracking-[0.055em] text-zinc-500 sm:text-[8px]">
-        <span>Leader appetite</span>
+        <span>Appetite</span>
         <span
           className={[
             isPetFed ? 'text-emerald-600' : petHungerStage === 'risk' ? 'text-red-600' : 'text-amber-600',
@@ -1478,7 +1506,6 @@ function FetchitWelcomeHero({
   onStarterUnlockClick,
   onAddDemoFunds,
   onViewBackpack,
-  onOpenGemGames,
   onOpenPetEdit,
   onFeedPet,
 }: {
@@ -1507,7 +1534,6 @@ function FetchitWelcomeHero({
   onStarterUnlockClick: () => void
   onAddDemoFunds: () => void
   onViewBackpack: () => void
-  onOpenGemGames: () => void
   onOpenPetEdit: () => void
   onFeedPet: () => void
 }) {
@@ -1573,11 +1599,10 @@ function FetchitWelcomeHero({
           <span className="min-w-0 flex-1 truncate text-left text-[11px] font-black tabular-nums text-[#1c1340]">{fundsLabel}</span>
           <HeaderSquarePlusIcon className="!h-6 !w-6" />
         </button>
-        <button
-          type="button"
-          onClick={onOpenGemGames}
-          className="flex min-h-[2.5rem] min-w-[4.25rem] shrink-0 flex-col items-center justify-center gap-0 rounded-lg bg-white px-2 py-0.5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95 transition-colors active:bg-violet-50/90 sm:min-w-[4.5rem]"
-          aria-label={`Open gem games, ${gemsCount} gems`}
+        <div
+          className="flex min-h-[2.5rem] min-w-[4.25rem] shrink-0 flex-col items-center justify-center gap-0 rounded-lg bg-white px-2 py-0.5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95 sm:min-w-[4.5rem]"
+          aria-label={`${gemsCount} gems`}
+          role="status"
           data-fetch-home-gems-chip
         >
           <img
@@ -1590,7 +1615,7 @@ function FetchitWelcomeHero({
             data-fetch-home-gems-icon
           />
           <span className="text-[11px] font-black leading-none tabular-nums text-[#1c1340]">{gemsCount}</span>
-        </button>
+        </div>
         <button
           type="button"
           className="relative flex h-auto min-h-[2.5rem] w-[2.68rem] shrink-0 flex-col items-center justify-center rounded-lg bg-white px-0 py-0.5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95 transition-colors active:bg-zinc-50/90"
@@ -1757,6 +1782,17 @@ function FetchitWelcomeHero({
               <span className="fetch-backpack-premium-card__shimmer" />
             </div>
           </div>
+        </button>
+        <button
+          type="button"
+          onClick={onOpenPetEdit}
+          className="absolute bottom-2.5 right-2.5 z-[8] flex h-8 w-8 items-center justify-center rounded-full bg-white text-zinc-800 shadow-[0_4px_14px_-4px_rgba(0,0,0,0.22)] ring-2 ring-zinc-200 transition-transform active:scale-[0.94] sm:bottom-3 sm:right-3"
+          aria-label="Edit home and pet"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="m4 16.5-.7 4.2 4.2-.7L18.7 8.8l-3.5-3.5L4 16.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+            <path d="m14.5 6 3.5 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
         </button>
       </div>
       <style>{`
@@ -2157,12 +2193,8 @@ function PetEditSheet({
           autoComplete="given-name"
           aria-label="Your display name"
         />
-        <p className="mt-1 text-[10px] font-semibold leading-snug text-zinc-500">Shown on your level card in the hero header.</p>
 
         <p className="mt-3 text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Hero banner</p>
-        <p className="mt-0.5 text-[10px] font-semibold leading-snug text-zinc-500">
-          Female home art swaps between fed vs hungry states when idle.
-        </p>
         <div className="mt-1.5 grid grid-cols-2 gap-1.5" role="group" aria-label="Hero banner gender">
           <button
             type="button"
@@ -2191,12 +2223,7 @@ function PetEditSheet({
         </div>
 
         <div className="mt-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Pets</p>
-            <p className="text-[9px] font-semibold tabular-nums text-zinc-500">
-              Tap card to edit · Swap any pet · max {sheetIncludeCap} ({includedIds.size}/{sheetIncludeCap})
-            </p>
-          </div>
+          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Pets</p>
           <div className="mt-1.5 grid grid-cols-2 gap-1.5 min-[401px]:grid-cols-4">
             {pets.map((pet) => {
               const included = includedIds.has(pet.id)
@@ -2310,9 +2337,7 @@ function PetEditSheet({
             >
               Make {focusedLabel} banner pet
             </button>
-          ) : (
-            <p className="mt-1.5 px-px text-center text-[9px] font-semibold text-zinc-500">{focusedLabel} is your banner pet.</p>
-          )}
+          ) : null}
         </div>
 
         <div className="mt-3 rounded-xl bg-zinc-50 p-2 ring-1 ring-zinc-100">
@@ -2320,7 +2345,6 @@ function PetEditSheet({
           <p className="mt-1 text-[11px] font-black tabular-nums leading-snug text-[#1c1340]">
             {Math.min(MAX_HOME_PET_SLOTS, homeUnlockedPetSlots)} / {MAX_HOME_PET_SLOTS} unlocked
           </p>
-          <p className="mt-0.5 text-[9px] font-semibold leading-snug text-zinc-500">Banner rows unlock with gems.</p>
           {homeUnlockedPetSlots >= MAX_HOME_PET_SLOTS ? (
             <p className="mt-2 text-[10px] font-bold text-emerald-600">All slots unlocked.</p>
           ) : nextBannerSlotGemCost != null ? (
@@ -2413,7 +2437,6 @@ function PetEditSheet({
         </div>
 
         <div className="sticky bottom-0 z-[4] mt-4 border-t border-violet-100 bg-gradient-to-b from-white via-white to-violet-50/40 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-4 shadow-[0_-8px_24px_-18px_rgba(76,29,149,0.18)] backdrop-blur-sm">
-          <p className="mb-2 text-center text-[9px] font-semibold text-zinc-500">Edits save as you go.</p>
           <button
             type="button"
             onClick={onSave}
@@ -2434,10 +2457,10 @@ function PetHuntMissionCard({
   matchesByHuntId,
   petNames,
   petRanks,
-  fallbackPetName,
+  fallbackPetName: _fallbackPetName,
   nowMs,
   canStartHunt,
-  starterLocked,
+  starterLocked: _starterLocked,
   onStartHunt,
   onViewHunt,
   onViewListing,
@@ -2460,30 +2483,27 @@ function PetHuntMissionCard({
   onBid: (huntId: string) => void
   onBuyNow: (huntId: string) => void
 }) {
-  const presets = ['Sneakers', 'Watches', 'Jewellery', 'Cards', 'Collectibles', 'Custom item']
+  const presets = PET_HUNT_CATEGORY_CAROUSEL_ITEMS.map((c) => c.label)
   const liveHuntCount = hunts.length
   const canAddMore = canStartHunt && liveHuntCount < PET_HUNT_MAX_LIVE
 
   if (liveHuntCount > 0) {
     return (
       <section className="-mx-0.5 px-0.5" aria-label="Active Pet Hunts" data-fetch-tour-target="adventure">
-        <div className="overflow-hidden rounded-3xl bg-white p-3 shadow-[0_12px_28px_-18px_rgba(76,29,149,0.45)] ring-1 ring-violet-200/70">
+        <div className="overflow-hidden rounded-2xl border border-violet-100/80 bg-gradient-to-b from-white to-violet-50/20 p-4 shadow-[0_16px_40px_-26px_rgba(76,29,149,0.45)] ring-1 ring-violet-100/60">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#7c3aed]">Pet Hunt</p>
               <h3 className="mt-1 text-[17px] font-black leading-tight tracking-[-0.04em] text-[#1c1340]">
                 {liveHuntCount}/{PET_HUNT_MAX_LIVE} pets hunting
               </h3>
-              <p className="mt-1 text-[11px] font-semibold leading-snug text-zinc-500">
-                Each pet can track one item. Autopilot can message, bid, or buy when a match drops.
-              </p>
             </div>
             <button
               type="button"
               onClick={() => canAddMore && onStartHunt()}
               disabled={!canAddMore}
               className={[
-                'shrink-0 rounded-xl px-3 py-2 text-[9px] font-black uppercase tracking-[0.06em]',
+                'shrink-0 rounded-xl px-3.5 py-2.5 text-[9px] font-black uppercase tracking-[0.06em]',
                 canAddMore
                   ? feed3dPurpleCta
                   : 'cursor-not-allowed bg-zinc-100 text-zinc-400 ring-1 ring-zinc-200',
@@ -2501,13 +2521,16 @@ function PetHuntMissionCard({
               const matchedListing = matchesByHuntId[hunt.id] ?? null
               const found = hunt.status === 'found' && matchedListing
               const elapsedLabel = formatPetHuntElapsedLabel(hunt.created_at, nowMs)
-              const scanProgress = 28 + (((Math.max(0, nowMs - hunt.created_at) / 1000) * 9 + petRank * 7) % 64)
+              const findBoost = petHuntBoostPercent(pet.id, petRank)
+              const huntPulse =
+                ((Math.max(0, nowMs - hunt.created_at) / 4200 + findBoost * 0.085 + petRank * 0.04) % 1) * 56
+              const scanProgress = Math.min(97, Math.round(22 + findBoost * 0.45 + huntPulse))
 
               return (
                 <div
                   key={hunt.id}
                   className={[
-                    'rounded-2xl bg-white p-2.5 ring-1',
+                    'rounded-2xl bg-white/95 p-3 shadow-sm ring-1',
                     found
                       ? 'ring-emerald-200'
                       : 'ring-violet-100',
@@ -2516,7 +2539,7 @@ function PetHuntMissionCard({
                   <div className="flex items-start gap-2.5">
                     <div
                       className={[
-                        'relative flex h-[4.75rem] w-[4.75rem] shrink-0 items-end justify-center overflow-visible rounded-2xl bg-transparent',
+                        'relative flex h-[4.75rem] w-[4.75rem] shrink-0 items-end justify-center overflow-visible rounded-2xl bg-gradient-to-b from-violet-50 to-violet-100/50 ring-1 ring-violet-100/80',
                         found ? 'drop-shadow-[0_8px_10px_rgba(16,185,129,0.14)]' : 'drop-shadow-[0_8px_10px_rgba(124,58,237,0.12)]',
                       ].join(' ')}
                     >
@@ -2537,7 +2560,7 @@ function PetHuntMissionCard({
                             {found ? `${hunt.query} just dropped` : `${petName} wants ${hunt.query}`}
                           </h4>
                         </div>
-                        <span className="shrink-0 rounded-full bg-white px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-violet-700 ring-1 ring-violet-100">
+                        <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-violet-700 shadow-sm ring-1 ring-violet-100">
                           Lv {petRank}
                         </span>
                       </div>
@@ -2554,26 +2577,47 @@ function PetHuntMissionCard({
                   </div>
 
                   {found ? (
-                    <div className="mt-2 grid grid-cols-4 gap-1.5">
-                      <button type="button" onClick={() => onViewListing(hunt.id)} className="rounded-xl bg-white px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em] text-[#4c1d95] ring-1 ring-violet-100">
-                        View
+                    <div className="mt-3 space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => onViewListing(hunt.id)}
+                        className={[
+                          'flex w-full items-center justify-center rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-[0.07em] shadow-[0_10px_28px_-14px_rgba(16,185,129,0.45)] transition-[transform] duration-150 active:scale-[0.99]',
+                          'border-b-[4px] border-b-emerald-700 bg-gradient-to-b from-emerald-400 to-emerald-600 text-white ring-1 ring-emerald-400/40',
+                        ].join(' ')}
+                      >
+                        View finding
                       </button>
-                      <button type="button" onClick={() => onMessage(hunt.id)} className="rounded-xl bg-white px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em] text-[#4c1d95] ring-1 ring-violet-100">
-                        Message
-                      </button>
-                      <button type="button" onClick={() => onBid(hunt.id)} className="rounded-xl bg-white px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em] text-[#4c1d95] ring-1 ring-violet-100">
-                        Bid
-                      </button>
-                      <button type="button" onClick={() => onBuyNow(hunt.id)} className={[feed3dPurpleCta, 'rounded-xl px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em]'].join(' ')}>
-                        Buy
-                      </button>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => onMessage(hunt.id)}
+                          className="rounded-xl bg-white px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em] text-[#4c1d95] shadow-sm ring-1 ring-violet-100"
+                        >
+                          Message
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onBid(hunt.id)}
+                          className="rounded-xl bg-white px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em] text-[#4c1d95] shadow-sm ring-1 ring-violet-100"
+                        >
+                          Bid
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onBuyNow(hunt.id)}
+                          className={[feed3dPurpleCta, 'rounded-xl px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em]'].join(' ')}
+                        >
+                          Buy
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <div className="mt-2 flex items-center justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
                           <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-[0.08em] text-violet-500">
-                            Scanning
+                            Watching
                             <span className="inline-flex items-center gap-0.5" aria-hidden>
                               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#7c3aed] [animation-delay:-180ms]" />
                               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8b5cf6] [animation-delay:-90ms]" />
@@ -2582,14 +2626,14 @@ function PetHuntMissionCard({
                           </span>
                           <span className="text-[9px] font-black tabular-nums text-zinc-400">{elapsedLabel}</span>
                         </div>
-                        <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-violet-100 ring-1 ring-violet-100" aria-hidden>
+                        <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-violet-100/90 ring-1 ring-violet-100/60" aria-hidden>
                           <div
                             className="fetch-seq-cta-shine relative h-full overflow-hidden rounded-full bg-gradient-to-r from-[#c4b5fd] via-[#7c3aed] to-[#a78bfa] transition-[width] duration-500"
                             style={{ width: `${scanProgress}%` }}
                           />
                         </div>
                       </div>
-                      <button type="button" onClick={() => onViewHunt(hunt.id)} className="shrink-0 rounded-xl bg-white px-3 py-2 text-[8px] font-black uppercase tracking-[0.05em] text-[#4c1d95] ring-1 ring-violet-100">
+                      <button type="button" onClick={() => onViewHunt(hunt.id)} className="shrink-0 rounded-xl bg-white px-3 py-2 text-[8px] font-black uppercase tracking-[0.05em] text-[#4c1d95] shadow-sm ring-1 ring-violet-100">
                         View hunt
                       </button>
                     </div>
@@ -2606,7 +2650,7 @@ function PetHuntMissionCard({
                   key={preset}
                   type="button"
                   onClick={() => onStartHunt(preset)}
-                  className="shrink-0 rounded-full bg-violet-50 px-2.5 py-1.5 text-[9px] font-black text-[#4c1d95] ring-1 ring-violet-100"
+                  className="shrink-0 rounded-full bg-violet-50/90 px-3 py-2 text-[9px] font-black text-[#4c1d95] shadow-sm ring-1 ring-violet-100"
                 >
                   {preset}
                 </button>
@@ -2624,17 +2668,10 @@ function PetHuntMissionCard({
       aria-label={canStartHunt ? 'Start Pet Hunt' : 'Pet Hunt locked until pet is fed'}
       data-fetch-tour-target="adventure"
     >
-      <div className="overflow-visible rounded-3xl bg-white p-2.5 shadow-[0_12px_28px_-18px_rgba(76,29,149,0.45)] ring-1 ring-violet-200/70">
+      <div className="overflow-visible rounded-2xl border border-violet-100/70 bg-gradient-to-b from-white to-violet-50/30 p-4 shadow-[0_16px_40px_-26px_rgba(76,29,149,0.4)] ring-1 ring-violet-100/60">
         <div className="min-w-0">
           <p className="truncate text-[15px] font-black leading-none tracking-[-0.02em] text-[#1c1340]">
             Send your pets on a hunt
-          </p>
-          <p className="mt-1 text-[11px] font-bold leading-snug text-zinc-500">
-            {canStartHunt
-              ? "Tell them what to find. They'll alert you when it drops."
-              : starterLocked
-                ? 'Unlock your companion from the Mystery Pet Pod in the banner first.'
-                : `Feed ${fallbackPetName} first so they can watch new listings.`}
           </p>
         </div>
         <button
@@ -2642,7 +2679,7 @@ function PetHuntMissionCard({
           onClick={() => canStartHunt && onStartHunt()}
           disabled={!canStartHunt}
           className={[
-            'mt-3 flex w-full items-center justify-center rounded-2xl px-5 py-3 text-[11px] font-black uppercase tracking-[0.08em]',
+            'mt-4 flex w-full items-center justify-center rounded-2xl px-5 py-3.5 text-[11px] font-black uppercase tracking-[0.08em] shadow-[0_8px_22px_-12px_rgba(76,29,149,0.35)]',
             canStartHunt
               ? feed3dPurpleCta
               : 'cursor-not-allowed border-b-[4px] border-b-zinc-300/80 bg-zinc-100 text-zinc-500 shadow-none',
@@ -2650,14 +2687,14 @@ function PetHuntMissionCard({
         >
           Start Hunt
         </button>
-        <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {presets.map((preset) => (
             <button
               key={preset}
               type="button"
               onClick={() => canStartHunt && onStartHunt(preset)}
               disabled={!canStartHunt}
-              className="shrink-0 rounded-full bg-violet-50 px-2.5 py-1.5 text-[9px] font-black text-[#4c1d95] ring-1 ring-violet-100 disabled:opacity-45"
+              className="shrink-0 rounded-full bg-violet-50/90 px-3 py-2 text-[9px] font-black text-[#4c1d95] shadow-sm ring-1 ring-violet-100 disabled:opacity-45"
             >
               {preset}
             </button>
@@ -2697,10 +2734,8 @@ function PetHuntSetupSheet({
     mustInclude: string
     excludeTerms: string
     sources: PetHuntListingSource[]
-    fulfillment: PetHuntFulfillment
     maxPrice: number | null
     condition: PetHuntCondition
-    radiusKm: number
     alertType: PetHuntAlertType
     autopilotEnabled: boolean
     autopilotActions: PetHuntAutopilotAction[]
@@ -2715,10 +2750,8 @@ function PetHuntSetupSheet({
   const [excludeTerms, setExcludeTerms] = useState('')
   const [category, setCategory] = useState('Custom item')
   const [sources, setSources] = useState<PetHuntListingSource[]>(['Listings', 'Auctions', 'Live drops'])
-  const [fulfillment, setFulfillment] = useState<PetHuntFulfillment>('Any')
   const [maxPrice, setMaxPrice] = useState('')
   const [condition, setCondition] = useState<PetHuntCondition>('Any')
-  const [radiusKm, setRadiusKm] = useState(25)
   const [alertType, setAlertType] = useState<PetHuntAlertType>('Instant')
   const [autopilotEnabled, setAutopilotEnabled] = useState(false)
   const [autopilotActions, setAutopilotActions] = useState<PetHuntAutopilotAction[]>(['message'])
@@ -2741,10 +2774,8 @@ function PetHuntSetupSheet({
     setExcludeTerms('')
     setCategory(presetQuery || 'Custom item')
     setSources(['Listings', 'Auctions', 'Live drops'])
-    setFulfillment('Any')
     setMaxPrice('')
     setCondition('Any')
-    setRadiusKm(25)
     setAlertType('Instant')
     setAutopilotEnabled(false)
     setAutopilotActions(['message'])
@@ -2773,10 +2804,8 @@ function PetHuntSetupSheet({
     must_include: mustInclude.trim().slice(0, 120),
     exclude_terms: excludeTerms.trim().slice(0, 120),
     sources,
-    fulfillment,
     max_price: normalizePetHuntPrice(maxPrice),
     condition,
-    radius_km: radiusKm,
     alert_type: alertType,
     autopilot_enabled: autopilotEnabled,
     autopilot_actions: autopilotActions,
@@ -2816,25 +2845,19 @@ function PetHuntSetupSheet({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-[#120822]/45 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-8 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-[#0f0824]/55 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-10 backdrop-blur-md">
       <button type="button" aria-label="Close Pet Hunt setup" className="absolute inset-0 cursor-default" onClick={onClose} />
-      <section
-        className="relative z-[1] max-h-[min(42rem,calc(100dvh-1.5rem))] w-full max-w-[392px] overflow-y-auto rounded-3xl bg-white p-4 text-[#1c1340] shadow-[0_24px_60px_-32px_rgba(30,15,80,0.72)] ring-1 ring-violet-100 [-webkit-overflow-scrolling:touch]"
-        aria-labelledby="fetch-pet-hunt-title"
-      >
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-violet-200" aria-hidden />
-        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#7c3aed]">Pet Hunt</p>
-        <h2 id="fetch-pet-hunt-title" className="mt-1 text-[20px] font-black leading-tight tracking-[-0.05em]">
-          Choose your hunt pet
+      <section className={PH_SHEET} aria-labelledby="fetch-pet-hunt-title">
+        <div className="mx-auto mb-2 h-1 w-11 rounded-full bg-violet-200/90" aria-hidden />
+        <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-violet-500">Pet Hunt</p>
+        <h2 id="fetch-pet-hunt-title" className="mt-1 text-center text-[22px] font-black leading-tight tracking-[-0.05em] text-[#1c1340]">
+          Choose your hunter
         </h2>
-        <p className="mt-1 text-[12px] font-semibold leading-snug text-zinc-500">
-          Pick up to 3 pets total. Each one hunts a different item across listings, auctions, and live drops.
-        </p>
-        <div className="mt-3 rounded-2xl bg-violet-50 px-3 py-2 text-[11px] font-black text-[#4c1d95] ring-1 ring-violet-100">
-          {liveHuntCount}/{PET_HUNT_MAX_LIVE} hunt slots active
+        <div className="mt-4 rounded-2xl bg-gradient-to-r from-violet-100/90 via-violet-50 to-fuchsia-50/80 px-3.5 py-2.5 text-center text-[11px] font-black text-[#4c1d95] shadow-inner shadow-violet-200/50 ring-1 ring-violet-200/60">
+          {liveHuntCount}/{PET_HUNT_MAX_LIVE} slots in use
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
           {pets.map((pet) => {
             const active = selectedPetId === pet.id
             const busy = usedPetIds.has(pet.id)
@@ -2848,16 +2871,16 @@ function PetHuntSetupSheet({
                 onClick={() => setSelectedPetId(pet.id)}
                 disabled={busy && !active}
                 className={[
-                  'relative overflow-hidden rounded-2xl bg-white p-2 text-left transition-[transform,box-shadow] active:scale-[0.98]',
+                  'relative overflow-hidden rounded-2xl bg-white p-2.5 text-left shadow-sm transition-[transform,box-shadow] active:scale-[0.98]',
                   active
-                    ? 'ring-2 ring-[#7c3aed] shadow-[0_0_24px_rgba(124,58,237,0.2)]'
-                    : 'ring-1 ring-violet-100',
+                    ? 'ring-2 ring-[#7c3aed] shadow-[0_12px_28px_-14px_rgba(124,58,237,0.45)]'
+                    : 'ring-1 ring-violet-100/90',
                   busy && !active ? 'opacity-45' : '',
                 ].join(' ')}
                 aria-pressed={active}
               >
-                <div className="flex items-center gap-2">
-                  <div className="flex h-12 w-12 shrink-0 items-end justify-center overflow-hidden rounded-xl bg-violet-50 ring-1 ring-violet-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-[3.25rem] w-[3.25rem] shrink-0 items-end justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-50 to-violet-100/80 ring-1 ring-violet-100">
                     <PetProfileImage pet={pet} className="flex h-full w-full items-end justify-center" preset="rectMd" />
                   </div>
                   <div className="min-w-0">
@@ -2865,8 +2888,8 @@ function PetHuntSetupSheet({
                     <p className="mt-1 text-[8px] font-black uppercase tracking-[0.08em] text-violet-500">
                       Lv {rank} · {FETCH_PET_ELEMENT[pet.id]}
                     </p>
-                    <p className="mt-1 text-[9px] font-bold text-zinc-500">+{boost}% faster finds</p>
-                    {busy ? <p className="mt-1 text-[8px] font-black uppercase tracking-[0.08em] text-emerald-600">Hunting</p> : null}
+                    <p className="mt-0.5 text-[9px] font-bold text-zinc-500">+{boost}% finds</p>
+                    {busy ? <p className="mt-0.5 text-[8px] font-black uppercase tracking-[0.08em] text-emerald-600">Busy</p> : null}
                   </div>
                 </div>
               </button>
@@ -2874,74 +2897,69 @@ function PetHuntSetupSheet({
           })}
         </div>
 
-        <div className="mt-4 space-y-3">
-          <label className="block">
-            <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Item name / search phrase</span>
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Nike hat"
-              className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[14px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
-            />
-          </label>
-          <div className="rounded-2xl bg-white p-3 ring-1 ring-violet-100">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Detailed search</p>
-                <p className="mt-0.5 text-[11px] font-semibold leading-snug text-zinc-500">
-                  Teach your pet exactly what counts as a match.
-                </p>
-              </div>
-              <span className="shrink-0 rounded-full bg-violet-50 px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-[#4c1d95] ring-1 ring-violet-100">
-                Smarter
-              </span>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="mt-6 space-y-5">
+          <div>
+            <label className="block">
+              <span className="text-[10px] font-black uppercase tracking-[0.14em] text-violet-600">What are you looking for?</span>
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="e.g. Nike cap, vintage watch…"
+                className={PH_FIELD}
+                autoComplete="off"
+              />
+            </label>
+          </div>
+
+          <PetHuntCategoryCarousel value={category} onChange={setCategory} />
+
+          <div>
+            <label className="block">
+              <span className="text-[10px] font-black uppercase tracking-[0.14em] text-violet-600">Max budget</span>
+              <input
+                value={maxPrice}
+                onChange={(event) => setMaxPrice(event.target.value)}
+                inputMode="decimal"
+                placeholder="$100"
+                className={PH_FIELD_SM}
+              />
+            </label>
+          </div>
+
+          <div className={PH_CARD}>
+            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-violet-600">Fine-tune (optional)</p>
+            <label className="mt-3 block">
+              <span className="text-[10px] font-black uppercase tracking-[0.1em] text-zinc-500">Brand / maker</span>
+              <input
+                value={brand}
+                onChange={(event) => setBrand(event.target.value)}
+                placeholder="Nike, Seiko…"
+                className={PH_FIELD_SM}
+              />
+            </label>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label className="block">
-                <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Brand / maker</span>
-                <input
-                  value={brand}
-                  onChange={(event) => setBrand(event.target.value)}
-                  placeholder="Nike, Seiko"
-                  className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
-                />
-              </label>
-              <label className="block">
-                <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Fulfillment</span>
-                <select
-                  value={fulfillment}
-                  onChange={(event) => setFulfillment(event.target.value as PetHuntFulfillment)}
-                  className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
-                >
-                  {(['Any', 'Pickup', 'Delivery', 'Same-day'] as const).map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <label className="block">
-                <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Must include</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.1em] text-zinc-500">Must include</span>
                 <input
                   value={mustInclude}
                   onChange={(event) => setMustInclude(event.target.value)}
-                  placeholder="size 10, box"
-                  className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+                  placeholder="size 10, box…"
+                  className={PH_FIELD_SM}
                 />
               </label>
               <label className="block">
-                <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Avoid words</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.1em] text-zinc-500">Avoid</span>
                 <input
                   value={excludeTerms}
                   onChange={(event) => setExcludeTerms(event.target.value)}
-                  placeholder="replica, damaged"
-                  className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+                  placeholder="replica, damaged…"
+                  className={PH_FIELD_SM}
                 />
               </label>
             </div>
-            <div className="mt-3">
-              <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Watch sources</p>
-              <div className="grid grid-cols-3 gap-1.5">
+            <div className="mt-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.1em] text-zinc-500">Watch sources</p>
+              <div className="mt-2 flex flex-wrap gap-2">
                 {(['Listings', 'Auctions', 'Live drops'] as const).map((source) => {
                   const active = sources.includes(source)
                   return (
@@ -2950,8 +2968,10 @@ function PetHuntSetupSheet({
                       type="button"
                       onClick={() => toggleSource(source)}
                       className={[
-                        'rounded-xl px-2 py-2 text-[9px] font-black uppercase tracking-[0.05em]',
-                        active ? 'bg-[#7c3aed] text-white' : 'bg-violet-50 text-[#4c1d95] ring-1 ring-violet-100',
+                        'rounded-full px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.06em] shadow-sm transition-transform active:scale-[0.97]',
+                        active
+                          ? 'bg-[#7c3aed] text-white shadow-[0_4px_14px_-6px_rgba(124,58,237,0.55)]'
+                          : 'bg-violet-50/90 text-[#4c1d95] ring-1 ring-violet-100',
                       ].join(' ')}
                       aria-pressed={active}
                     >
@@ -2962,35 +2982,13 @@ function PetHuntSetupSheet({
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <label className="block">
-              <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Max price</span>
-              <input
-                value={maxPrice}
-                onChange={(event) => setMaxPrice(event.target.value)}
-                inputMode="decimal"
-                placeholder="$100"
-                className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
-              />
-            </label>
-            <label className="block">
-              <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Radius</span>
-              <select
-                value={radiusKm}
-                onChange={(event) => setRadiusKm(Number(event.target.value))}
-                className="mt-1 w-full rounded-2xl border-0 bg-violet-50 px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
-              >
-                {[5, 10, 25, 50, 100].map((km) => (
-                  <option key={km} value={km}>{km} km</option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <PetHuntOptionGroup label="Condition" value={condition} options={['Any', 'New', 'Used']} onChange={(next) => setCondition(next as PetHuntCondition)} />
-          <PetHuntOptionGroup label="Category" value={category} options={['Sneakers', 'Watches', 'Jewellery', 'Cards', 'Collectibles', 'Custom item']} onChange={setCategory} />
-          <PetHuntOptionGroup label="Alert type" value={alertType} options={['Instant', 'Daily summary']} onChange={(next) => setAlertType(next as PetHuntAlertType)} />
 
-          <div className="rounded-2xl bg-violet-50 p-3 ring-1 ring-violet-100">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <PetHuntOptionGroup label="Condition" value={condition} options={['Any', 'New', 'Used']} onChange={(next) => setCondition(next as PetHuntCondition)} />
+            <PetHuntOptionGroup label="Alerts" value={alertType} options={['Instant', 'Daily summary']} onChange={(next) => setAlertType(next as PetHuntAlertType)} />
+          </div>
+
+          <div className={`${PH_CARD} bg-gradient-to-br from-violet-50/90 to-white`}>
             <button
               type="button"
               onClick={() => setAutopilotEnabled((value) => !value)}
@@ -2998,31 +2996,29 @@ function PetHuntSetupSheet({
               aria-pressed={autopilotEnabled}
             >
               <span>
-                <span className="block text-[10px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Autopilot mode</span>
-                <span className="mt-0.5 block text-[11px] font-semibold leading-snug text-zinc-500">
-                  Let your pet message, bid, or buy when a match appears.
-                </span>
+                <span className="block text-[11px] font-black uppercase tracking-[0.12em] text-violet-600">Autopilot</span>
+                <span className="mt-0.5 block text-[11px] font-medium leading-snug text-zinc-500">Auto message, bid, or buy on your rules.</span>
               </span>
               <span
                 className={[
-                  'relative h-7 w-12 shrink-0 rounded-full transition-colors',
+                  'relative h-8 w-[3.25rem] shrink-0 rounded-full transition-colors',
                   autopilotEnabled ? 'bg-[#7c3aed]' : 'bg-zinc-300',
                 ].join(' ')}
                 aria-hidden
               >
                 <span
                   className={[
-                    'absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform',
-                    autopilotEnabled ? 'translate-x-6' : 'translate-x-1',
+                    'absolute top-1 left-1 h-6 w-6 rounded-full bg-white shadow-md transition-transform',
+                    autopilotEnabled ? 'translate-x-5' : 'translate-x-0',
                   ].join(' ')}
                 />
               </span>
             </button>
             {autopilotEnabled ? (
-              <div className="mt-3 space-y-3">
+              <div className="mt-4 space-y-3 border-t border-violet-100/80 pt-4">
                 <div>
-                  <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Autopilot actions</p>
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.1em] text-violet-600">Actions</p>
+                  <div className="flex flex-wrap gap-2">
                     {([
                       ['message', 'Message'],
                       ['bid', 'Bid'],
@@ -3035,8 +3031,8 @@ function PetHuntSetupSheet({
                           type="button"
                           onClick={() => toggleAutopilotAction(action)}
                           className={[
-                            'rounded-xl px-2 py-2 text-[9px] font-black uppercase tracking-[0.05em]',
-                            active ? 'bg-[#7c3aed] text-white' : 'bg-white text-[#4c1d95] ring-1 ring-violet-100',
+                            'rounded-full px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.05em]',
+                            active ? 'bg-[#7c3aed] text-white shadow-sm' : 'bg-white text-[#4c1d95] ring-1 ring-violet-100',
                           ].join(' ')}
                           aria-pressed={active}
                         >
@@ -3048,13 +3044,13 @@ function PetHuntSetupSheet({
                 </div>
                 {autopilotActions.includes('bid') ? (
                   <label className="block">
-                    <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">Autopilot max bid</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.1em] text-zinc-500">Autopilot max bid</span>
                     <input
                       value={autopilotMaxBid}
                       onChange={(event) => setAutopilotMaxBid(event.target.value)}
                       inputMode="decimal"
                       placeholder={maxPrice || '$80'}
-                      className="mt-1 w-full rounded-2xl border-0 bg-white px-3 py-2.5 text-[13px] font-black text-[#1c1340] outline-none ring-1 ring-violet-100 focus:ring-2 focus:ring-[#7c3aed]"
+                      className={PH_FIELD_SM}
                     />
                   </label>
                 ) : null}
@@ -3064,28 +3060,33 @@ function PetHuntSetupSheet({
         </div>
 
         {limitReached ? (
-          <div className="mt-4 rounded-2xl bg-amber-50 px-3 py-2 text-[11px] font-bold leading-snug text-amber-800 ring-1 ring-amber-100">
+          <div className="mt-5 rounded-2xl bg-amber-50 px-3.5 py-3 text-[11px] font-bold leading-snug text-amber-900 ring-1 ring-amber-100/80">
             You already have 3 hunts running. Finish or pause one before adding another item.
           </div>
         ) : selectedPetBusy ? (
-          <div className="mt-4 rounded-2xl bg-amber-50 px-3 py-2 text-[11px] font-bold leading-snug text-amber-800 ring-1 ring-amber-100">
+          <div className="mt-5 rounded-2xl bg-amber-50 px-3.5 py-3 text-[11px] font-bold leading-snug text-amber-900 ring-1 ring-amber-100/80">
             {selectedPetName} is already hunting. Choose another pet for this item.
           </div>
         ) : trimmedQuery ? (
-          <div className={['mt-4 rounded-2xl px-3 py-2 text-[11px] font-semibold leading-snug ring-1', currentMatch ? 'bg-emerald-50 text-emerald-800 ring-emerald-100' : 'bg-violet-50 text-violet-800 ring-violet-100'].join(' ')}>
+          <div
+            className={[
+              'mt-5 rounded-2xl px-3.5 py-3 text-[11px] font-semibold leading-snug ring-1',
+              currentMatch ? 'bg-emerald-50 text-emerald-900 ring-emerald-100' : 'bg-violet-50 text-violet-900 ring-violet-100/80',
+            ].join(' ')}
+          >
             {currentMatch ? (
-              <>Strong match exists: {currentMatch.title}. Sending {selectedPetName} will alert you immediately.</>
+              <>Strong match: {currentMatch.title}. {selectedPetName} can alert you right away.</>
             ) : (
-              <>No {trimmedQuery} found yet. Send {selectedPetName} to watch new listings, auctions, and live drops.</>
+              <>No “{trimmedQuery}” yet — {selectedPetName} will watch listings, auctions, and drops.</>
             )}
           </div>
         ) : null}
 
-        <div className="mt-4 grid grid-cols-[0.72fr_1fr] gap-2">
+        <div className="mt-6 grid grid-cols-[0.78fr_1.22fr] gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-2xl bg-zinc-100 px-4 py-3 text-[12px] font-black uppercase tracking-[0.06em] text-zinc-700 ring-1 ring-zinc-200 active:scale-[0.98]"
+            className="rounded-2xl bg-zinc-100/95 px-4 py-3.5 text-[12px] font-black uppercase tracking-[0.06em] text-zinc-700 shadow-sm ring-1 ring-zinc-200/90 transition-transform active:scale-[0.98]"
           >
             Cancel
           </button>
@@ -3102,10 +3103,8 @@ function PetHuntSetupSheet({
                 mustInclude: mustInclude.trim().slice(0, 120),
                 excludeTerms: excludeTerms.trim().slice(0, 120),
                 sources,
-                fulfillment,
                 maxPrice: normalizePetHuntPrice(maxPrice),
                 condition,
-                radiusKm,
                 alertType,
                 autopilotEnabled,
                 autopilotActions,
@@ -3113,18 +3112,377 @@ function PetHuntSetupSheet({
               })
             }}
             className={[
-              'rounded-2xl px-4 py-3 text-[12px] font-black uppercase tracking-[0.06em]',
+              'rounded-2xl px-4 py-3.5 text-[12px] font-black uppercase tracking-[0.06em] shadow-[0_8px_24px_-12px_rgba(76,29,149,0.45)] transition-transform active:scale-[0.98]',
               canCreate
                 ? feed3dPurpleCta
                 : 'cursor-not-allowed border-b-[4px] border-b-zinc-300/80 bg-zinc-100 text-zinc-400 shadow-none',
             ].join(' ')}
           >
-            {limitReached ? '3 hunts max' : 'Send pet to hunt'}
+            {limitReached ? '3 hunts max' : 'Start hunt'}
           </button>
         </div>
       </section>
     </div>,
     document.body,
+  )
+}
+
+function tryPetHuntFoundBrowserNotification(title: string, body: string) {
+  try {
+    if (typeof Notification === 'undefined') return
+    if (Notification.permission !== 'granted') return
+    new Notification(title, { body, tag: 'fetch-pet-hunt-found' })
+  } catch {
+    // Non-secure contexts or blocked APIs — ignore.
+  }
+}
+
+function PetHuntFoundModal({
+  open,
+  hunt,
+  listing,
+  petName,
+  onViewFinding,
+  onDismiss,
+}: {
+  open: boolean
+  hunt: PetHunt | null
+  listing: PeerListing | null
+  petName: string
+  onViewFinding: () => void
+  onDismiss: () => void
+}) {
+  if (!open || !hunt || !listing) return null
+  const imgUrl = listing.images?.[0]?.url
+  const priceLabel = formatAudFromCents(listing.priceCents ?? 0)
+  const autopilotHint = petHuntAutopilotResultLabel(hunt).trim()
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[96] flex items-center justify-center px-4 py-8"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pet-hunt-found-modal-title"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 bg-[#0c0518]/55 backdrop-blur-sm"
+        aria-label="Dismiss match dialog"
+        onClick={onDismiss}
+      />
+      <div className="relative z-[1] w-full max-w-[22rem] overflow-hidden rounded-[1.65rem] bg-white p-5 shadow-[0_28px_70px_-28px_rgba(15,8,40,0.75)] ring-2 ring-emerald-200/90">
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-600">Match found</p>
+        <h2 id="pet-hunt-found-modal-title" className="mt-1.5 text-[20px] font-black leading-tight tracking-[-0.04em] text-[#1c1340]">
+          {petName} found “{hunt.query}”
+        </h2>
+        {autopilotHint ? (
+          <p className="mt-2 text-[11px] font-semibold leading-snug text-emerald-800/95">{autopilotHint}</p>
+        ) : null}
+        <div className="mt-4 flex gap-3 rounded-2xl bg-gradient-to-br from-emerald-50/90 to-violet-50/40 p-3 ring-1 ring-emerald-100/80">
+          <div className="h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-violet-100">
+            {imgUrl ? (
+              <img
+                src={listingImageAbsoluteUrl(imgUrl)}
+                alt=""
+                className="h-full w-full object-cover"
+                draggable={false}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-[10px] font-bold text-zinc-400">No image</div>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="line-clamp-3 text-[13px] font-black leading-snug text-[#1c1340]">{listing.title}</p>
+            <p className="mt-1 text-[14px] font-black tabular-nums text-[#4c1d95]">{priceLabel}</p>
+          </div>
+        </div>
+        <div className="mt-5 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={onViewFinding}
+            className={[
+              'flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-[11px] font-black uppercase tracking-[0.08em] shadow-[0_10px_28px_-14px_rgba(76,29,149,0.55)] transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2',
+              feed3dPurpleCta,
+            ].join(' ')}
+          >
+            View finding
+          </button>
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="rounded-xl py-2.5 text-[12px] font-bold text-zinc-500 underline decoration-zinc-300 underline-offset-2 transition-colors hover:text-zinc-700"
+          >
+            Not now
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
+function PetHuntFindingsSheet({
+  open,
+  hunt,
+  matchedListing,
+  petDisplayName,
+  pet,
+  nowMs,
+  onClose,
+  onViewFinding,
+  onAdjustHunt,
+}: {
+  open: boolean
+  hunt: PetHunt | null
+  matchedListing: PeerListing | null
+  petDisplayName: string
+  pet: FetchHomePet
+  nowMs: number
+  onClose: () => void
+  onViewFinding: () => void
+  onAdjustHunt: () => void
+}) {
+  useEffect(() => {
+    if (!open) return undefined
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose, open])
+
+  if (!open || !hunt) return null
+
+  const hasListing = matchedListing != null
+  const found = hunt.status === 'found' && hasListing
+  const foundPending = hunt.status === 'found' && !hasListing
+  const elapsedLabel = formatPetHuntElapsedLabel(hunt.created_at, nowMs)
+
+  return createPortal(
+    <div className="fixed inset-0 z-[91] flex items-end justify-center bg-[#0f0824]/55 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-10 backdrop-blur-md">
+      <button type="button" aria-label="Close hunt details" className="absolute inset-0 cursor-default" onClick={onClose} />
+      <section className={PH_SHEET} aria-labelledby="pet-hunt-findings-title">
+        <div className="mx-auto mb-2 h-1 w-11 rounded-full bg-violet-200/90" aria-hidden />
+        <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-violet-500">Pet Hunt</p>
+        <h2 id="pet-hunt-findings-title" className="mt-1 text-center text-[22px] font-black leading-tight tracking-[-0.05em] text-[#1c1340]">
+          What&apos;s been found
+        </h2>
+
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-violet-100 bg-white/95 p-3 ring-1 ring-violet-100/80">
+          <div className="flex h-14 w-14 shrink-0 items-end justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-50 to-violet-100/80 ring-1 ring-violet-100">
+            <PetProfileImage
+              pet={pet}
+              className="flex h-full w-full items-end justify-center"
+              preset="rectMd"
+              imgClassName="pointer-events-none h-[125%] w-auto max-w-none translate-y-[6%] object-contain object-bottom select-none"
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.1em] text-[#7c3aed]">{petDisplayName}</p>
+            <p className="mt-0.5 truncate text-[16px] font-black leading-tight text-[#1c1340]">{hunt.query}</p>
+            <p className="mt-1 text-[11px] font-bold text-zinc-500">{petHuntDetailLabel(hunt)}</p>
+          </div>
+        </div>
+
+        {found && matchedListing ? (
+          <div className="mt-4 rounded-2xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50/95 to-white p-4 ring-1 ring-emerald-100/80">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-600">Match</p>
+            <div className="mt-2 flex gap-3">
+              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-emerald-100">
+                {matchedListing.images?.[0]?.url ? (
+                  <img
+                    src={listingImageAbsoluteUrl(matchedListing.images[0].url)}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-[10px] font-bold text-zinc-400">No photo</div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="line-clamp-2 text-[13px] font-black leading-snug text-[#1c1340]">{matchedListing.title}</p>
+                <p className="mt-1 text-[15px] font-black tabular-nums text-[#4c1d95]">
+                  {formatAudFromCents(matchedListing.priceCents ?? 0)}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onViewFinding}
+              className={[
+                'mt-4 flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-[11px] font-black uppercase tracking-[0.08em] shadow-[0_10px_28px_-14px_rgba(76,29,149,0.55)] transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2',
+                feed3dPurpleCta,
+              ].join(' ')}
+            >
+              View finding
+            </button>
+          </div>
+        ) : (
+          <div className={`${PH_CARD} mt-4`}>
+            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-violet-600">Status</p>
+            <p className="mt-2 text-[14px] font-bold leading-snug text-[#1c1340]">
+              {foundPending
+                ? 'Match found — loading listing details. Pull to refresh the feed or try again in a moment.'
+                : hunt.status === 'active'
+                  ? `Still watching for “${hunt.query}”. We’ll alert you when something matches.`
+                  : 'This hunt is no longer active.'}
+            </p>
+            {hunt.status === 'active' || foundPending ? (
+              <p className="mt-2 text-[12px] font-semibold text-zinc-500">Watching · {elapsedLabel}</p>
+            ) : null}
+            <p className="mt-2 text-[11px] font-semibold text-[#4c1d95]">
+              {petHuntAutopilotLabel(hunt)}
+              {hunt.autopilot_enabled && hunt.autopilot_max_bid != null
+                ? ` · Bid cap ${formatAudFromCents(hunt.autopilot_max_bid)}`
+                : ''}
+            </p>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-5 w-full rounded-2xl border border-zinc-200 bg-zinc-50/95 py-3.5 text-[13px] font-black uppercase tracking-[0.06em] text-zinc-700 shadow-sm ring-1 ring-zinc-200/90 transition-transform active:scale-[0.99]"
+        >
+          Cancel
+        </button>
+        <button type="button" onClick={onAdjustHunt} className="mt-3 w-full text-center text-[12px] font-bold text-[#7c3aed] underline decoration-violet-300 underline-offset-2 transition-colors hover:text-[#5b21b6]">
+          Adjust hunt settings
+        </button>
+      </section>
+    </div>,
+    document.body,
+  )
+}
+
+function PetHuntChromaKeyImage({ src, className }: { src: string; className?: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [useFallback, setUseFallback] = useState(false)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+    if (!ctx) {
+      setUseFallback(true)
+      return
+    }
+
+    let cancelled = false
+    const img = new Image()
+    img.decoding = 'async'
+    img.onload = () => {
+      if (cancelled) return
+      const w = img.naturalWidth
+      const h = img.naturalHeight
+      if (w === 0 || h === 0) {
+        setUseFallback(true)
+        return
+      }
+      canvas.width = w
+      canvas.height = h
+      ctx.drawImage(img, 0, 0)
+      try {
+        const imageData = ctx.getImageData(0, 0, w, h)
+        const d = imageData.data
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i]!
+          const g = d[i + 1]!
+          const b = d[i + 2]!
+          const a = d[i + 3]!
+          if (a === 0) continue
+          const dg = g - (r + b) / 2
+          if (dg > 48 && g > 72) {
+            d[i + 3] = 0
+          } else if (dg > 14 && g > 48) {
+            const t = Math.min(1, (dg - 14) / 42)
+            d[i + 3] = Math.round(a * (1 - t))
+          }
+        }
+        ctx.putImageData(imageData, 0, 0)
+      } catch {
+        setUseFallback(true)
+      }
+    }
+    img.onerror = () => setUseFallback(true)
+    img.src = src
+    return () => {
+      cancelled = true
+    }
+  }, [src])
+
+  if (useFallback) {
+    return <img src={src} alt="" className={className} draggable={false} />
+  }
+
+  return <canvas ref={canvasRef} className={className} aria-hidden style={{ display: 'block' }} />
+}
+
+function PetHuntCategoryCarousel({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (next: string) => void
+}) {
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([])
+
+  useEffect(() => {
+    const idx = PET_HUNT_CATEGORY_CAROUSEL_ITEMS.findIndex((item) => item.label === value)
+    if (idx < 0) return
+    const el = itemRefs.current[idx]
+    el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+  }, [value])
+
+  return (
+    <div>
+      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.2em] text-violet-700">Category</p>
+      <div
+        className="-mx-1 flex gap-3 overflow-x-auto overscroll-x-contain px-1 pb-2 [scrollbar-width:none] snap-x snap-mandatory [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        role="listbox"
+        aria-label="Hunt category"
+      >
+        {PET_HUNT_CATEGORY_CAROUSEL_ITEMS.map((item, index) => {
+          const active = item.label === value
+          return (
+            <button
+              key={item.label}
+              type="button"
+              ref={(el) => {
+                itemRefs.current[index] = el
+              }}
+              role="option"
+              aria-selected={active}
+              aria-label={item.label}
+              onClick={() => onChange(item.label)}
+              className={[
+                'snap-start flex w-[6rem] shrink-0 flex-col overflow-hidden rounded-2xl border bg-white text-left shadow-md transition-[transform,box-shadow] active:scale-[0.98]',
+                active
+                  ? 'border-violet-500 shadow-[0_12px_28px_-14px_rgba(124,58,237,0.5)] ring-[3px] ring-[#7c3aed]/30'
+                  : 'border-violet-200/95',
+              ].join(' ')}
+            >
+              <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-gradient-to-b from-violet-50 to-violet-100/50">
+                {item.label === 'Custom item' ? (
+                  <PetHuntChromaKeyImage src={item.image} className="h-full w-full object-cover" />
+                ) : (
+                  <img src={item.image} alt="" className="h-full w-full object-cover object-center" draggable={false} />
+                )}
+                <div
+                  className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1c1340]/92 via-[#1c1340]/55 to-transparent px-1.5 pb-2 pt-7"
+                  aria-hidden
+                >
+                  <p className="text-center text-[8px] font-black leading-[1.15] tracking-[-0.02em] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)] line-clamp-3 [text-shadow:0_1px_3px_rgba(0,0,0,0.8)]">
+                    {item.label}
+                  </p>
+                </div>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
@@ -3141,8 +3499,8 @@ function PetHuntOptionGroup({
 }) {
   return (
     <div>
-      <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#7c3aed]">{label}</p>
-      <div className="flex flex-wrap gap-1.5">
+      <p className="mb-2 text-[10px] font-black uppercase tracking-[0.1em] text-zinc-500">{label}</p>
+      <div className="flex flex-wrap gap-2">
         {options.map((option) => {
           const active = option === value
           return (
@@ -3151,10 +3509,10 @@ function PetHuntOptionGroup({
               type="button"
               onClick={() => onChange(option)}
               className={[
-                'rounded-full px-2.5 py-1.5 text-[10px] font-black transition-colors',
+                'rounded-full px-3.5 py-2 text-[10px] font-black transition-[transform,box-shadow] active:scale-[0.97]',
                 active
-                  ? 'bg-[#7c3aed] text-white'
-                  : 'bg-violet-50 text-[#4c1d95] ring-1 ring-violet-100 active:bg-violet-100',
+                  ? 'bg-[#7c3aed] text-white shadow-[0_4px_14px_-6px_rgba(124,58,237,0.55)]'
+                  : 'bg-violet-50/90 text-[#4c1d95] ring-1 ring-violet-100 shadow-sm',
               ].join(' ')}
               aria-pressed={active}
             >
@@ -3249,11 +3607,14 @@ function HomeAdventureQuickActions({
   onOpenLiveAuctions,
   onOpenBidWars,
   onOpenShop,
+  adventureLevel,
 }: {
   onOpenLiveAuctions: () => void
   onOpenBidWars: () => void
   onOpenShop: () => void
+  adventureLevel: number
 }) {
+  const bidWarsUnlocked = adventureLevel >= BID_WARS_UNLOCK_ADVENTURE_LEVEL
   return (
     <section aria-label="Quick actions">
       <div className="grid grid-cols-3 gap-2">
@@ -3261,7 +3622,7 @@ function HomeAdventureQuickActions({
           type="button"
           onClick={onOpenLiveAuctions}
           className="relative flex min-h-[8.35rem] flex-col overflow-hidden rounded-[1.1rem] border border-violet-200/70 bg-white px-2 py-2 text-left text-[#1c1340] shadow-[0_14px_26px_-20px_rgba(76,29,149,0.55)] transition-colors active:bg-violet-50"
-          aria-label="Open live auctions"
+          aria-label="Open lives"
         >
           <p className="relative z-[1] truncate text-[11px] font-black uppercase leading-none tracking-[0.04em]">Live</p>
           <div className="pointer-events-none relative z-0 mt-1 flex min-h-[4.5rem] flex-1 items-start justify-center overflow-hidden">
@@ -3280,14 +3641,25 @@ function HomeAdventureQuickActions({
             ].join(' ')}
             aria-hidden
           >
-            Browse auctions
+            Open lives
           </span>
         </button>
         <button
           type="button"
-          onClick={onOpenBidWars}
-          className="relative flex min-h-[8.35rem] flex-col overflow-hidden rounded-[1.1rem] border border-violet-200/70 bg-white px-2 py-2 text-left text-[#1c1340] shadow-[0_14px_26px_-20px_rgba(76,29,149,0.55)] transition-colors active:bg-violet-50"
-          aria-label="Open bid wars"
+          onClick={() => {
+            if (!bidWarsUnlocked) {
+              playUiFeedback('error')
+              return
+            }
+            onOpenBidWars()
+          }}
+          className={[
+            'relative flex min-h-[8.35rem] flex-col overflow-hidden rounded-[1.1rem] border px-2 py-2 text-left text-[#1c1340] shadow-[0_14px_26px_-20px_rgba(76,29,149,0.55)] transition-colors',
+            bidWarsUnlocked ? 'border-violet-200/70 bg-white active:bg-violet-50' : 'cursor-not-allowed border-zinc-200/90 bg-zinc-50/90',
+          ].join(' ')}
+          aria-label={
+            bidWarsUnlocked ? 'Open bid wars' : `Bid wars — unlocks at adventure level ${BID_WARS_UNLOCK_ADVENTURE_LEVEL}`
+          }
         >
           <p className="relative z-[1] truncate text-[11px] font-black uppercase leading-none tracking-[0.04em]">Bid wars</p>
           <div className="pointer-events-none relative z-0 mt-1 flex min-h-[4.5rem] flex-1 items-center justify-center overflow-hidden">
@@ -3295,18 +3667,34 @@ function HomeAdventureQuickActions({
               src={fetchitQuickBidWarsUrl}
               alt=""
               aria-hidden
-              className="h-[5.05rem] w-[5.05rem] object-contain mix-blend-multiply"
+              className={[
+                'h-[5.05rem] w-[5.05rem] object-contain mix-blend-multiply',
+                bidWarsUnlocked ? '' : 'opacity-55 grayscale',
+              ].join(' ')}
               draggable={false}
             />
+            {!bidWarsUnlocked ? (
+              <div
+                className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center bg-[#1c1340]/35 px-1"
+                aria-hidden
+              >
+                <div className="max-w-[5.5rem] rounded-md bg-white/95 px-2 py-1.5 text-center shadow-md ring-1 ring-zinc-200/90">
+                  <p className="text-[8px] font-black uppercase leading-tight tracking-[0.06em] text-[#7c3aed]">
+                    Level {BID_WARS_UNLOCK_ADVENTURE_LEVEL}
+                  </p>
+                  <p className="mt-0.5 text-[7px] font-bold leading-tight text-zinc-500">Required to play</p>
+                </div>
+              </div>
+            ) : null}
           </div>
           <span
             className={[
-              feed3dPurpleCta,
+              bidWarsUnlocked ? feed3dPurpleCta : 'border-b-[3px] border-zinc-300/90 bg-zinc-200 text-zinc-600 shadow-none ring-1 ring-zinc-300/80',
               'relative z-[1] mt-1 flex w-full items-center justify-center rounded-xl px-2 py-2 text-[9px] font-black uppercase leading-none tracking-[0.06em]',
             ].join(' ')}
             aria-hidden
           >
-            View battles
+            {bidWarsUnlocked ? 'View battles' : 'Locked'}
           </span>
         </button>
         <button
@@ -3582,131 +3970,6 @@ function DailyRewardTaskCards({
         ) : null}
       </div>
     </section>
-  )
-}
-
-function GemGameSelectionSheet({
-  open,
-  onClose,
-  onOpenSpinWheel,
-  onOpenMysteryFlip,
-}: {
-  open: boolean
-  onClose: () => void
-  onOpenSpinWheel?: () => void
-  onOpenMysteryFlip?: () => void
-}) {
-  useEffect(() => {
-    if (!open) return undefined
-
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose, open])
-
-  if (!open) return null
-
-  return createPortal(
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-[#140b2f]/48 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-8 backdrop-blur-sm">
-      <button
-        type="button"
-        aria-label="Close gem games"
-        className="absolute inset-0 cursor-default"
-        onClick={onClose}
-      />
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="fetch-gem-games-title"
-        className="relative w-full max-w-[26rem] overflow-hidden rounded-[1.7rem] border border-violet-200/80 bg-white p-3 text-[#1c1340] shadow-[0_24px_80px_rgba(28,19,64,0.38)]"
-      >
-        <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full bg-violet-200/70 blur-2xl" aria-hidden />
-        <div className="relative flex items-start gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 ring-1 ring-violet-200">
-            <img src={purpleGemIconUrl} alt="" aria-hidden className="h-8 w-8 object-contain" draggable={false} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#7c3aed]">Gem games</p>
-            <h2 id="fetch-gem-games-title" className="mt-0.5 text-[1.25rem] font-black leading-none tracking-[-0.05em]">
-              Pick a game
-            </h2>
-            <p className="mt-1 text-[11px] font-bold leading-snug text-[#6b5a8f]">
-              Spend or win gems in quick Fetch mini games.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-50 text-[#4c1d95] active:bg-violet-100"
-            aria-label="Close"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="relative mt-3 grid grid-cols-1 gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              playUiFeedback('gems_collect')
-              onClose()
-              onOpenSpinWheel?.()
-            }}
-            className="flex items-center gap-3 rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 to-white p-3 text-left shadow-none active:bg-violet-100"
-          >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#7c3aed] text-white">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                <circle cx="12" cy="12" r="7.5" stroke="currentColor" strokeWidth="2.2" />
-                <circle cx="12" cy="12" r="2" fill="currentColor" />
-              </svg>
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-black leading-none tracking-[-0.03em]">Spin the wheel</span>
-              <span className="mt-1 block text-[11px] font-bold leading-snug text-[#6b5a8f]">
-                Open Prize Spin and try for gems, boosts, and bonuses.
-              </span>
-            </span>
-            <span className="text-[#7c3aed]" aria-hidden>&rsaquo;</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              playUiFeedback('gems_collect')
-              onClose()
-              onOpenMysteryFlip?.()
-            }}
-            className="flex items-center gap-3 rounded-2xl border border-violet-200 bg-gradient-to-r from-[#fff7ed] to-white p-3 text-left shadow-none active:bg-amber-50"
-          >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-b from-amber-300 to-orange-500 text-white">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <rect x="4" y="3" width="13" height="18" rx="2.6" stroke="currentColor" strokeWidth="2.2" />
-                <rect x="7" y="6" width="13" height="18" rx="2.6" stroke="currentColor" strokeWidth="2.2" fill="rgba(255,255,255,0.2)" />
-                <path d="M11 13l1.5 1.5L16 11" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-black leading-none tracking-[-0.03em]">
-                Reveal what&rsquo;s behind
-              </span>
-              <span className="mt-1 block text-[11px] font-bold leading-snug text-[#6b5a8f]">
-                Mystery Flip &mdash; flip cards, grab gifts, avoid the bombs.
-              </span>
-            </span>
-            <span className="rounded-full bg-violet-100 px-2 py-1 text-[10px] font-black text-[#4c1d95]">
-              Play
-            </span>
-          </button>
-        </div>
-      </section>
-    </div>,
-    document.body,
   )
 }
 
@@ -4079,38 +4342,6 @@ function BackpackMapIcon({ className = '' }: { className?: string }) {
   )
 }
 
-const HOME_CATEGORY_CHIPS = [
-  { id: 'all', label: 'All', icon: 'grid', image: undefined },
-  { id: 'sneakers', label: 'Sneakers', icon: 'sneaker', image: searchRealSneakersShoesUrl },
-  { id: 'cards', label: 'Trading Cards', icon: 'cards', image: searchRealTradingCardGamesUrl },
-  { id: 'luxury', label: 'Luxury', icon: 'bag', image: searchRealJewelleryWatchesUrl },
-  { id: 'collectibles', label: 'Collectibles', icon: 'bear', image: searchRealToysHobbiesUrl },
-  { id: 'tech', label: 'Tech', icon: 'tech', image: searchRealElectronicsUrl },
-  { id: 'watches', label: 'Watches', icon: 'watch', image: searchRealJewelleryWatchesUrl },
-] as const
-type HomeCategoryChipId = (typeof HOME_CATEGORY_CHIPS)[number]['id']
-type HomeLiveNowReel = DropReel & { homeCategoryId: HomeCategoryChipId }
-
-const HOME_LIVE_NOW_REELS: readonly HomeLiveNowReel[] = [
-  {
-    id: 'live-sneaker-seller-001',
-    homeCategoryId: 'sneakers',
-    imageUrls: [searchRealSneakersShoesUrl],
-    mediaKind: 'images',
-    poster: searchRealSneakersShoesUrl,
-    title: 'Live sneaker deals',
-    seller: '@SneakerScout',
-    authorId: 'demo_sneaker_scout',
-    priceLabel: 'From $89',
-    blurb: 'A live seller walking through clean sneaker finds, quick sizing notes, and pickup-ready pairs.',
-    likes: 128,
-    growthVelocityScore: 1.35,
-    watchTimeMsSeed: 186_000,
-    categories: ['local_pickup', 'promo'],
-    region: 'AU_WIDE',
-  },
-]
-
 export type HomeShellForYouFeedProps = {
   onOpenDrops: () => void
   /** Live tiles on Explore — opens the Live tab + that stream (preferred over generic drops). */
@@ -4128,10 +4359,10 @@ export type HomeShellForYouFeedProps = {
   onViewBackpack?: () => void
   /** Opens the Bid Wars hub from the adventure promo. */
   onJoinBidWar?: () => void
-  /** Opens the full Prize Spin game from the gem games picker. */
-  onOpenSpinWheel?: () => void
-  /** Opens the Mystery Flip card game from the gem games picker. */
-  onOpenMysteryFlip?: () => void
+  /** For You “Live” tile — marketplace live grid (defaults to generic marketplace). */
+  onOpenMarketplaceAuctions?: () => void
+  /** For You “Shop” tile — marketplace store catalog (defaults to generic marketplace). */
+  onOpenMarketplaceShop?: () => void
   className?: string
   /** Omit top title block when a parent supplies the headline (e.g. Explore). */
   embedded?: boolean
@@ -4297,15 +4528,15 @@ function filterListingsForCategory(
 }
 
 function HomeShellForYouFeedInner({
-  onOpenDrops,
-  onOpenLiveStream,
+  onOpenDrops: _onOpenDrops,
+  onOpenLiveStream: _onOpenLiveStream,
   onOpenMarketplace,
+  onOpenMarketplaceAuctions,
+  onOpenMarketplaceShop,
   onOpenSearch: _onOpenSearch,
   onOpenPeerListing,
   onQuickBuyPeerListing,
   onJoinBidWar,
-  onOpenSpinWheel,
-  onOpenMysteryFlip,
   className = '',
   embedded = false,
   explorePromoBleed: _explorePromoBleed = 'page',
@@ -4327,11 +4558,6 @@ function HomeShellForYouFeedInner({
     return allListings
   }, [browseCategory, allListings])
 
-  const homeCategoryFilter: HomeCategoryChipId = 'all'
-  const homeLiveNowReels = useMemo<readonly DropReel[]>(
-    () => HOME_LIVE_NOW_REELS.filter((reel) => reel.homeCategoryId === homeCategoryFilter),
-    [homeCategoryFilter],
-  )
   const [demoFundsCents, setDemoFundsCents] = useState(0)
   const [backpackStorageOpen, setBackpackStorageOpen] = useState(false)
   const [backpackItems, setBackpackItems] = useState<BackpackItem[]>(() => loadBackpackItems())
@@ -4351,12 +4577,13 @@ function HomeShellForYouFeedInner({
   })
   const [petEditorOpen, setPetEditorOpen] = useState(false)
   const [nowMs, setNowMs] = useState(() => Date.now())
-  const [gemGamesOpen, setGemGamesOpen] = useState(false)
   const [petCelebrationSeq, setPetCelebrationSeq] = useState(0)
   const [petHunts, setPetHunts] = useState<PetHunt[]>(() => loadPetHunts())
   const [petHuntSheetOpen, setPetHuntSheetOpen] = useState(false)
   const [petHuntPresetQuery, setPetHuntPresetQuery] = useState('')
   const [petHuntToast, setPetHuntToast] = useState<{ huntId: string; message: string } | null>(null)
+  const [petHuntFoundModalHuntId, setPetHuntFoundModalHuntId] = useState<string | null>(null)
+  const [petHuntFindingsSheetHuntId, setPetHuntFindingsSheetHuntId] = useState<string | null>(null)
   const [starterPetRevealed, setStarterPetRevealed] = useState(() => loadStarterPetRevealed())
   const [starterUnlockRunning, setStarterUnlockRunning] = useState(false)
   const [starterSkillsSheetOpen, setStarterSkillsSheetOpen] = useState(false)
@@ -4380,13 +4607,8 @@ function HomeShellForYouFeedInner({
   const activePetName = petProfile.names[activePet.id]?.trim() || activePet.defaultName
   const activePetRank = normalizePetRank(petProfile.ranks[activePet.id])
   const handleOpenLiveAuctions = useCallback(() => {
-    const firstReel = homeLiveNowReels[0]
-    if (onOpenLiveStream && firstReel) {
-      onOpenLiveStream(firstReel)
-      return
-    }
-    onOpenDrops()
-  }, [homeLiveNowReels, onOpenDrops, onOpenLiveStream])
+    ;(onOpenMarketplaceAuctions ?? onOpenMarketplace)()
+  }, [onOpenMarketplaceAuctions, onOpenMarketplace])
   const benchPet = useMemo(() => {
     if (FETCH_HOME_PETS.length < 2) return null
     const idx = FETCH_HOME_PETS.findIndex((p) => p.id === petProfile.selectedPetId)
@@ -4414,6 +4636,21 @@ function HomeShellForYouFeedInner({
     const busyPetIds = new Set(livePetHunts.map((hunt) => hunt.pet_id))
     return FETCH_HOME_PETS.find((pet) => !busyPetIds.has(pet.id))?.id ?? petProfile.selectedPetId
   }, [livePetHunts, petProfile.selectedPetId])
+
+  const heroNotificationCount = useMemo(() => {
+    const foundCount = petHunts.filter((h) => h.status === 'found').length
+    return Math.min(9, Math.max(1, 1 + foundCount))
+  }, [petHunts])
+
+  const notifyPetHuntMatch = useCallback((hunt: PetHunt, listing: PeerListing) => {
+    setPetHuntFoundModalHuntId(hunt.id)
+    setPetHuntToast(null)
+    const pet = FETCH_HOME_PETS.find((p) => p.id === hunt.pet_id)
+    const petName = petProfile.names[hunt.pet_id]?.trim() || pet?.defaultName || 'Your pet'
+    const preview =
+      listing.title.length > 110 ? `${listing.title.slice(0, 110).trim()}…` : listing.title
+    tryPetHuntFoundBrowserNotification('Pet Hunt · Match found', `${petName}: ${preview}`)
+  }, [petProfile.names])
 
   function handleHeroDisplayNameChange(name: string) {
     const next = name.slice(0, 48)
@@ -4460,13 +4697,12 @@ function HomeShellForYouFeedInner({
       savePetHunts(next)
       const found = next.find((hunt, idx) => hunt !== petHunts[idx] && hunt.status === 'found')
       if (found) {
-        const pet = FETCH_HOME_PETS.find((p) => p.id === found.pet_id)
-        const name = petProfile.names[found.pet_id]?.trim() || pet?.defaultName || 'Your pet'
-        setPetHuntToast({ huntId: found.id, message: `${name} found a ${found.query}.${petHuntAutopilotResultLabel(found)}` })
+        const matchListing = allListings.find((listing) => listing.id === found.matched_listing_id)
+        if (matchListing) notifyPetHuntMatch(found, matchListing)
         playUiFeedback('gems_collect')
       }
     }
-  }, [allListings, petHunts, petProfile.names])
+  }, [allListings, notifyPetHuntMatch, petHunts])
 
   function handleStartPetHuntScan() {
     playAdventureTrumpets()
@@ -4592,10 +4828,8 @@ function HomeShellForYouFeedInner({
     mustInclude: string
     excludeTerms: string
     sources: PetHuntListingSource[]
-    fulfillment: PetHuntFulfillment
     maxPrice: number | null
     condition: PetHuntCondition
-    radiusKm: number
     alertType: PetHuntAlertType
     autopilotEnabled: boolean
     autopilotActions: PetHuntAutopilotAction[]
@@ -4615,10 +4849,8 @@ function HomeShellForYouFeedInner({
       must_include: input.mustInclude.trim().slice(0, 120),
       exclude_terms: input.excludeTerms.trim().slice(0, 120),
       sources: input.sources.length ? input.sources : ['Listings', 'Auctions', 'Live drops'],
-      fulfillment: input.fulfillment,
       max_price: input.maxPrice,
       condition: input.condition,
-      radius_km: input.radiusKm,
       alert_type: input.alertType,
       autopilot_enabled: input.autopilotEnabled,
       autopilot_actions: input.autopilotActions,
@@ -4638,11 +4870,7 @@ function HomeShellForYouFeedInner({
     setPetHuntSheetOpen(false)
     if (!match) handleStartPetHuntScan()
     else playUiFeedback('gems_collect')
-    if (match) {
-      const pet = FETCH_HOME_PETS.find((p) => p.id === input.petId)
-      const petName = petProfile.names[input.petId]?.trim() || pet?.defaultName || 'Your pet'
-      setPetHuntToast({ huntId: nextHunt.id, message: `${petName} found a ${input.query}.${petHuntAutopilotResultLabel(nextHunt)}` })
-    }
+    if (match) notifyPetHuntMatch(nextHunt, match)
   }
 
   function getPetHuntListingMatch(huntId: string): PeerListing | null {
@@ -4654,7 +4882,13 @@ function HomeShellForYouFeedInner({
   }
 
   function handleViewPetHunt(huntId: string) {
-    const hunt = petHunts.find((item) => item.id === huntId)
+    setPetHuntFindingsSheetHuntId(huntId)
+  }
+
+  function handleAdjustPetHuntFromFindingsSheet() {
+    const huntId = petHuntFindingsSheetHuntId
+    const hunt = huntId ? petHunts.find((item) => item.id === huntId) : null
+    setPetHuntFindingsSheetHuntId(null)
     setPetHuntPresetQuery(hunt?.query ?? '')
     setPetHuntSheetOpen(true)
   }
@@ -4663,6 +4897,7 @@ function HomeShellForYouFeedInner({
     const match = getPetHuntListingMatch(huntId)
     if (!match) return
     setPetHuntToast(null)
+    setPetHuntFoundModalHuntId(null)
     onOpenPeerListing(match.id)
   }
 
@@ -4670,6 +4905,7 @@ function HomeShellForYouFeedInner({
     const match = getPetHuntListingMatch(huntId)
     const hunt = petHunts.find((item) => item.id === huntId)
     if (!match || !hunt) return
+    setPetHuntFoundModalHuntId(null)
     setPetHuntToast({ huntId, message: `Autopilot message ready for ${hunt.query}.` })
     onOpenPeerListing(match.id)
   }
@@ -4678,6 +4914,7 @@ function HomeShellForYouFeedInner({
     const match = getPetHuntListingMatch(huntId)
     if (!match) return
     setPetHuntToast(null)
+    setPetHuntFoundModalHuntId(null)
     if (onQuickBuyPeerListing) onQuickBuyPeerListing(match.id)
     else onOpenPeerListing(match.id)
   }
@@ -4686,6 +4923,7 @@ function HomeShellForYouFeedInner({
     const match = getPetHuntListingMatch(huntId)
     if (!match) return
     setPetHuntToast(null)
+    setPetHuntFoundModalHuntId(null)
     onOpenPeerListing(match.id)
   }
 
@@ -4794,6 +5032,42 @@ function HomeShellForYouFeedInner({
     return el ? el.getBoundingClientRect() : null
   }
 
+  const petHuntFoundModalHunt = useMemo(
+    () => (petHuntFoundModalHuntId ? petHunts.find((h) => h.id === petHuntFoundModalHuntId) ?? null : null),
+    [petHuntFoundModalHuntId, petHunts],
+  )
+  const petHuntFoundModalListing = useMemo(
+    () =>
+      petHuntFoundModalHunt?.matched_listing_id
+        ? allListings.find((listing) => listing.id === petHuntFoundModalHunt.matched_listing_id) ?? null
+        : null,
+    [allListings, petHuntFoundModalHunt],
+  )
+  const petHuntFoundModalPetName = useMemo(() => {
+    if (!petHuntFoundModalHunt) return ''
+    const pet = FETCH_HOME_PETS.find((p) => p.id === petHuntFoundModalHunt.pet_id)
+    return petProfile.names[petHuntFoundModalHunt.pet_id]?.trim() || pet?.defaultName || 'Your pet'
+  }, [petHuntFoundModalHunt, petProfile.names])
+
+  const petHuntFindingsSheetHunt = useMemo(
+    () =>
+      petHuntFindingsSheetHuntId ? petHunts.find((item) => item.id === petHuntFindingsSheetHuntId) ?? null : null,
+    [petHuntFindingsSheetHuntId, petHunts],
+  )
+  const petHuntFindingsSheetListing = useMemo(() => {
+    if (!petHuntFindingsSheetHunt?.matched_listing_id) return null
+    return allListings.find((listing) => listing.id === petHuntFindingsSheetHunt.matched_listing_id) ?? null
+  }, [allListings, petHuntFindingsSheetHunt])
+  const petHuntFindingsSheetPet = useMemo(() => {
+    if (!petHuntFindingsSheetHunt) return FETCH_HOME_PETS[0]
+    return FETCH_HOME_PETS.find((p) => p.id === petHuntFindingsSheetHunt.pet_id) ?? FETCH_HOME_PETS[0]
+  }, [petHuntFindingsSheetHunt])
+  const petHuntFindingsSheetPetName = useMemo(() => {
+    if (!petHuntFindingsSheetHunt) return ''
+    const pet = FETCH_HOME_PETS.find((p) => p.id === petHuntFindingsSheetHunt.pet_id)
+    return petProfile.names[petHuntFindingsSheetHunt.pet_id]?.trim() || pet?.defaultName || 'Your pet'
+  }, [petHuntFindingsSheetHunt, petProfile.names])
+
   if (embedded) {
     return (
       <div
@@ -4813,7 +5087,7 @@ function HomeShellForYouFeedInner({
             adventureXp={adventureProgress.xp}
             fundsLabel={demoFundsLabel}
             gemsCount={demoGems}
-            notificationsCount={1}
+            notificationsCount={heroNotificationCount}
             petName={activePetName}
             petFeedTimerLabel={petFeedTimerLabel}
             petRank={activePetRank}
@@ -4831,7 +5105,6 @@ function HomeShellForYouFeedInner({
             onStarterUnlockClick={handleStarterUnlockClick}
             onAddDemoFunds={() => setDemoFundsCents((cents) => cents + 1000)}
             onViewBackpack={() => setBackpackStorageOpen(true)}
-            onOpenGemGames={() => setGemGamesOpen(true)}
             onOpenPetEdit={() => setPetEditorOpen(true)}
             onFeedPet={handleFeedPet}
           />
@@ -4855,9 +5128,10 @@ function HomeShellForYouFeedInner({
           </div>
           <div className="mt-2 px-2 sm:px-3">
             <HomeAdventureQuickActions
+              adventureLevel={adventureProgress.level}
               onOpenLiveAuctions={handleOpenLiveAuctions}
               onOpenBidWars={onJoinBidWar ?? onOpenMarketplace}
-              onOpenShop={onOpenMarketplace}
+              onOpenShop={() => (onOpenMarketplaceShop ?? onOpenMarketplace)()}
             />
           </div>
         </div>
@@ -4902,6 +5176,32 @@ function HomeShellForYouFeedInner({
           onClose={() => setPetHuntSheetOpen(false)}
           onCreate={handleCreatePetHunt}
         />
+        <PetHuntFoundModal
+          open={Boolean(petHuntFoundModalHunt && petHuntFoundModalListing)}
+          hunt={petHuntFoundModalHunt}
+          listing={petHuntFoundModalListing}
+          petName={petHuntFoundModalPetName}
+          onViewFinding={() => {
+            if (petHuntFoundModalHunt) handleViewPetHuntListing(petHuntFoundModalHunt.id)
+          }}
+          onDismiss={() => setPetHuntFoundModalHuntId(null)}
+        />
+        <PetHuntFindingsSheet
+          open={petHuntFindingsSheetHuntId != null && petHuntFindingsSheetHunt != null}
+          hunt={petHuntFindingsSheetHunt}
+          matchedListing={petHuntFindingsSheetListing}
+          petDisplayName={petHuntFindingsSheetPetName}
+          pet={petHuntFindingsSheetPet}
+          nowMs={nowMs}
+          onClose={() => setPetHuntFindingsSheetHuntId(null)}
+          onViewFinding={() => {
+            if (petHuntFindingsSheetHuntId) {
+              handleViewPetHuntListing(petHuntFindingsSheetHuntId)
+              setPetHuntFindingsSheetHuntId(null)
+            }
+          }}
+          onAdjustHunt={handleAdjustPetHuntFromFindingsSheet}
+        />
         <div className="mt-3">
           <DailyRewardTaskCards
             completed={dailyRewardState.completed}
@@ -4940,12 +5240,6 @@ function HomeShellForYouFeedInner({
           onDone={() => setLevelUpOpen(false)}
         />
         <FetchHomeFirstEntryTour rootRef={tourRootRef} />
-        <GemGameSelectionSheet
-          open={gemGamesOpen}
-          onClose={() => setGemGamesOpen(false)}
-          onOpenSpinWheel={onOpenSpinWheel}
-          onOpenMysteryFlip={onOpenMysteryFlip}
-        />
         {dailyGemFx ? (
           <DailyGemClaimFx
             key={dailyGemFx.key}
@@ -5031,7 +5325,7 @@ function HomeShellForYouFeedInner({
             <button
               key={p.id}
               type="button"
-              onClick={onOpenMarketplace}
+              onClick={() => (onOpenMarketplaceShop ?? onOpenMarketplace)()}
               className="flex w-[7.5rem] shrink-0 flex-col overflow-hidden rounded-2xl border-x border-t border-violet-200/60 border-b-[4px] border-b-violet-400/55 bg-gradient-to-b from-white to-violet-50/70 text-left shadow-none transition-[transform,border-bottom-width,background-color] duration-150 active:translate-y-0.5 active:border-b-2 active:bg-violet-100/75"
             >
               <div className="relative aspect-square w-full bg-violet-50">

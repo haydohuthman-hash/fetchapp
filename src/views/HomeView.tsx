@@ -64,6 +64,7 @@ import type { BuySellDropsListingHandoff } from '../components/HomeShellBuySellP
 import type {
   MarketplaceBrowseHandoff,
   MarketplaceDropsProductHandoff,
+  MarketplaceSegmentHandoff,
   MarketplaceSellerHubHandoff,
 } from '../components/HomeShellMarketplacePage'
 import type { DropReel } from '../lib/drops/types'
@@ -890,6 +891,7 @@ export default function HomeView({
   )
   const [dropsListingHandoff, setDropsListingHandoff] = useState<BuySellDropsListingHandoff | null>(null)
   const [marketplaceBrowseHandoff, setMarketplaceBrowseHandoff] = useState<MarketplaceBrowseHandoff | null>(null)
+  const [marketplaceSegmentHandoff, setMarketplaceSegmentHandoff] = useState<MarketplaceSegmentHandoff | null>(null)
   const [marketplaceCartQtyById, setMarketplaceCartQtyById] = useState<Record<string, number>>({})
   const marketplaceCartHasItems = useMemo(
     () => Object.values(marketplaceCartQtyById).some((q) => typeof q === 'number' && q > 0),
@@ -3358,6 +3360,20 @@ export default function HomeView({
     setMarketplaceBrowseHandoff(null)
   }, [])
 
+  const clearMarketplaceSegmentHandoff = useCallback(() => {
+    setMarketplaceSegmentHandoff(null)
+  }, [])
+
+  const openMarketplaceAuctionsEntry = useCallback(() => {
+    setMarketplaceSegmentHandoff({ id: Date.now(), segment: 'auctions' })
+    onHomeShellTabChange('marketplace')
+  }, [onHomeShellTabChange])
+
+  const openMarketplaceShopEntry = useCallback(() => {
+    setMarketplaceSegmentHandoff({ id: Date.now(), segment: 'shop' })
+    onHomeShellTabChange('marketplace')
+  }, [onHomeShellTabChange])
+
   const openExploreMarketplaceBrowse = useCallback(
     (filter: MarketplacePeerBrowseFilter) => {
       setMarketplaceBrowseHandoff({ id: Date.now(), ...filter })
@@ -5712,7 +5728,10 @@ export default function HomeView({
         homeBrainFlow === 'tunnel' ? 'tunnel' : homeBrainFlow ? 'brain' : 'idle'
       }
     >
-      {showAppAddressHeader && !servicesExploreFullPage && homeShellTab !== 'search' ? (
+      {showAppAddressHeader &&
+      !servicesExploreFullPage &&
+      homeShellTab !== 'search' &&
+      homeShellTab !== 'marketplace' ? (
         <FetchHomeAppAddressHeader
           onSearchSubmit={onAppTopSearchSubmit}
           onOpenAccount={onAppTopAccount}
@@ -5893,6 +5912,8 @@ export default function HomeView({
                 onOpenDrops={() => onHomeShellTabChange('marketplace')}
                 onOpenLiveStream={openExploreLiveStream}
                 onOpenMarketplace={() => onHomeShellTabChange('marketplace')}
+                onOpenMarketplaceAuctions={openMarketplaceAuctionsEntry}
+                onOpenMarketplaceShop={openMarketplaceShopEntry}
                 onOpenSearch={() => {
                   bumpInteraction()
                   onHomeShellTabChange('search')
@@ -5911,14 +5932,6 @@ export default function HomeView({
                 onJoinBidWar={() => {
                   bumpInteraction()
                   setBidwarsMatchmakingOpen(true)
-                }}
-                onOpenSpinWheel={() => {
-                  bumpInteraction()
-                  setPokiesOpen(true)
-                }}
-                onOpenMysteryFlip={() => {
-                  bumpInteraction()
-                  setMysteryFlipOpen(true)
                 }}
                 intentOrbHintBubble={intentOrbHintBubble}
                 intentOrbHintCopy={HOME_INTENT_ORB_BUBBLE_HINT}
@@ -6340,6 +6353,8 @@ export default function HomeView({
                     onOpenDrops={() => onHomeShellTabChange('marketplace')}
                     onOpenLiveStream={openExploreLiveStream}
                     onOpenMarketplace={() => onHomeShellTabChange('marketplace')}
+                    onOpenMarketplaceAuctions={openMarketplaceAuctionsEntry}
+                    onOpenMarketplaceShop={openMarketplaceShopEntry}
                     onOpenSearch={() => {
                       bumpInteraction()
                       onHomeShellTabChange('search')
@@ -6358,14 +6373,6 @@ export default function HomeView({
                     onJoinBidWar={() => {
                       bumpInteraction()
                       setBidwarsMatchmakingOpen(true)
-                    }}
-                    onOpenSpinWheel={() => {
-                      bumpInteraction()
-                      setPokiesOpen(true)
-                    }}
-                    onOpenMysteryFlip={() => {
-                      bumpInteraction()
-                      setMysteryFlipOpen(true)
                     }}
                     intentOrbHintBubble={intentOrbHintBubble}
                     intentOrbHintCopy={HOME_INTENT_ORB_BUBBLE_HINT}
@@ -7904,6 +7911,10 @@ export default function HomeView({
             onSellerHubHandoffConsumed={clearSellerHubHandoff}
             liveJoinStreamHandoff={liveJoinStreamHandoff}
             onLiveJoinStreamHandoffConsumed={clearLiveJoinStreamHandoff}
+            onRequestHomeShellTab={onHomeShellTabChange}
+            onOpenWallet={() => setBidwarsHubView({ kind: 'wallet' })}
+            segmentHandoff={marketplaceSegmentHandoff}
+            onSegmentHandoffConsumed={clearMarketplaceSegmentHandoff}
           />
         </div>
       ) : null}

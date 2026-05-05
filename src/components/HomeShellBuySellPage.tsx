@@ -205,6 +205,13 @@ export type HomeShellBuySellPageProps = {
   onDropsListingHandoffConsumed?: () => void
   /** Jump to home services and start pick & drop booking. */
   onBookDriver?: () => void
+  /** When embedded in marketplace: apply Explore / banner browse filters. */
+  syncBrowseFilter?: {
+    q?: string
+    category?: string
+    maxPriceCents?: number
+    scope?: 'local' | 'global'
+  } | null
   /**
    * When true, skip the public browse feed (used when opened from the unified marketplace “Sell” hub).
    */
@@ -273,6 +280,7 @@ function HomeShellBuySellPageInner({
   dropsListingHandoff = null,
   onDropsListingHandoffConsumed,
   onBookDriver,
+  syncBrowseFilter = null,
   overlayMode = false,
   onOverlayClose,
   overlayLandingPanel,
@@ -298,6 +306,7 @@ function HomeShellBuySellPageInner({
   const [marketScope, setMarketScope] = useState<MarketScope>(loadStoredScope)
   const [searchOverlayOpen, setSearchOverlayOpen] = useState(false)
   const [categoriesOverlayOpen, setCategoriesOverlayOpen] = useState(false)
+  const shopSearchInputRef = useRef<HTMLInputElement>(null)
 
   const [listings, setListings] = useState<PeerListing[]>([])
   const [listErr, setListErr] = useState<string | null>(null)
@@ -531,6 +540,19 @@ function HomeShellBuySellPageInner({
       /* ignore */
     }
   }, [])
+
+  useEffect(() => {
+    if (!syncBrowseFilter) return
+    const q = syncBrowseFilter.q?.trim()
+    if (q) setSearch(q)
+    const cat = syncBrowseFilter.category?.trim()
+    if (cat) {
+      setCategoryId(cat)
+      setForYouActive(cat === 'all')
+    }
+    const sc = syncBrowseFilter.scope
+    if (sc === 'local' || sc === 'global') persistScope(sc)
+  }, [syncBrowseFilter, persistScope])
 
   const feedListings = useMemo(() => {
     if (marketScope === 'global') return listings
@@ -1007,9 +1029,12 @@ function HomeShellBuySellPageInner({
           <div className="flex shrink-0 items-center justify-end gap-0.5 justify-self-end">
             <button
               type="button"
-              onClick={() => setSearchOverlayOpen(true)}
+              onClick={() => {
+                shopSearchInputRef.current?.focus()
+                shopSearchInputRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+              }}
               className="flex h-10 w-10 items-center justify-center rounded-full text-zinc-800 transition-colors active:bg-zinc-100"
-              aria-label="Search marketplace"
+              aria-label="Focus search"
             >
               <SearchIcon className="text-zinc-600" />
             </button>
@@ -1075,6 +1100,56 @@ function HomeShellBuySellPageInner({
           >
             For you
           </button>
+        </div>
+
+        <div className="mx-auto mt-2 w-full min-w-0 max-w-lg px-1">
+          <label className="sr-only" htmlFor="fetch-shop-search">
+            Search listings
+          </label>
+          <div className="flex w-full items-center gap-2 rounded-xl border border-zinc-200/90 bg-white px-3 py-2.5 shadow-sm">
+            <SearchIcon className="shrink-0 text-zinc-400" />
+            <input
+              id="fetch-shop-search"
+              ref={shopSearchInputRef}
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search listings"
+              className="min-w-0 flex-1 bg-transparent text-[15px] text-zinc-900 outline-none placeholder:text-zinc-400"
+              autoComplete="off"
+              enterKeyHint="search"
+            />
+          </div>
+        </div>
+
+        <div
+          className="mx-auto mt-2 flex w-full min-w-0 max-w-lg gap-2 overflow-x-auto px-1 pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory"
+          role="tablist"
+          aria-label="Shop categories"
+        >
+          {CATEGORY_CHIPS.map((c) => {
+            const active = categoryId === c.id
+            return (
+              <button
+                key={c.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => {
+                  setCategoryId(c.id)
+                  setForYouActive(c.id === 'all')
+                }}
+                className={[
+                  'shrink-0 snap-start rounded-full border px-3.5 py-2 text-[12px] font-semibold transition-colors',
+                  active
+                    ? 'border-zinc-900 bg-zinc-900 text-white shadow-sm'
+                    : 'border-zinc-200 bg-white text-zinc-700 shadow-sm active:bg-zinc-50',
+                ].join(' ')}
+              >
+                {c.label}
+              </button>
+            )
+          })}
         </div>
 
         <div className="mx-auto mt-2 flex w-full min-w-0 max-w-lg items-center gap-2 px-1">
