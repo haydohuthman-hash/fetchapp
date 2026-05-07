@@ -976,8 +976,26 @@ export const LiveFeedPage = memo(function LiveFeedPage({
               <button
                 type="button"
                 onClick={onGoLive}
-                className="ml-1 rounded-full bg-[#00ff6a] px-3.5 py-1.5 text-[11px] font-bold text-[#000000] shadow-sm active:opacity-90"
+                className="ml-1 flex items-center gap-1.5 rounded-full bg-[#7C3AED] px-3.5 py-1.5 text-[11px] font-bold text-white shadow-[0_2px_10px_-2px_rgba(124,58,237,0.5)] active:opacity-90"
               >
+                <span className="relative inline-flex h-[1.375rem] w-[1.375rem] shrink-0 items-center justify-center" aria-hidden>
+                  <span className="absolute inline-flex h-2.5 w-2.5 animate-ping rounded-full bg-white/70" />
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="relative z-[1] shrink-0 text-white animate-pulse"
+                  >
+                    <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+                    <path
+                      d="M7.5 7.5a6.36 6.36 0 000 9M16.5 7.5a6.36 6.36 0 010 9M4.5 4.5a10.6 10.6 0 000 15M19.5 4.5a10.6 10.6 0 010 15"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </span>
                 Go live
               </button>
             ) : null}

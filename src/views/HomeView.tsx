@@ -9,6 +9,7 @@ import {
   type CSSProperties,
   type RefObject,
 } from 'react'
+import { Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import {
   FetchHomeBookingSheet,
@@ -33,7 +34,6 @@ import {
   type FetchOrbExpression,
 } from '../components/JarvisNeuralOrb'
 import { FetchStripePaymentElement } from '../components/FetchStripePaymentElement'
-import { FetchPremiumPageSkeleton, useOneTimePageSkeleton } from '../components/FetchPremiumPageSkeleton'
 import { HomeFetchLogoAndVoiceDock } from '../components/HomeFetchLogoAndVoiceDock'
 import { AppleMapsNavRoutePanel } from '../components/AppleMapsNavRoutePanel'
 import { MysteryAdventurePanel } from '../components/MysteryAdventurePanel'
@@ -52,12 +52,23 @@ import {
   markEntryAddressOnboardingComplete,
   skipEntryAddressSheetForSession,
 } from '../lib/fetchEntryAddressOnboarding'
-import { FETCH_GEMS_PATH, FETCH_MARKETPLACE_LIST_PATH } from '../lib/fetchRoutes'
+import { isBidWarsAdventureUnlocked } from '../lib/fetchAdventureRewards'
+import {
+  FETCH_AUTH_PATH,
+  FETCH_GEMS_PATH,
+  FETCH_MARKETPLACE_LIST_PATH,
+  FETCH_SHOP_PATH,
+  FETCH_WALLET_TRANSACTIONS_PATH,
+} from '../lib/fetchRoutes'
+import { useAuthState } from '../lib/authState'
+import { readMarketplaceCartQty, writeMarketplaceCartQty } from '../lib/marketplaceCartSnapshot'
 import { ambientRegisterHome, ambientSetPokiesDuck } from '../lib/audio/fetchAmbientMusic'
 import { PokiesGame } from '../components/bidwars/PokiesGame'
 import { MysteryFlipPage } from '../components/games/MysteryFlipPage'
 import { SellOptionsSheet } from '../components/bidwars/SellOptionsSheet'
 import { ServicesExploreHomePanel } from '../components/ServicesExploreHomePanel'
+import { ExploreEarthCurveDivider } from '../components/ExploreEarthCurveDivider'
+import searchHeroWallpaperUrl from '../assets/fetchit-search-hero-wallpaper.png'
 import { HomeShellChatHubPage } from '../components/HomeShellChatHubPage'
 import { HomeShellMarketplacePage } from '../components/HomeShellMarketplacePage'
 import type { BuySellDropsListingHandoff } from '../components/HomeShellBuySellPage'
@@ -90,10 +101,11 @@ import { TripSheetCard } from '../components/booking/TripSheetCard'
 import { TripDriverStatusStrip } from '../components/booking/TripDriverStatusStrip'
 import { TripPriceEstimateStrip } from '../components/booking/TripPriceEstimateStrip'
 import {
-  FetchActivityNavIcon,
+  FetchShopNavIcon,
   FetchEyesHomeIcon,
   FetchProfileNavIcon,
-  FetchSearchNavIcon,
+  FetchLivesNavIcon,
+  PlusCircleNavIcon,
 } from '../components/icons/HomeShellNavIcons'
 import {
   postFetchAiChat,
@@ -124,6 +136,7 @@ import {
 } from '../lib/fetchBrainChatStorage'
 import { buildBrainBookingScanSummaryFromPhoto } from '../lib/brainBookingScanContext'
 import { FIELD_VOICE_PRICE_CHOICES } from '../lib/brainFieldVoiceConstants'
+import { playUiFeedback } from '../voice/fetchFeedback'
 import {
   buildBrainAccountIntelForAi,
   buildBrainAccountSnapshot,
@@ -753,6 +766,8 @@ export default function HomeView({
   onMapsBootReady,
 }: HomeViewProps = {}) {
   const navigate = useNavigate()
+  const { sessionUserId } = useAuthState()
+  const shopLocked = !sessionUserId
   const {
     speakLine,
     isSpeechPlaying,
@@ -833,8 +848,6 @@ export default function HomeView({
   const [sellSheetOpen, setSellSheetOpen] = useState(false)
   const [pokiesOpen, setPokiesOpen] = useState(false)
   const [mysteryFlipOpen, setMysteryFlipOpen] = useState(false)
-  const showHomeTabSkeleton = useOneTimePageSkeleton(`home-tab:${homeShellTab}`)
-
   useEffect(() => {
     ambientRegisterHome(1)
     return () => ambientRegisterHome(-1)
@@ -851,7 +864,7 @@ export default function HomeView({
         ? 'fetch-home-shell-route-enter--from-right'
         : 'fetch-home-shell-route-enter--from-left',
     )
-    const t = window.setTimeout(() => setHomeShellTabEnterClass(''), 360)
+    const t = window.setTimeout(() => setHomeShellTabEnterClass(''), 400)
     return () => window.clearTimeout(t)
   }, [homeShellTab])
 
@@ -892,11 +905,16 @@ export default function HomeView({
   const [dropsListingHandoff, setDropsListingHandoff] = useState<BuySellDropsListingHandoff | null>(null)
   const [marketplaceBrowseHandoff, setMarketplaceBrowseHandoff] = useState<MarketplaceBrowseHandoff | null>(null)
   const [marketplaceSegmentHandoff, setMarketplaceSegmentHandoff] = useState<MarketplaceSegmentHandoff | null>(null)
-  const [marketplaceCartQtyById, setMarketplaceCartQtyById] = useState<Record<string, number>>({})
+  const [marketplaceCartQtyById, setMarketplaceCartQtyById] = useState<Record<string, number>>(() =>
+    readMarketplaceCartQty(),
+  )
   const marketplaceCartHasItems = useMemo(
     () => Object.values(marketplaceCartQtyById).some((q) => typeof q === 'number' && q > 0),
     [marketplaceCartQtyById],
   )
+  useEffect(() => {
+    writeMarketplaceCartQty(marketplaceCartQtyById)
+  }, [marketplaceCartQtyById])
   /** Global FAB → seller overlay (post listing) on marketplace tab. */
   const [sellerHubHandoff, setSellerHubHandoff] = useState<MarketplaceSellerHubHandoff | null>(null)
   const [liveJoinStreamHandoff, setLiveJoinStreamHandoff] = useState<LiveFeedStream | null>(null)
@@ -5117,8 +5135,8 @@ export default function HomeView({
   const homeShellFooterNav = useMemo(
     () => (
       <nav
-        className="fetch-home-intent-bottom-nav fetch-home-intent-bottom-nav--compact fetch-home-intent-bottom-nav--with-fab"
-        aria-label="For you, search, sell, activity, and profile"
+        className="fetch-home-intent-bottom-nav fetch-home-intent-bottom-nav--compact"
+        aria-label="For you, lives, sell, shop, and profile"
       >
         <button
           type="button"
@@ -5148,7 +5166,7 @@ export default function HomeView({
           ]
             .filter(Boolean)
             .join(' ')}
-          aria-label="Search"
+          aria-label="Lives"
           aria-current={homeShellTab === 'search' ? 'page' : undefined}
           onClick={() => {
             bumpInteraction()
@@ -5156,35 +5174,27 @@ export default function HomeView({
           }}
         >
           <span className="fetch-home-intent-bottom-nav__icon-inner">
-            <FetchSearchNavIcon className="block" active={homeShellTab === 'search'} />
-            <span className="fetch-home-intent-bottom-nav__label">Search</span>
+            <FetchLivesNavIcon className="block" active={homeShellTab === 'search'} />
+            <span className="fetch-home-intent-bottom-nav__label">Lives</span>
           </span>
         </button>
         <button
           type="button"
           className={[
-            'fetch-home-intent-bottom-nav__fab',
+            'fetch-home-intent-bottom-nav__icon',
+            homeShellTab === 'marketplace' ? 'fetch-home-intent-bottom-nav__icon--active' : '',
           ]
             .filter(Boolean)
             .join(' ')}
           aria-label="Sell — list an item or go live"
+          aria-current={homeShellTab === 'marketplace' ? 'page' : undefined}
           onClick={() => {
             bumpInteraction()
             setSellSheetOpen(true)
           }}
         >
-          <span className="fetch-home-intent-bottom-nav__fab-stack">
-            <span className="fetch-home-intent-bottom-nav__fab-orb" aria-hidden>
-              <svg viewBox="0 0 24 24" fill="none" className="h-[55%] w-[55%]">
-                <path
-                  d="M12 7v10M7 12h10"
-                  stroke="currentColor"
-                  strokeWidth="2.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
+          <span className="fetch-home-intent-bottom-nav__icon-inner">
+            <PlusCircleNavIcon className="block" active={homeShellTab === 'marketplace'} />
             <span className="fetch-home-intent-bottom-nav__label">Sell</span>
           </span>
         </button>
@@ -5192,21 +5202,43 @@ export default function HomeView({
           type="button"
           className={[
             'fetch-home-intent-bottom-nav__icon',
-            homeShellTab === 'chat'
+            homeShellTab === 'chat' && !shopLocked
               ? 'fetch-home-intent-bottom-nav__icon--active'
               : '',
+            shopLocked ? 'fetch-home-intent-bottom-nav__icon--shop-locked' : '',
           ]
             .filter(Boolean)
             .join(' ')}
-          aria-label="Activity"
+          aria-label={shopLocked ? 'Shop — sign in required' : 'Shop'}
+          aria-current={homeShellTab === 'chat' && !shopLocked ? 'page' : undefined}
           onClick={() => {
             bumpInteraction()
-            setBidwarsHubView({ kind: 'activity' })
+            if (shopLocked) {
+              navigate(FETCH_AUTH_PATH)
+              return
+            }
+            navigate({ pathname: FETCH_SHOP_PATH, search: '' })
           }}
         >
-          <span className="fetch-home-intent-bottom-nav__icon-inner">
-            <FetchActivityNavIcon className="block" active={homeShellTab === 'chat'} />
-            <span className="fetch-home-intent-bottom-nav__label">Activity</span>
+          <span className="relative inline-block">
+            <span
+              className={[
+                'fetch-home-intent-bottom-nav__icon-inner',
+                shopLocked ? 'opacity-40 grayscale' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
+              <FetchShopNavIcon className="block" active={homeShellTab === 'chat' && !shopLocked} />
+              <span className="fetch-home-intent-bottom-nav__label">Shop</span>
+            </span>
+            {shopLocked ? (
+              <Lock
+                className="pointer-events-none absolute -bottom-0.5 -right-1 h-3.5 w-3.5 rounded-full bg-white text-zinc-500 ring-1 ring-zinc-200"
+                strokeWidth={2.5}
+                aria-hidden
+              />
+            ) : null}
           </span>
         </button>
         <button
@@ -5225,7 +5257,15 @@ export default function HomeView({
         </button>
       </nav>
     ),
-    [bumpInteraction, homeShellTab, onHomeShellTabChange, onPeekHomeClick, onAccountNavigate],
+    [
+      bumpInteraction,
+      homeShellTab,
+      navigate,
+      onHomeShellTabChange,
+      onPeekHomeClick,
+      onAccountNavigate,
+      shopLocked,
+    ],
   )
 
   const onHomeOrbBottomPxChange = useCallback((px: number) => {
@@ -5770,8 +5810,6 @@ export default function HomeView({
         open={bidwarsMatchmakingOpen}
         onClose={() => setBidwarsMatchmakingOpen(false)}
       />
-      <FetchPremiumPageSkeleton visible={showHomeTabSkeleton} />
-
       <SellOptionsSheet
         open={sellSheetOpen}
         onClose={() => setSellSheetOpen(false)}
@@ -5872,14 +5910,14 @@ export default function HomeView({
         <>
         <div
           className={[
-            'fetch-explore-full-page-shell absolute inset-0 z-[52] flex min-h-dvh flex-col bg-[#f3f0fa]',
+            'fetch-explore-full-page-shell absolute inset-0 z-[52] flex min-h-dvh min-w-0 flex-col overflow-x-hidden bg-[#f3f0fa]',
             homeShellTab === 'services' ? homeShellTabEnterClass : '',
           ].join(' ')}
         >
           {!forYouLoaded ? (
             <main
               className={[
-                'mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f3f0fa] pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+1rem)]',
+                'mx-auto flex min-h-0 min-w-0 w-full max-w-[min(100%,430px)] flex-1 flex-col overflow-x-hidden bg-[#f3f0fa] pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+1rem)]',
                 exploreFullPageMainTopPad,
               ].join(' ')}
               role="main"
@@ -5890,7 +5928,7 @@ export default function HomeView({
           ) : (
             <main
               className={[
-                'mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f3f0fa] pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+1rem)] animate-[fetch-for-you-fadein_0.45s_ease_both]',
+                'mx-auto flex min-h-0 min-w-0 w-full max-w-[min(100%,430px)] flex-1 flex-col overflow-x-hidden bg-[#f3f0fa] pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+1rem)] animate-[fetch-for-you-fadein_0.45s_ease_both]',
               ].join(' ')}
               role="main"
               aria-label="Explore"
@@ -5929,8 +5967,15 @@ export default function HomeView({
                   onHomeShellTabChange('marketplace')
                 }}
                 onViewBackpack={onAppTopOpenCart}
+                onViewTransactions={() => navigate(FETCH_WALLET_TRANSACTIONS_PATH)}
+                onOpenGifts={onAppTopOpenGems}
+                onOpenNotifications={onAppTopChat}
                 onJoinBidWar={() => {
                   bumpInteraction()
+                  if (!isBidWarsAdventureUnlocked()) {
+                    playUiFeedback('error')
+                    return
+                  }
                   setBidwarsMatchmakingOpen(true)
                 }}
                 intentOrbHintBubble={intentOrbHintBubble}
@@ -6370,8 +6415,15 @@ export default function HomeView({
                       onHomeShellTabChange('marketplace')
                     }}
                     onViewBackpack={onAppTopOpenCart}
+                    onViewTransactions={() => navigate(FETCH_WALLET_TRANSACTIONS_PATH)}
+                    onOpenGifts={onAppTopOpenGems}
+                    onOpenNotifications={onAppTopChat}
                     onJoinBidWar={() => {
                       bumpInteraction()
+                      if (!isBidWarsAdventureUnlocked()) {
+                        playUiFeedback('error')
+                        return
+                      }
                       setBidwarsMatchmakingOpen(true)
                     }}
                     intentOrbHintBubble={intentOrbHintBubble}
@@ -7943,70 +7995,77 @@ export default function HomeView({
       homeBrainFlow == null ? (
         <div
           className={[
-            'fetch-home-search-route absolute inset-0 z-[52] flex min-h-dvh flex-col bg-[#f8f6fd]',
+            'fetch-home-search-route absolute inset-0 z-[52] flex min-h-dvh flex-col',
             homeShellTabEnterClass,
           ].join(' ')}
         >
+          <div className="relative z-[13] w-full shrink-0 overflow-visible">
+            <div
+              className="relative z-0 min-h-[min(168px,44vw)] w-full overflow-visible bg-[#cab8ff] bg-cover bg-center bg-no-repeat px-3 pb-[min(40px,11vw)] pt-[max(0.35rem,calc(env(safe-area-inset-top,0px)+0.6rem))]"
+              style={{ backgroundImage: `url(${searchHeroWallpaperUrl})` }}
+            >
+              <form
+                role="search"
+                aria-label="Search fetchit"
+                className="fetch-home-search-hero fetch-home-search-hero--explore-wallpaper relative z-[10] mb-3"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  bumpInteraction()
+                  onAppTopSearchSubmit(searchQuery.trim())
+                }}
+              >
+                <label className="fetch-home-search-hero__field flex h-12 w-full items-center gap-2 rounded-full px-3 transition-[border-color,box-shadow] duration-200">
+                  <svg className="h-5 w-5 shrink-0 text-zinc-500" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path
+                      d="M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15zM16.5 16.5L21 21"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <input
+                    type="search"
+                    inputMode="search"
+                    enterKeyHint="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => bumpInteraction()}
+                    placeholder="Search marketplace, drops & live"
+                    className="min-w-0 flex-1 bg-transparent text-[15px] font-medium leading-tight tracking-tight text-zinc-900 outline-none placeholder:font-normal placeholder:text-zinc-400"
+                    aria-label="Search across fetchit"
+                  />
+                  {searchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        bumpInteraction()
+                        setSearchQuery('')
+                      }}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-100/60 text-[#4c1d95] transition-colors active:bg-violet-100"
+                      aria-label="Clear search"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                        <path
+                          d="M6 6l12 12M18 6L6 18"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </button>
+                  ) : null}
+                </label>
+              </form>
+              <ExploreEarthCurveDivider curveFill="#f8f6fd" />
+            </div>
+          </div>
+
           <main
-            className="fetch-home-search-categories mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f8f6fd] px-3 pb-2 pt-[max(0.35rem,env(safe-area-inset-top,0px))]"
+            className="fetch-home-search-categories relative z-[1] -mt-[min(44px,11vw)] mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f8f6fd] px-3 pb-2 pt-2"
             role="main"
             aria-label="Search"
           >
-            {/* Search header: pinned to top (no wallet chrome on this tab) */}
-            <form
-              role="search"
-              aria-label="Search fetchit"
-              className="fetch-home-search-hero sticky top-0 z-[2] -mx-3 mb-3 bg-[#f8f6fd] px-3 pb-3 pt-1"
-              onSubmit={(e) => {
-                e.preventDefault()
-                bumpInteraction()
-                onAppTopSearchSubmit(searchQuery.trim())
-              }}
-            >
-              <label className="fetch-home-search-hero__field flex h-12 w-full items-center gap-2 rounded-full px-3 transition-[border-color,box-shadow] duration-200">
-                <svg className="h-5 w-5 shrink-0 text-zinc-500" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <path
-                    d="M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15zM16.5 16.5L21 21"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <input
-                  type="search"
-                  inputMode="search"
-                  enterKeyHint="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => bumpInteraction()}
-                  placeholder="Search marketplace, drops & live"
-                  className="min-w-0 flex-1 bg-transparent text-[15px] font-medium leading-tight tracking-tight text-zinc-900 outline-none placeholder:font-normal placeholder:text-zinc-400"
-                  aria-label="Search across fetchit"
-                />
-                {searchQuery ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      bumpInteraction()
-                      setSearchQuery('')
-                    }}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-100/60 text-[#4c1d95] transition-colors active:bg-violet-100"
-                    aria-label="Clear search"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-                      <path
-                        d="M6 6l12 12M18 6L6 18"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </button>
-                ) : null}
-              </label>
-            </form>
-
             <div className="fetch-home-search-categories__scroll min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pr-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <section className="mt-1 min-w-0 pb-2" aria-label="Search categories">
                 <div className="mb-2 flex items-baseline justify-between px-0.5">
@@ -8029,7 +8088,7 @@ export default function HomeView({
                         }}
                         aria-label={`${item.ariaLabel} · ${viewers} people viewing now`}
                       >
-                        <span className="relative flex aspect-square w-full flex-col items-center justify-end overflow-hidden rounded-[1.35rem] bg-zinc-100 px-1.5 pb-1.5 pt-2 shadow-sm ring-1 ring-zinc-200/80">
+                        <span className="fetch-home-search-categories__tile relative flex w-full flex-col items-center justify-end overflow-hidden rounded-[1.35rem] px-1.5 pb-1.5 pt-2">
                           <span className="line-clamp-2 min-h-[2.15em] w-full px-0.5 text-center text-[11px] font-black leading-tight tracking-tight text-zinc-900">
                             {item.title}
                           </span>

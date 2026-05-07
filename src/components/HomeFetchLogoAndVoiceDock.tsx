@@ -38,7 +38,7 @@ export function HomeFetchBrandLogoButton({
       type="button"
       onClick={onPress}
       className={[
-        'flex shrink-0 items-center justify-center overflow-hidden bg-[#FACC15] transition-transform active:scale-[0.98]',
+        'flex shrink-0 items-center justify-center overflow-hidden bg-white transition-transform active:scale-[0.98]',
         stripLeading
           ? [
               'h-full self-stretch rounded-none rounded-l-[13px] shadow-none ring-0',
@@ -107,7 +107,7 @@ export function HomeFetchVoiceSpeechBubbleChip({
         className={[
           exploreGlassStrip
             ? [
-                'fetch-explore-header-voice-chip flex shrink-0 items-center justify-center rounded-xl border-0 bg-[#FACC15] shadow-none',
+                'fetch-explore-header-voice-chip flex shrink-0 items-center justify-center rounded-xl border border-zinc-200/90 bg-white shadow-none dark:border-zinc-600/80',
                 size === 'largeCompact' ? 'h-11 w-11' : 'h-10 w-10',
               ].join(' ')
             : [

@@ -54,6 +54,14 @@ function fullNameFromUser(user: User): string {
   return a || b || ''
 }
 
+function phoneFromUser(user: User): string | null {
+  const m = user.user_metadata as Record<string, unknown> | undefined
+  const p = m?.phone
+  if (typeof p !== 'string') return null
+  const t = p.trim().slice(0, 32)
+  return t.length > 0 ? t : null
+}
+
 /** Friendly two-word names for instant profiles (users can change anytime in settings). */
 const FETCH_PROFILE_NAME_ADJECTIVES = [
   'Swift',
@@ -308,6 +316,7 @@ export async function ensureUserProfile(user: User | null | undefined): Promise<
   const email = profileEmailFromUser(user)
   const fullName = fullNameFromUser(user)
   const avatarMeta = avatarUrlFromUser(user)
+  const phoneMeta = phoneFromUser(user)
   console.log('[PROFILE] ensureUserProfile start', { userId: uid })
 
   let row = await fetchProfileRow(sb, uid)
@@ -324,7 +333,7 @@ export async function ensureUserProfile(user: User | null | undefined): Promise<
       onboarding_complete: true,
       bio: null as string | null,
       location_label: null as string | null,
-      phone: null as string | null,
+      phone: phoneMeta,
       seller_rating: 5,
       followers_count: 0,
       following_count: 0,
@@ -389,6 +398,7 @@ export async function ensureUserProfile(user: User | null | undefined): Promise<
   if (fullName && !(row.full_name || '').trim()) patch.full_name = fullName
   const remoteAvatar = avatarMeta
   if (remoteAvatar && !(row.avatar_url || '').trim()) patch.avatar_url = remoteAvatar
+  if (phoneMeta && !(row.phone || '').trim()) patch.phone = phoneMeta
 
   if (Object.keys(patch).length > 0) {
     console.log('[PROFILE] backfilling empty profile fields', { userId: uid, keys: Object.keys(patch) })

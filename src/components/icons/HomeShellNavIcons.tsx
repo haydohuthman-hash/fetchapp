@@ -13,8 +13,6 @@ type IconProps = {
   active?: boolean
 }
 
-/** Outline weight tuned for ~20–26px render (reads crisp on mobile). */
-const navStroke = 1.75
 /** Sheet rows: lighter + rounder (minimal). */
 const menuStroke = 1.5
 /** Bottom-bar outline weights — slightly thicker when the tab is active. */
@@ -89,6 +87,52 @@ export function FetchSearchNavIcon({ className, active = true }: IconProps) {
 }
 
 /**
+ * Live TV — outline when inactive, solid screen when active (Lives tab).
+ */
+export function FetchLivesNavIcon({ className, active = true }: IconProps) {
+  const stroke = active ? NAV_OUTLINE_STROKE_ACTIVE : NAV_OUTLINE_STROKE
+  if (active) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path
+          d="M9 4.65 12 7.25 15 4.65"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+        <rect x="4.6" y="7.95" width="14.8" height="10.85" rx="2" fill="currentColor" />
+        <path d="M9 20.65h6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      </svg>
+    )
+  }
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M9 4.65 12 7.25 15 4.65"
+        stroke="currentColor"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <rect
+        x="4.85"
+        y="8.2"
+        width="14.3"
+        height="10.35"
+        rx="1.85"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={stroke}
+      />
+      <path d="M9.25 20.65h5.5" stroke="currentColor" strokeWidth={stroke + 0.4} strokeLinecap="round" />
+    </svg>
+  )
+}
+
+/**
  * Chat bubble — outline when inactive, bubble fills when active.
  */
 export function FetchActivityNavIcon({ className, active = true }: IconProps) {
@@ -118,6 +162,52 @@ export function FetchActivityNavIcon({ className, active = true }: IconProps) {
       <circle cx="8.5" cy="9.6" r="1.1" fill="currentColor" />
       <circle cx="12" cy="9.6" r="1.1" fill="currentColor" />
       <circle cx="15.5" cy="9.6" r="1.1" fill="currentColor" />
+    </svg>
+  )
+}
+
+/**
+ * Market / storefront — outline when inactive, solid shop when active.
+ */
+export function FetchShopNavIcon({ className, active = true }: IconProps) {
+  const stroke = active ? NAV_OUTLINE_STROKE_ACTIVE : NAV_OUTLINE_STROKE
+  if (active) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path
+          fill="currentColor"
+          d="M3.75 10.25 6.05 5.03A1.72 1.72 0 0 1 7.61 4h8.78c.72 0 1.38.44 1.66 1.12l2.2 5.13H3.75Zm1.57 1.06V18.5c0 .55.45 1 1 1h12.36c.55 0 1-.45 1-1v-7.19H5.32Z"
+        />
+        <rect x="9" y="13.75" width="6" height="5.75" rx="0.6" fill="#ffffff" fillOpacity={0.88} />
+      </svg>
+    )
+  }
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M3.75 10.25 6.05 5.03A1.72 1.72 0 0 1 7.61 4h8.78c.72 0 1.38.44 1.66 1.12l2.2 5.13"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={stroke}
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5 11.25V18.5c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-7.25H5Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={stroke}
+        strokeLinejoin="round"
+      />
+      <rect
+        x="9"
+        y="13.75"
+        width="6"
+        height="5.75"
+        rx="0.6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={stroke}
+      />
     </svg>
   )
 }
@@ -209,6 +299,37 @@ export function NavShellArrowIcon({ className, tight }: IconProps) {
       <path
         fill="currentColor"
         d="M12 3.75L20.5 18h-6.25v6.25h-4.5V18H3.5L12 3.75z"
+      />
+    </svg>
+  )
+}
+
+/**
+ * Sell / create — plus in a circle; outline when inactive, filled disc + white plus when active.
+ */
+export function PlusCircleNavIcon({ className, active = true }: IconProps) {
+  const stroke = active ? NAV_OUTLINE_STROKE_ACTIVE : NAV_OUTLINE_STROKE
+  if (active) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+        <circle cx="12" cy="12" r="9.25" fill="currentColor" />
+        <path
+          d="M12 8.15v7.7M8.15 12h7.7"
+          stroke="#ffffff"
+          strokeWidth="2.1"
+          strokeLinecap="round"
+        />
+      </svg>
+    )
+  }
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="8.85" fill="none" stroke="currentColor" strokeWidth={stroke} />
+      <path
+        d="M12 8.15v7.7M8.15 12h7.7"
+        stroke="currentColor"
+        strokeWidth="2.05"
+        strokeLinecap="round"
       />
     </svg>
   )
@@ -320,14 +441,21 @@ export function ReelsNavIconFilled({ className, active = true }: IconProps) {
 /** Notifications — bell (aligned with top bubble bar bell geometry). */
 export function NotificationsNavIconFilled({ className, active = true }: IconProps) {
   if (!active) {
+    const stroke = NAV_OUTLINE_STROKE
     return (
       <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path fill="currentColor" d="M12 3a5 5 0 00-5 5v3.5L5 18h14l-2-6.5V8a5 5 0 00-5-5z" />
+        <path
+          d="M12 3a5 5 0 00-5 5v3.5L5 18h14l-2-6.5V8a5 5 0 00-5-5z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={stroke}
+          strokeLinejoin="round"
+        />
         <path
           d="M10 18a2 2 0 004 0"
           fill="none"
           stroke="currentColor"
-          strokeWidth={navStroke}
+          strokeWidth={stroke}
           strokeLinecap="round"
         />
       </svg>

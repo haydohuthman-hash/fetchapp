@@ -88,6 +88,7 @@ export type Bid = {
 export type WalletTxnKind =
   | 'deposit'
   | 'withdraw'
+  | 'peer-send'
   | 'win-charge'
   | 'win-refund'
   | 'reward'

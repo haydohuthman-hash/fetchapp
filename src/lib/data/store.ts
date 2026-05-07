@@ -174,6 +174,16 @@ function resolveStarterPerks(persisted: Persisted): UserPerks {
 
 const persisted = loadPersisted()
 
+function latestTxnBalanceSeed(txns: WalletTransaction[]): number {
+  if (txns.length === 0) return 0
+  let best = txns[0]!
+  for (let i = 1; i < txns.length; i++) {
+    const t = txns[i]!
+    if (t.createdAt >= best.createdAt) best = t
+  }
+  return best.balanceAfterCents
+}
+
 const state: StoreState = {
   user: { ...SELF_USER, watchlist: persisted.watchlist ?? SELF_USER.watchlist },
   auctions: AUCTIONS,
@@ -183,8 +193,7 @@ const state: StoreState = {
   orders: ORDERS,
   walletTxns: WALLET_TXNS,
   activity: ACTIVITY,
-  walletBalanceCents:
-    persisted.walletBalanceCents ?? WALLET_TXNS.at(-1)?.balanceAfterCents ?? 27_000,
+  walletBalanceCents: persisted.walletBalanceCents ?? latestTxnBalanceSeed(WALLET_TXNS),
   winningBalanceCents: 8_500,
   userPerks: resolveStarterPerks(persisted),
   boostedAuctionIds: persisted.boostedAuctionIds ?? [],
@@ -522,6 +531,24 @@ export function withdrawWallet(amountCents: number, label: string): boolean {
   return true
 }
 
+/** P2P send from the cash wallet (demo store). `recipientUsername` is shown as @handle in the ledger. */
+export function sendWalletToUser(amountCents: number, recipientUsername: string): boolean {
+  const handle = recipientUsername.trim().replace(/^@+/u, '')
+  if (!handle || handle.length < 2 || amountCents <= 0) return false
+  if (amountCents > state.walletBalanceCents) return false
+  pushWalletTxn({
+    id: genId('wtx'),
+    kind: 'peer-send',
+    amountCents: -amountCents,
+    balanceAfterCents: state.walletBalanceCents - amountCents,
+    createdAt: Date.now(),
+    label: `Send to @${handle}`,
+  })
+  emit()
+  persist(state)
+  return true
+}
+
 export function instantCash(amountCents: number): boolean {
   if (amountCents > state.walletBalanceCents) return false
   pushWalletTxn({
@@ -540,6 +567,44 @@ export function instantCash(amountCents: number): boolean {
 export function markAllNotificationsRead(): void {
   state.notifications = state.notifications.map((n) => ({ ...n, read: true }))
   emit()
+}
+
+/**
+ * Demo-only: append an in-app notification (used for Auto Hunt notify-only interest copy).
+ */
+export function pushDemoNotification(title: string, body: string): void {
+  pushNotification({
+    id: genId('n'),
+    title,
+    body,
+    createdAt: Date.now(),
+    read: false,
+  })
+  emit()
+  persist(state)
+}
+
+/**
+ * When the user starts a notify-only hunt, record that sellers will be messaged with interest.
+ */
+export function recordHuntInterestSignal(huntLabel: string): void {
+  const label = huntLabel.trim() || 'this hunt'
+  pushNotification({
+    id: genId('n'),
+    title: 'Sellers will see your interest',
+    body: `We’ll message sellers that you’re interested when we find listings that match “${label}”.`,
+    createdAt: Date.now(),
+    read: false,
+  })
+  pushActivity({
+    id: genId('act'),
+    kind: 'message',
+    createdAt: Date.now(),
+    title: 'Hunt interest signal',
+    body: `Sellers get a heads-up you’re watching for “${label}”.`,
+  })
+  emit()
+  persist(state)
 }
 
 /* ------------------------- perk + gem-economy actions --------------------- */

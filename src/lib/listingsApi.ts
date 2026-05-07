@@ -119,6 +119,9 @@ export async function fetchPublishedListings(params?: {
   profileAuthorId?: string
   cursor?: string
   limit?: number
+  /** Server expects whole AUD dollars (see `peer-listings-store` maxPrice / minPrice). */
+  minPriceAud?: number
+  maxPriceAud?: number
 }): Promise<{ listings: PeerListing[]; nextCursor: string | null }> {
   const qs = new URLSearchParams()
   if (params?.q) qs.set('q', params.q)
@@ -126,6 +129,12 @@ export async function fetchPublishedListings(params?: {
   if (params?.profileAuthorId?.trim()) qs.set('profileAuthorId', params.profileAuthorId.trim())
   if (params?.cursor) qs.set('cursor', params.cursor)
   if (params?.limit != null && Number.isFinite(params.limit)) qs.set('limit', String(Math.floor(params.limit)))
+  if (params?.minPriceAud != null && Number.isFinite(params.minPriceAud)) {
+    qs.set('minPrice', String(params.minPriceAud))
+  }
+  if (params?.maxPriceAud != null && Number.isFinite(params.maxPriceAud)) {
+    qs.set('maxPrice', String(params.maxPriceAud))
+  }
   const suffix = qs.toString()
   const path = `/api/listings${suffix ? `?${suffix}` : ''}`
   const response = await fetch(`${getFetchApiBaseUrl()}${path}`, {

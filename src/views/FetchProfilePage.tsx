@@ -284,7 +284,7 @@ export default function FetchProfilePage({
     <div className="min-h-dvh pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]" style={{ background: BRAND_BG }}>
       {/* Top bar */}
       <header className="sticky top-0 z-20 bg-[#faf8ff]/94 backdrop-blur-md">
-        <div className="flex items-center justify-between px-4 pb-3 pt-[max(0.65rem,env(safe-area-inset-top,0px))]">
+        <div className="flex items-center justify-between px-4 pb-1.5 pt-[max(0.65rem,env(safe-area-inset-top,0px))]">
           <button
             type="button"
             onClick={onOpenApp}
@@ -335,9 +335,9 @@ export default function FetchProfilePage({
         </div>
       </header>
 
-      <div className="mx-auto max-w-[430px] px-4">
-        {/* Identity row — avatar + copy */}
-        <section className="flex gap-4 pt-1">
+      <div className="mx-auto max-w-[430px] px-4 pt-0">
+        {/* Identity row — avatar + copy (tight under sticky header) */}
+        <section className="flex items-start gap-4 pt-0">
           <div className="relative shrink-0">
             <div
               className="flex h-[5.75rem] w-[5.75rem] items-center justify-center overflow-hidden rounded-full bg-white ring-[3px] ring-white shadow-[0_12px_40px_-12px_rgba(76,29,149,0.45)]"
@@ -359,11 +359,13 @@ export default function FetchProfilePage({
             </div>
           </div>
 
-          <div className="min-w-0 flex-1 pt-1">
+          <div className="min-w-0 flex-1 pt-0">
             <div className="flex items-start gap-2">
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-x-1.5">
-                  <h1 className="text-[1.2rem] font-black leading-none tracking-tight text-zinc-950">{displayName}</h1>
+                <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                  <h1 className="break-words text-[1.2rem] font-black leading-snug tracking-tight text-zinc-950">
+                    {displayName}
+                  </h1>
                   {username ? (
                     <span
                       className="flex h-[1.125rem] w-[1.125rem] shrink-0 items-center justify-center rounded-full text-white shadow-sm"
@@ -384,11 +386,11 @@ export default function FetchProfilePage({
                   ) : null}
                 </div>
                 {username ? (
-                  <p className="mt-1 truncate text-[13px] font-semibold" style={{ color: BRAND }}>
+                  <p className="mt-1 break-words text-[13px] font-semibold leading-snug" style={{ color: BRAND }}>
                     @{username}
                   </p>
                 ) : (
-                  <p className="mt-1 text-[13px] font-medium text-zinc-500">Set a username in Edit profile</p>
+                  <p className="mt-1 text-[13px] font-medium leading-snug text-zinc-500">Set a username in Edit profile</p>
                 )}
               </div>
               <button

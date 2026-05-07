@@ -1,5 +1,5 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js'
-import { FETCH_APP_PATH, FETCH_PROFILE_PATH } from './fetchRoutes'
+import { FETCH_APP_PATH, FETCH_PROFILE_EDIT_PATH, FETCH_PROFILE_PATH } from './fetchRoutes'
 import { hasEntryAddressSheetAfterSignupRequest } from './fetchEntryAddressOnboarding'
 import { refreshSessionFromSupabase, seedSessionCacheFromSupabaseUser } from './fetchUserSession'
 import { getSupabaseBrowserClient } from './supabase/client'
@@ -46,7 +46,15 @@ export async function handlePostAuthUser(authUser: User, ctx: HandlePostAuthCont
   seedSessionCacheFromSupabaseUser(authUser)
 
   const addressPromptAfterSignup = hasEntryAddressSheetAfterSignupRequest()
-  const path: string = addressPromptAfterSignup ? FETCH_APP_PATH : FETCH_PROFILE_PATH
+  let path: string = addressPromptAfterSignup ? FETCH_APP_PATH : FETCH_PROFILE_PATH
+  try {
+    if (sessionStorage.getItem('fetch.intentAfterAuth') === 'profile-edit') {
+      sessionStorage.removeItem('fetch.intentAfterAuth')
+      path = FETCH_PROFILE_EDIT_PATH
+    }
+  } catch {
+    /* ignore */
+  }
 
   const routeKey = `${authUser.id}|${path}|main`
   if (ctx.lastRouteKeyRef.current !== routeKey) {

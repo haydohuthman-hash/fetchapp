@@ -8,8 +8,15 @@
 
 const FIRST_GIFT_KEY = 'fetch.adventure.firstGiftClaimed.v1'
 const BACKPACK_KEY = 'fetch.backpack.items.v1'
-const PROGRESS_KEY = 'fetch.adventure.progress.v1'
+/** localStorage key for `AdventureProgress` JSON — use for `storage` event filtering elsewhere. */
+export const ADVENTURE_PROGRESS_STORAGE_KEY = 'fetch.adventure.progress.v1'
+const PROGRESS_KEY = ADVENTURE_PROGRESS_STORAGE_KEY
 const MAX_ITEMS = 64
+
+/** Minimum adventure level before Bid Wars surfaces open (Explore quick actions, Activity tab, etc.). */
+export const BID_WARS_UNLOCK_ADVENTURE_LEVEL = 10
+
+export const ADVENTURE_PROGRESS_CHANGED_EVENT = 'fetch-adventure-progress-changed'
 export const FIRST_ADVENTURE_XP_REWARD = 100
 
 export type BackpackItemKind = 'map' | 'gem' | 'pass' | 'boost'
@@ -166,9 +173,14 @@ function persistAdventureProgress(progress: AdventureProgress) {
   if (!w) return
   try {
     w.localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress))
+    w.dispatchEvent(new Event(ADVENTURE_PROGRESS_CHANGED_EVENT))
   } catch {
     /* ignore */
   }
+}
+
+export function isBidWarsAdventureUnlocked(): boolean {
+  return loadAdventureProgress().level >= BID_WARS_UNLOCK_ADVENTURE_LEVEL
 }
 
 export function awardFirstAdventureXp(): AdventureProgress {

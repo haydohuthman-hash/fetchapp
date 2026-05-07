@@ -14,11 +14,15 @@ import { handlePostAuthUser } from './lib/fetchHandlePostAuth'
 import {
   FETCH_APP_PATH,
   FETCH_AUTH_PATH,
+  FETCH_LEGACY_APP_REDIRECT_PATH,
   FETCH_MARKETPLACE_LIST_PATH,
   FETCH_PROFILE_EDIT_PATH,
   FETCH_PROFILE_PATH,
+  FETCH_SHOP_PATH,
+  FETCH_SHOP_SETUP_PATH,
   FETCH_WALLET_ADD_CREDITS_PATH,
   FETCH_WALLET_CASH_OUT_PATH,
+  FETCH_WALLET_TRANSACTIONS_PATH,
   FETCH_GEMS_PATH,
 } from './lib/fetchRoutes'
 import { tryDevAutoSignIn } from './lib/fetchDevAutoSignIn'
@@ -34,9 +38,8 @@ import { setAuthState } from './lib/authState'
 import { FetchVoiceProvider } from './voice/FetchVoiceContext'
 import { FetchAppShellSuspenseFallback } from './components/FetchAppShellSuspenseFallback'
 import { FetchAppBottomNav } from './components/FetchAppBottomNav'
+import { FetchNavRouteSlide } from './components/FetchNavRouteSlide'
 import { FetchBoomerangSplash } from './components/FetchBoomerangSplash'
-import { FetchPremiumPageSkeleton, useOneTimePageSkeleton } from './components/FetchPremiumPageSkeleton'
-
 const homeChunk = () => import('./views/HomeView')
 const HomeView = lazy(homeChunk)
 
@@ -46,8 +49,8 @@ const AuthScreen = lazy(authChunk)
 const driverChunk = () => import('./views/DriverDashboardView')
 const DriverDashboardView = lazy(driverChunk)
 
-const fetchProfilePageChunk = () => import('./views/FetchProfilePage')
-const FetchProfilePage = lazy(fetchProfilePageChunk)
+const accountPageChunk = () => import('./views/AccountPage')
+const AccountPage = lazy(accountPageChunk)
 const fetchProfileEditChunk = () => import('./views/FetchProfileEditView')
 const FetchProfileEditView = lazy(fetchProfileEditChunk)
 const fetchMarketplaceListingCreateChunk = () => import('./views/FetchMarketplaceListingCreateView')
@@ -56,6 +59,12 @@ const fetchWalletPlaceholderChunk = () => import('./views/FetchWalletPlaceholder
 const FetchWalletPlaceholderView = lazy(fetchWalletPlaceholderChunk)
 const fetchGemsChunk = () => import('./views/FetchGemsView')
 const FetchGemsView = lazy(fetchGemsChunk)
+const fetchWalletTransactionsChunk = () => import('./views/FetchWalletTransactionsView')
+const FetchWalletTransactionsView = lazy(fetchWalletTransactionsChunk)
+const fetchShopPageChunk = () => import('./views/FetchShopPageView')
+const FetchShopPageView = lazy(fetchShopPageChunk)
+const fetchShopSetupChunk = () => import('./views/FetchShopSetupView')
+const FetchShopSetupView = lazy(fetchShopSetupChunk)
 
 type AppPhase = 'splash' | 'home' | 'auth' | 'driver'
 type PostAuthTrace = {
@@ -114,6 +123,11 @@ function App() {
   const location = useLocation()
   const pathname = location.pathname
 
+  useEffect(() => {
+    if (pathname !== FETCH_LEGACY_APP_REDIRECT_PATH) return
+    navigate(FETCH_APP_PATH, { replace: true })
+  }, [navigate, pathname])
+
   const [phase, setPhase] = useState<AppPhase>(initialAppPhase)
   const [entrySplashDone, setEntrySplashDone] = useState(fetchAppSplashHandoffDone)
   /** First `getSession` + `refreshSessionFromSupabase` pass completed (non-blocking; used for routing + logs). */
@@ -121,13 +135,16 @@ function App() {
   const [authSessionUserId, setAuthSessionUserId] = useState<string | null>(null)
 
   const isHomeProfileSurface =
-    Boolean(authSessionUserId) &&
-    (pathname === FETCH_PROFILE_PATH ||
-      pathname === FETCH_PROFILE_EDIT_PATH ||
-      pathname === FETCH_MARKETPLACE_LIST_PATH ||
-      pathname === FETCH_WALLET_CASH_OUT_PATH ||
-      pathname === FETCH_WALLET_ADD_CREDITS_PATH ||
-      pathname === FETCH_GEMS_PATH)
+    pathname === FETCH_WALLET_TRANSACTIONS_PATH ||
+    pathname === FETCH_SHOP_PATH ||
+    pathname === FETCH_SHOP_SETUP_PATH ||
+    pathname === FETCH_PROFILE_PATH ||
+    pathname === FETCH_PROFILE_EDIT_PATH ||
+    (Boolean(authSessionUserId) &&
+      (pathname === FETCH_MARKETPLACE_LIST_PATH ||
+        pathname === FETCH_WALLET_CASH_OUT_PATH ||
+        pathname === FETCH_WALLET_ADD_CREDITS_PATH ||
+        pathname === FETCH_GEMS_PATH))
   /**
    * When false, ignore post-auth phase jumps from onAuthStateChange so splash can finish and session cache can hydrate.
    * Seed from module splash flag so React Strict Mode remounts after handoff don’t stay “locked” on home.
@@ -174,13 +191,12 @@ function App() {
     applyFetchDevDemoLocalBootstrap()
   }, [authSessionUserId])
 
-  /** Require auth for profile / sell / wallet surfaces. */
+  /** Require auth for sell / wallet / gems (not profile — profile always loads). */
   useEffect(() => {
     if (!shellHydrateDone) return
     const gated =
-      pathname === FETCH_PROFILE_PATH ||
-      pathname === FETCH_PROFILE_EDIT_PATH ||
       pathname === FETCH_MARKETPLACE_LIST_PATH ||
+      pathname === FETCH_SHOP_SETUP_PATH ||
       pathname === FETCH_WALLET_CASH_OUT_PATH ||
       pathname === FETCH_WALLET_ADD_CREDITS_PATH ||
       pathname === FETCH_GEMS_PATH
@@ -194,6 +210,14 @@ function App() {
     pathname,
     navigate,
   ])
+
+  /** Deep link or in-app navigation to `/auth` must show the auth shell. */
+  useEffect(() => {
+    if (!shellHydrateDone) return
+    if (pathname === FETCH_AUTH_PATH && !authSessionUserId) {
+      setPhase('auth')
+    }
+  }, [shellHydrateDone, pathname, authSessionUserId])
 
   const finalizePostAuthTrace = useCallback((reason: string) => {
     const t = postAuthTraceRef.current
@@ -247,6 +271,8 @@ function App() {
     void homeChunk()
     void authChunk()
     void driverChunk()
+    void fetchShopPageChunk()
+    void fetchShopSetupChunk()
   }, [])
 
   /** Warm home chunk while user is on sign-in so post-auth transition feels instant. */
@@ -398,12 +424,6 @@ function App() {
   }, [navigate, pathname, runPostAuth, startPostAuthTrace])
 
   const goAccountFromHome = useCallback(() => {
-    if (!loadSession()?.email?.trim()) {
-      console.log('[ROUTE] open auth (no session cache)')
-      navigate(FETCH_AUTH_PATH, { replace: true })
-      setPhase('auth')
-      return
-    }
     navigate(FETCH_PROFILE_PATH, { replace: true })
     setPhase('home')
   }, [navigate])
@@ -443,82 +463,99 @@ function App() {
     }
     if (phase === 'home') {
       const isProfileSurface =
-        Boolean(authSessionUserId) &&
-        (pathname === FETCH_PROFILE_PATH ||
-          pathname === FETCH_PROFILE_EDIT_PATH ||
-          pathname === FETCH_MARKETPLACE_LIST_PATH ||
-          pathname === FETCH_WALLET_CASH_OUT_PATH ||
-          pathname === FETCH_WALLET_ADD_CREDITS_PATH ||
-          pathname === FETCH_GEMS_PATH)
+        pathname === FETCH_WALLET_TRANSACTIONS_PATH ||
+        pathname === FETCH_SHOP_PATH ||
+        pathname === FETCH_SHOP_SETUP_PATH ||
+        pathname === FETCH_PROFILE_PATH ||
+        pathname === FETCH_PROFILE_EDIT_PATH ||
+        (Boolean(authSessionUserId) &&
+          (pathname === FETCH_MARKETPLACE_LIST_PATH ||
+            pathname === FETCH_WALLET_CASH_OUT_PATH ||
+            pathname === FETCH_WALLET_ADD_CREDITS_PATH ||
+            pathname === FETCH_GEMS_PATH))
 
       if (isProfileSurface) {
         return (
           <>
-            <Suspense
-              fallback={
-                <FetchAppShellSuspenseFallback title="Loading…" subtitle="Preparing your marketplace profile." />
-              }
-            >
-              <div className="pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))]">
-                {pathname === FETCH_GEMS_PATH ? (
-                  <FetchGemsView onBack={() => navigate(FETCH_APP_PATH)} />
-                ) : pathname === FETCH_PROFILE_PATH ? (
-                  <FetchProfilePage
-                    onOpenApp={() => navigate(FETCH_APP_PATH)}
-                    onOpenDrops={() => {
-                      navigate(FETCH_APP_PATH)
-                    }}
-                    onEditProfile={() => navigate(FETCH_PROFILE_EDIT_PATH)}
-                    onListItem={() => navigate(FETCH_MARKETPLACE_LIST_PATH)}
-                    onEditListing={(listingId) =>
-                      navigate(`${FETCH_MARKETPLACE_LIST_PATH}?edit=${encodeURIComponent(listingId)}`)
-                    }
-                    onCashOut={() => navigate(FETCH_WALLET_CASH_OUT_PATH)}
-                    onAddCredits={() => navigate(FETCH_WALLET_ADD_CREDITS_PATH)}
-                  />
-                ) : pathname === FETCH_PROFILE_EDIT_PATH ? (
-                  <FetchProfileEditView onDone={() => navigate(FETCH_PROFILE_PATH, { replace: true })} />
-                ) : pathname === FETCH_MARKETPLACE_LIST_PATH ? (
-                  <FetchMarketplaceListingCreateView onDone={() => navigate(FETCH_PROFILE_PATH, { replace: true })} />
-                ) : (
-                  <FetchWalletPlaceholderView
-                    variant={pathname === FETCH_WALLET_CASH_OUT_PATH ? 'cashOut' : 'credits'}
-                    onBack={() => navigate(FETCH_PROFILE_PATH)}
-                  />
-                )}
-              </div>
-            </Suspense>
+            <FetchNavRouteSlide pathname={pathname}>
+              <Suspense
+                fallback={
+                  <FetchAppShellSuspenseFallback title="Loading…" subtitle="Preparing your marketplace profile." />
+                }
+              >
+                <div
+                  className={
+                    pathname === FETCH_PROFILE_PATH
+                      ? ''
+                      : 'pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))]'
+                  }
+                >
+                  {pathname === FETCH_GEMS_PATH ? (
+                    <FetchGemsView onBack={() => navigate(FETCH_APP_PATH)} />
+                  ) : pathname === FETCH_WALLET_TRANSACTIONS_PATH ? (
+                    <FetchWalletTransactionsView onBack={() => navigate(FETCH_APP_PATH)} />
+                  ) : pathname === FETCH_SHOP_SETUP_PATH ? (
+                    <FetchShopSetupView />
+                  ) : pathname === FETCH_SHOP_PATH ? (
+                    <FetchShopPageView />
+                  ) : pathname === FETCH_PROFILE_PATH ? (
+                    <AccountPage />
+                  ) : pathname === FETCH_PROFILE_EDIT_PATH ? (
+                    <FetchProfileEditView onDone={() => navigate(FETCH_PROFILE_PATH, { replace: true })} />
+                  ) : pathname === FETCH_MARKETPLACE_LIST_PATH ? (
+                    <FetchMarketplaceListingCreateView onDone={() => navigate(FETCH_PROFILE_PATH, { replace: true })} />
+                  ) : (
+                    <FetchWalletPlaceholderView
+                      variant={pathname === FETCH_WALLET_CASH_OUT_PATH ? 'cashOut' : 'credits'}
+                      onBack={() => navigate(FETCH_PROFILE_PATH)}
+                    />
+                  )}
+                </div>
+              </Suspense>
+            </FetchNavRouteSlide>
             <FetchAppBottomNav />
           </>
         )
       }
 
       return (
-        <Suspense
-          fallback={<div className="min-h-dvh min-h-[100dvh] w-full bg-white" aria-hidden />}
-        >
-          <HomeView onAccountNavigate={goAccountFromHome} />
-        </Suspense>
+        <FetchNavRouteSlide pathname={pathname}>
+          <Suspense
+            fallback={<div className="min-h-dvh min-h-[100dvh] w-full bg-white" aria-hidden />}
+          >
+            <HomeView onAccountNavigate={goAccountFromHome} />
+          </Suspense>
+        </FetchNavRouteSlide>
       )
     }
     if (phase === 'auth') {
+      const guestShell = !authSessionUserId
       return (
-        <Suspense
-          fallback={
-            <FetchAppShellSuspenseFallback
-              title="Opening sign in…"
-              subtitle="Securely loading your account options."
-            />
-          }
-        >
-          <AuthScreen
-            onBack={() => {
-              navigate(FETCH_APP_PATH, { replace: true })
-              setPhase('home')
-            }}
-            onSignedIn={onSignedIn}
-          />
-        </Suspense>
+        <>
+          <FetchNavRouteSlide pathname={pathname}>
+            <div
+              className={guestShell ? 'pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))]' : undefined}
+            >
+              <Suspense
+                fallback={
+                  <FetchAppShellSuspenseFallback
+                    title="Opening sign in…"
+                    subtitle="Securely loading your account options."
+                  />
+                }
+              >
+                <AuthScreen
+                  onBack={() => {
+                    navigate(FETCH_APP_PATH, { replace: true })
+                    setPhase('home')
+                  }}
+                  onSignedIn={onSignedIn}
+                />
+              </Suspense>
+            </div>
+          </FetchNavRouteSlide>
+          {guestShell ? <FetchAppBottomNav /> : null}
+        </>
       )
     }
     console.log('[AUTH] blank-screen guard triggered', { phase })
@@ -531,8 +568,6 @@ function App() {
   })()
 
   const homeLightShell = phase === 'home' && !isHomeProfileSurface
-  const pageSkeletonKey = `${phase}:${pathname}`
-  const showPageSkeleton = useOneTimePageSkeleton(pageSkeletonKey, entrySplashDone)
 
   return (
     <FetchVoiceProvider>
@@ -541,7 +576,7 @@ function App() {
       ) : null}
       <div
         className={[
-          'fetch-app-shell-bg relative flex min-h-dvh min-h-[100dvh] w-full justify-center',
+          'fetch-app-shell-bg relative flex min-h-dvh min-h-[100dvh] w-full min-w-0 max-w-full justify-center overflow-x-clip',
           !entrySplashDone ? 'invisible' : '',
           homeLightShell ? 'fetch-app-shell--home-light' : '',
         ]
@@ -550,7 +585,7 @@ function App() {
       >
         <div
           className={[
-            'fetch-app-shell-inner relative z-[1] mx-auto min-h-dvh min-h-[100dvh] w-full max-w-[1024px] overflow-x-clip overflow-y-visible',
+            'fetch-app-shell-inner relative z-[1] mx-auto min-h-dvh min-h-[100dvh] w-full min-w-0 max-w-[1024px] overflow-x-clip overflow-y-visible',
             homeLightShell ? 'fetch-app-shell--home-light' : '',
           ]
             .filter(Boolean)
@@ -559,7 +594,6 @@ function App() {
           {phaseBody}
         </div>
       </div>
-      <FetchPremiumPageSkeleton visible={showPageSkeleton} />
     </FetchVoiceProvider>
   )
 }

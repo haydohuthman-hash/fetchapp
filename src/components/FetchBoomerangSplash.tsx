@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import fetchitSplashLogoUrl from '../assets/fetchit-splash-logo.png'
+import fetchitSplashLogoUrl from '../assets/fetchit-app-entry-splash.png'
 
 function StaticEntryBrand() {
   return (

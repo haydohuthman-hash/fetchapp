@@ -38,6 +38,22 @@ body,
   margin: 0;
   padding: 0;
   background-color: var(--fetch-bottom-nav-chrome);
+  max-width: 100%;
+  overflow-x: clip;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+#root {
+  min-width: 0;
 }
 
 body {
@@ -49,9 +65,12 @@ body {
   display: flex;
   min-height: 100dvh;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   justify-content: center;
   align-items: flex-start;
   background-color: #f8f6fd;
+  overflow-x: clip;
 }
 
 html[data-fetch-theme='light'] .fetch-home-phone-stage {
@@ -62,6 +81,7 @@ html[data-fetch-theme='light'] .fetch-home-phone-stage {
   position: relative;
   width: 100%;
   max-width: var(--fetch-home-frame-max-w);
+  min-width: 0;
   /* Avoid transform: it would make fixed descendants (bottom nav host) relative to this frame, not the viewport. */
   isolation: isolate;
   overflow-x: clip;
@@ -1217,6 +1237,29 @@ html[data-fetch-theme='light'] .fetch-home-phone-stage {
   }
 }
 
+/* Bottom nav / home shell — 400ms ease, gentle offset (matches FetchNavRouteSlide SLIDE_MS) */
+@keyframes fetch-nav-slide-in-from-right {
+  from {
+    opacity: 0.97;
+    transform: translate3d(10vw, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fetch-nav-slide-in-from-left {
+  from {
+    opacity: 0.97;
+    transform: translate3d(-10vw, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 @keyframes fetch-reels-tab-splash-in-from-right {
   from {
     transform: translate3d(100%, 0, 0);
@@ -1278,13 +1321,25 @@ html[data-fetch-theme='light'] .fetch-home-phone-stage {
     animation: fetch-reels-tab-splash-out-to-left 0.32s cubic-bezier(0.4, 0, 0.8, 0.4) both;
   }
 
+  .fetch-nav-route-slide--enter-from-right {
+    animation: fetch-nav-slide-in-from-right 400ms
+      cubic-bezier(0.2, 0.82, 0.16, 1) both;
+  }
+
+  .fetch-nav-route-slide--enter-from-left {
+    animation: fetch-nav-slide-in-from-left 400ms
+      cubic-bezier(0.2, 0.82, 0.16, 1) both;
+  }
+
   /* Home shell page route transitions (forward/back from bottom nav tab clicks). */
   .fetch-home-shell-route-enter--from-right {
-    animation: fetch-reels-feed-tab-in-from-right 0.34s cubic-bezier(0.22, 0.88, 0.24, 1) both;
+    animation: fetch-nav-slide-in-from-right 400ms
+      cubic-bezier(0.2, 0.82, 0.16, 1) both;
   }
 
   .fetch-home-shell-route-enter--from-left {
-    animation: fetch-reels-feed-tab-in-from-left 0.34s cubic-bezier(0.22, 0.88, 0.24, 1) both;
+    animation: fetch-nav-slide-in-from-left 400ms
+      cubic-bezier(0.2, 0.82, 0.16, 1) both;
   }
 }
 
@@ -1300,6 +1355,13 @@ html[data-fetch-theme='light'] .fetch-home-phone-stage {
 @media (prefers-reduced-motion: reduce) {
   .fetch-reels-feed-tab-enter--from-right,
   .fetch-reels-feed-tab-enter--from-left {
+    animation: none;
+  }
+
+  .fetch-nav-route-slide--enter-from-right,
+  .fetch-nav-route-slide--enter-from-left,
+  .fetch-home-shell-route-enter--from-right,
+  .fetch-home-shell-route-enter--from-left {
     animation: none;
   }
 
@@ -2928,6 +2990,103 @@ html[data-fetch-theme='light'] .fetch-home-vision .fetch-fetch-speech-glow-wave-
 
 .fetch-home-search-cta:active .fetch-home-search-cta-ripple {
   animation: fetch-search-ripple 0.26s ease-out both;
+}
+
+@keyframes fetch-explore-watch-lives-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.07);
+  }
+}
+
+@keyframes fetch-explore-watch-lives-red-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgb(239 68 68 / 0),
+      0 0 6px rgb(239 68 68 / 0.12);
+  }
+  50% {
+    box-shadow:
+      0 0 0 8px rgb(239 68 68 / 0),
+      0 0 18px rgb(239 68 68 / 0.45);
+  }
+}
+
+.fetch-explore-watch-lives-icon-pulse {
+  animation: fetch-explore-watch-lives-red-glow 2s ease-in-out infinite;
+}
+
+.fetch-explore-watch-lives-icon-pulse > svg {
+  transform-origin: center;
+  animation: fetch-explore-watch-lives-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fetch-explore-watch-lives-icon-pulse {
+    animation: none;
+    box-shadow: none;
+  }
+  .fetch-explore-watch-lives-icon-pulse > svg {
+    animation: none;
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fetch-explore-gift-glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 1px 3px rgb(24 24 27 / 0.06),
+      0 0 0 1px rgb(228 228 231 / 0.7),
+      0 0 0 0 rgb(167 139 250 / 0),
+      inset 0 1px 0 rgb(255 255 255 / 0.55);
+  }
+  50% {
+    box-shadow:
+      0 2px 5px rgb(24 24 27 / 0.08),
+      0 0 0 1px rgb(196 181 253 / 0.95),
+      0 0 22px 7px rgb(139 92 246 / 0.55),
+      inset 0 1px 0 rgb(255 255 255 / 0.6);
+  }
+}
+
+.fetch-explore-gift-pulse {
+  animation: fetch-explore-gift-glow-pulse 2.35s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fetch-explore-gift-pulse {
+    animation: none;
+    box-shadow:
+      0 1px 3px rgb(24 24 27 / 0.06),
+      0 0 0 1px rgb(228 228 231 / 0.65);
+  }
+}
+
+/* Hunt + streak hero chips — solid white, flat hairline outline */
+.fetch-explore-hunt-chip__root {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px #e4e4e7;
+}
+
+.fetch-explore-hunt-chip__root--end-hunt {
+  background: #ffffff;
+  box-shadow: 0 0 0 1px #fecaca;
+}
+
+.fetch-explore-hunt-chip__circle {
+  position: relative;
+  overflow: hidden;
 }
 
 @keyframes fetch-fab-ring-wave {
@@ -6900,6 +7059,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-phone-stage {
   background-color: #f8f6fd !important;
   color: #1c1528 !important;
+  max-width: 100% !important;
+  overflow-x: clip !important;
 }
 
 .fetch-home-vision {
@@ -7456,6 +7617,13 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   .fetch-home-intent-bottom-nav__label {
   color: #4c1d95;
   font-weight: 800;
+}
+
+.fetch-home-phone-stage
+  .fetch-home-intent-bottom-nav--compact
+  .fetch-home-intent-bottom-nav__icon--shop-locked
+  .fetch-home-intent-bottom-nav__label {
+  color: #a1a1aa;
 }
 
 .fetch-home-intent-bottom-nav__icon svg {
@@ -8025,6 +8193,12 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 }
 
 .fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact
+  .fetch-home-intent-bottom-nav__icon--shop-locked
+  .fetch-home-intent-bottom-nav__label {
+  color: #a1a1aa;
+}
+
+.fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav__fab
   .fetch-home-intent-bottom-nav__label {
   display: block !important;
@@ -8110,16 +8284,31 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   background-color: #f8f6fd !important;
 }
 .fetch-app-shell-inner .fetch-home-search-categories__tile {
-  background-color: #ffffff !important;
-  box-shadow: 0 1px 2px rgba(76, 29, 149, 0.05), inset 0 0 0 1px rgba(76, 29, 149, 0.08);
+  aspect-ratio: 4 / 5 !important;
+  min-height: clamp(8.75rem, 28vw, 10.5rem);
+  background-color: #f4f4f5 !important;
+  background-image: none !important;
+  box-shadow: none;
+  border: none;
+  outline: none;
   color: #1c1528;
 }
 .fetch-app-shell-inner .fetch-home-search-categories__tile:hover {
-  box-shadow: 0 6px 18px rgba(76, 29, 149, 0.12), inset 0 0 0 1px rgba(76, 29, 149, 0.16);
+  background-color: #e4e4e7 !important;
+  box-shadow: none;
+  outline: none;
 }
 .fetch-app-shell-inner .fetch-home-search-categories__icon-well {
-  background-image: linear-gradient(140deg, #ede9f6 0%, #d8cdf2 100%) !important;
+  background-color: #e4e4e7 !important;
+  background-image: none !important;
   color: #4c1d95 !important;
+}
+
+/* Search hero on Explore star wallpaper (Lives tab): no frosted strip behind the pill */
+.fetch-app-shell-inner .fetch-home-search-hero.fetch-home-search-hero--explore-wallpaper {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* Search hero: sticky search bar + quick chip rail (light surface) */
@@ -8343,7 +8532,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   background: rgba(255, 255, 255, 0.9) !important;
 }
 
-/* Explore Ask Fetch chip: dark blue wave bars on yellow chip. */
+/* Explore Ask Fetch chip: dark blue wave bars on light chip. */
 .fetch-explore-header-voice-chip .fetch-sound-wave-bars__bar {
   background: #0b1533 !important;
 }

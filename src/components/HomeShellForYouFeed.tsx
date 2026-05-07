@@ -4,6 +4,7 @@ import { loadSession, updateUserProfile } from '../lib/fetchUserSession'
 import {
   addBackpackItem,
   awardFirstAdventureXp,
+  BID_WARS_UNLOCK_ADVENTURE_LEVEL,
   FIRST_ADVENTURE_MAP_ITEM,
   FIRST_ADVENTURE_XP_REWARD,
   loadAdventureProgress,
@@ -52,6 +53,8 @@ import searchRealSportsCardsUrl from '../assets/search-categories-real/sports-ca
 import searchRealToysHobbiesUrl from '../assets/search-categories-real/toys-hobbies.png'
 import searchRealTradingCardGamesUrl from '../assets/search-categories-real/trading-card-games.png'
 import searchRealWomensFashionUrl from '../assets/search-categories-real/womens-fashion.png'
+import { loadAndBumpDailyStreakCount, todayKey } from '../lib/homeDailyStreak'
+import { HOME_PET_PROFILE_CHANGED_EVENT, HOME_PET_PROFILE_STORAGE_KEY } from '../lib/homePetProfileConstants'
 import { playAdventureTrumpets, playConfettiPops, playWinFanfare } from '../lib/fetchBattleSounds'
 import { depositWallet, useWalletBalanceCents } from '../lib/data'
 import { playUiFeedback } from '../voice/fetchFeedback'
@@ -64,16 +67,12 @@ const DAILY_MYSTERY_UNLOCK_GEMS = 200
 const DAILY_REWARD_STORAGE_KEY = 'fetch.home.dailyRewardTasks.v3'
 const DAILY_REWARD_STORAGE_LEGACY_KEY = 'fetch.home.dailyRewardTasks.v2'
 const DEMO_GEMS_STORAGE_KEY = 'fetch.home.demoGems.v1'
-const PET_PROFILE_STORAGE_KEY = 'fetch.home.petProfile.v1'
 const HOME_HERO_DISPLAY_NAME_KEY = 'fetch.home.heroDisplayName.v1'
 const HOME_HERO_GENDER_KEY = 'fetch.home.heroGender.v1'
 const HOME_PET_SLOTS_KEY = 'fetch.home.unlockedPetSlots.v1'
 const STARTER_PET_REVEALED_KEY = 'fetch.home.starterPetRevealed.v1'
 const PET_HUNTS_STORAGE_KEY = 'fetch.home.petHunts.v1'
 const PET_HUNT_MAX_LIVE = 3
-/** Minimum adventure level to open Bid Wars from the Explore quick-action card */
-const BID_WARS_UNLOCK_ADVENTURE_LEVEL = 10
-/** Same tiles as `WHATNOT_SEARCH_CATEGORIES` in HomeView (Search), plus Custom item. */
 const PET_HUNT_CATEGORY_CAROUSEL_ITEMS: ReadonlyArray<{ label: string; image: string }> = [
   { label: 'Events', image: searchRealEventsUrl },
   { label: "Men's Fashion", image: searchRealMensFashionUrl },
@@ -359,57 +358,6 @@ function parseDailyRewardTaskId(value: unknown): DailyRewardTaskId | null {
   return null
 }
 
-function todayKey(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-const DAILY_STREAK_STORAGE_KEY = 'fetch.home.dailyStreak.v1'
-
-type DailyStreakPersisted = {
-  lastDate: string
-  count: number
-}
-
-function calendarDayAddYmd(ymd: string, deltaDays: number): string {
-  const [ys, ms, ds] = ymd.split('-')
-  const y = Number(ys)
-  const m = Number(ms)
-  const d = Number(ds)
-  const dt = new Date(y, m - 1, d + deltaDays)
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
-}
-
-/** Visit-based streak on Home — bumps when the calendar day advances; resets after a missed day. */
-function loadAndBumpDailyStreakCount(): number {
-  const today = todayKey()
-  try {
-    const raw = window.localStorage.getItem(DAILY_STREAK_STORAGE_KEY)
-    const parsed = raw ? (JSON.parse(raw) as Partial<DailyStreakPersisted>) : null
-    const lastDate = typeof parsed?.lastDate === 'string' ? parsed.lastDate : null
-    const prevCount =
-      typeof parsed?.count === 'number' && Number.isFinite(parsed.count) ? Math.max(0, Math.floor(parsed.count)) : 0
-
-    const validLast = lastDate && /^\d{4}-\d{2}-\d{2}$/.test(lastDate) ? lastDate : null
-
-    if (!validLast) {
-      const next: DailyStreakPersisted = { lastDate: today, count: 1 }
-      window.localStorage.setItem(DAILY_STREAK_STORAGE_KEY, JSON.stringify(next))
-      return 1
-    }
-    if (validLast === today) {
-      return Math.max(1, prevCount || 1)
-    }
-    const nextCount =
-      validLast === calendarDayAddYmd(today, -1) ? Math.max(1, prevCount || 1) + 1 : 1
-    const next: DailyStreakPersisted = { lastDate: today, count: nextCount }
-    window.localStorage.setItem(DAILY_STREAK_STORAGE_KEY, JSON.stringify(next))
-    return nextCount
-  } catch {
-    return 1
-  }
-}
-
 function loadDemoGems(): number {
   try {
     const raw = window.localStorage.getItem(DEMO_GEMS_STORAGE_KEY)
@@ -472,7 +420,7 @@ function saveDailyRewardState(next: DailyRewardState) {
 
 function loadPetProfile(): PetProfileState {
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(PET_PROFILE_STORAGE_KEY) || 'null') as Partial<PetProfileState> | null
+    const parsed = JSON.parse(window.localStorage.getItem(HOME_PET_PROFILE_STORAGE_KEY) || 'null') as Partial<PetProfileState> | null
     const legacyName = typeof (parsed as { name?: unknown } | null)?.name === 'string'
       ? String((parsed as { name?: string }).name).trim().slice(0, 16)
       : ''
@@ -506,7 +454,8 @@ function loadPetProfile(): PetProfileState {
 
 function savePetProfile(next: PetProfileState) {
   try {
-    window.localStorage.setItem(PET_PROFILE_STORAGE_KEY, JSON.stringify(next))
+    window.localStorage.setItem(HOME_PET_PROFILE_STORAGE_KEY, JSON.stringify(next))
+    window.dispatchEvent(new Event(HOME_PET_PROFILE_CHANGED_EVENT))
   } catch {
     /* ignore */
   }
@@ -694,7 +643,7 @@ function loadStarterPetRevealed(): boolean {
   try {
     const flagged = window.localStorage.getItem(STARTER_PET_REVEALED_KEY)
     if (flagged === '1') return true
-    if (window.localStorage.getItem(PET_PROFILE_STORAGE_KEY)) {
+    if (window.localStorage.getItem(HOME_PET_PROFILE_STORAGE_KEY)) {
       window.localStorage.setItem(STARTER_PET_REVEALED_KEY, '1')
       return true
     }
@@ -718,7 +667,7 @@ if (typeof window !== 'undefined' && import.meta.env.DEV) {
     const sp = new URLSearchParams(window.location.search)
     if (sp.get('resetStarterPet') === '1') {
       window.localStorage.removeItem(STARTER_PET_REVEALED_KEY)
-      window.localStorage.removeItem(PET_PROFILE_STORAGE_KEY)
+      window.localStorage.removeItem(HOME_PET_PROFILE_STORAGE_KEY)
       sp.delete('resetStarterPet')
       const next = sp.toString()
       const base = `${window.location.pathname}${next ? `?${next}` : ''}${window.location.hash}`

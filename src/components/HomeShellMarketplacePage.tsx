@@ -20,6 +20,7 @@ import { useFetchProducts } from '../lib/useFetchProducts'
 import { formatDropHandle } from '../lib/drops/profileStore'
 import { syncCustomerSessionCookie } from '../lib/fetchServerSession'
 import { loadSession } from '../lib/fetchUserSession'
+import { consumePendingOpenMarketplaceCart } from '../lib/marketplaceCartSnapshot'
 import { useWalletBalanceCents } from '../lib/data'
 import { MARKETPLACE_MOCK_PEER_LISTINGS } from '../lib/marketplaceMockPeerListings'
 import {
@@ -768,6 +769,11 @@ function HomeShellMarketplacePageInner({
     setCartOpenSeq((n) => n + 1)
     setSubView('cart')
   }, [])
+
+  useEffect(() => {
+    if (!consumePendingOpenMarketplaceCart()) return
+    queueMicrotask(() => goCart())
+  }, [goCart])
 
   const dropsProductHandoffDoneRef = useRef<string | null>(null)
   useEffect(() => {

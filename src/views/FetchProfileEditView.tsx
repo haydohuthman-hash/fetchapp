@@ -214,7 +214,7 @@ export default function FetchProfileEditView({ onDone }: FetchProfileEditViewPro
         </label>
 
         <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-red-200/55">
-          Phone <span className="font-normal text-white/35">(optional)</span>
+          Phone <span className="font-normal text-white/35">(orders &amp; verification)</span>
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}

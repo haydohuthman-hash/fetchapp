@@ -6,7 +6,7 @@ import type {
 } from './JarvisNeuralOrb'
 import type { MarketplacePeerBrowseFilter } from './ExploreBrowseBanner'
 import { ExploreAskFetchSheet } from './ExploreAskFetchSheet'
-import { HomeShellForYouFeed } from './HomeShellForYouFeed'
+import { HomeFeedV2 } from './HomeFeedV2'
 import type { DropReel } from '../lib/drops/types'
 
 type OrbChatTurn = { id: string; role: 'user' | 'assistant'; text: string }
@@ -26,6 +26,10 @@ export type ServicesExploreHomePanelProps = {
   onQuickBuyPeerListing: (listingId: string) => void
   /** Hero floating card: opens backpack / cart (defaults to marketplace). */
   onViewBackpack?: () => void
+  /** Wallet card: full transaction history (bank-style account). */
+  onViewTransactions?: () => void
+  onOpenGifts?: () => void
+  onOpenNotifications?: () => void
   /** Opens the Bid Wars hub from the adventure promo. */
   onJoinBidWar?: () => void
   intentOrbHintBubble: boolean
@@ -70,8 +74,11 @@ export function ServicesExploreHomePanel({
   onOpenSearch,
   onOpenMarketplaceBrowse,
   onOpenPeerListing,
-  onQuickBuyPeerListing,
+  onQuickBuyPeerListing: _onQuickBuyPeerListing,
   onViewBackpack,
+  onViewTransactions,
+  onOpenGifts,
+  onOpenNotifications,
   onJoinBidWar,
   intentOrbHintBubble: _intentOrbHintBubble,
   intentOrbHintCopy: _intentOrbHintCopy,
@@ -95,7 +102,7 @@ export function ServicesExploreHomePanel({
   brainImmersive: _brainImmersive,
   showIntent: _showIntent,
   cardVisible: _cardVisible,
-  furniturePromoBleed = 'page',
+  furniturePromoBleed: _furniturePromoBleed = 'page',
   onExploreFeedScrollTop,
 }: ServicesExploreHomePanelProps) {
   const [askFetchOpen, setAskFetchOpen] = useState(false)
@@ -115,9 +122,9 @@ export function ServicesExploreHomePanel({
   flushExploreScroll.current = onExploreFeedScrollTop
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-violet-50/40">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden bg-[#f3f0fa]">
       <div
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-violet-50/40 pb-[max(3.5rem,env(safe-area-inset-bottom,0px)+5.25rem)] [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain bg-[#f3f0fa] pb-[calc(env(safe-area-inset-bottom,0px)+3.5rem)] [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         onScroll={
           onExploreFeedScrollTop
             ? (e) => {
@@ -135,21 +142,25 @@ export function ServicesExploreHomePanel({
             : undefined
         }
       >
-        <HomeShellForYouFeed
-          embedded
-          explorePromoBleed={furniturePromoBleed}
-          onOpenDrops={onOpenDrops}
-          onOpenLiveStream={onOpenLiveStream}
-          onOpenMarketplace={onOpenMarketplace}
-          onOpenMarketplaceAuctions={onOpenMarketplaceAuctions ?? onOpenMarketplace}
-          onOpenMarketplaceShop={onOpenMarketplaceShop ?? onOpenMarketplace}
-          onOpenSearch={onOpenSearch}
-          onOpenMarketplaceBrowse={onOpenMarketplaceBrowse}
-          onOpenPeerListing={onOpenPeerListing}
-          onQuickBuyPeerListing={onQuickBuyPeerListing}
-          onViewBackpack={onViewBackpack}
-          onJoinBidWar={onJoinBidWar}
-        />
+        <div className="flex w-full min-w-0 flex-col">
+          <HomeFeedV2
+            onOpenLiveStream={onOpenLiveStream}
+            onOpenMarketplaceAuctions={onOpenMarketplaceAuctions ?? onOpenMarketplace}
+            onOpenMarketplaceShop={onOpenMarketplaceShop ?? onOpenMarketplace}
+            onViewAllForYou={
+              onOpenMarketplaceBrowse ? () => onOpenMarketplaceBrowse({}) : undefined
+            }
+            onOpenSearch={onOpenSearch}
+            onOpenPeerListing={onOpenPeerListing}
+            onJoinBidWar={onJoinBidWar}
+            onGoLive={onOpenMarketplaceAuctions ?? onOpenMarketplace}
+            onCreateListing={onOpenDrops}
+            onAddHunt={onOpenDrops}
+            onViewWallet={onViewTransactions ?? onViewBackpack}
+            onOpenGifts={onOpenGifts}
+            onOpenNotifications={onOpenNotifications}
+          />
+        </div>
       </div>
 
       <ExploreAskFetchSheet
