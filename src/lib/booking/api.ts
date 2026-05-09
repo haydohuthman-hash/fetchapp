@@ -60,6 +60,7 @@ export type PaymentCardConfirmPayload = {
 
 export type PaymentIntentMetadata =
   | { type: 'hardware'; sku: string; qty?: number }
+  | { type: 'wallet_top_up' }
   | Record<string, unknown>
 
 export async function createPaymentIntent(params: {
@@ -318,7 +319,10 @@ export async function patchMarketplaceOffer(
   return payload.offer
 }
 
-/** Subscribe to marketplace writes (same origin as API). Returns unsubscribe. */
+/**
+ * Subscribe to marketplace writes via SSE (`GET /api/marketplace/stream`).
+ * Uses `withCredentials` when `VITE_FETCH_API_BASE_URL` points at another origin so session cookies flow.
+ */
 export function subscribeMarketplaceStream(onEvent: () => void): () => void {
   if (typeof window === 'undefined' || typeof EventSource === 'undefined') {
     return () => {}
@@ -351,7 +355,7 @@ export function subscribeMarketplaceStream(onEvent: () => void): () => void {
     clearTimer()
     teardownEs()
     const q = lastEventId ? `?lastEventId=${encodeURIComponent(lastEventId)}` : ''
-    es = new EventSource(`${base}${q}`)
+    es = new EventSource(`${base}${q}`, { withCredentials: Boolean(API_ROOT) })
     es.addEventListener('marketplace', (ev) => {
       attempt = 0
       if (ev.lastEventId) lastEventId = ev.lastEventId

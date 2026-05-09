@@ -5,12 +5,12 @@
 html {
   --fetch-chrome-bg: #ffffff;
   --fetch-app-bg: #f8f6fd;
-  --fetch-shell-ring: rgba(76, 29, 149, 0.18);
+  --fetch-shell-ring: rgba(41, 16, 80, 0.18);
   --fetch-map-placeholder-bg: #ede9f6;
   --color-fetch-charcoal: #1c1528;
   --color-fetch-muted: #64748b;
   --color-fetch-soft-gray: #f4f2fa;
-  --orb-glow: 76, 29, 149;
+  --orb-glow: 41, 16, 80;
 }
 
 .fetch-theme-chrome {
@@ -21,12 +21,12 @@ html[data-fetch-theme='light'] {
   /* Global app shell: light theme with dark purple primary */
   --fetch-chrome-bg: #ffffff;
   --fetch-app-bg: #f8f6fd;
-  --fetch-shell-ring: rgba(76, 29, 149, 0.18);
+  --fetch-shell-ring: rgba(41, 16, 80, 0.18);
   --fetch-map-placeholder-bg: #ede9f6;
   --color-fetch-charcoal: #1c1528;
   --color-fetch-muted: #64748b;
   --color-fetch-soft-gray: #f4f2fa;
-  --orb-glow: 76, 29, 149;
+  --orb-glow: 41, 16, 80;
 }
 
 /* --- Account / auth chrome --- */

@@ -30,7 +30,7 @@ export function BidButton({
       onClick={onPress}
       disabled={busy || disabled}
       className={[
-        'fetch-auth-cta inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(76,29,149,0.55),inset_0_1px_0_rgba(255,255,255,0.25)] ring-1 ring-white/10 transition-transform active:scale-[0.985] disabled:opacity-55',
+        'fetch-auth-cta inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-b from-[#7c3aed] via-[#4f1d93] to-[#291050] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(41,16,80,0.55),inset_0_1px_0_rgba(255,255,255,0.25)] ring-1 ring-white/10 transition-transform active:scale-[0.985] disabled:opacity-55',
         fullWidth ? 'w-full' : '',
         padding,
         text,

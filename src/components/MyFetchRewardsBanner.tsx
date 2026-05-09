@@ -62,8 +62,8 @@ export function MyFetchRewardsBanner({
         }}
         className={
           stack
-            ? 'mt-1.5 w-full rounded-xl bg-[#7c3aed] px-3 py-2 text-[10px] font-black uppercase tracking-[0.09em] text-white shadow-[0_4px_14px_-8px_rgba(76,29,149,0.45)] transition-transform active:scale-[0.99]'
-            : 'mt-2 w-full rounded-xl bg-[#7c3aed] px-3 py-2.5 text-[11px] font-black uppercase tracking-[0.08em] text-white shadow-[0_4px_14px_-8px_rgba(76,29,149,0.45)] transition-transform active:scale-[0.99]'
+            ? 'mt-1.5 w-full rounded-xl bg-[#7c3aed] px-3 py-2 text-[10px] font-black uppercase tracking-[0.09em] text-white shadow-[0_4px_14px_-8px_rgba(41,16,80,0.45)] transition-transform active:scale-[0.99]'
+            : 'mt-2 w-full rounded-xl bg-[#7c3aed] px-3 py-2.5 text-[11px] font-black uppercase tracking-[0.08em] text-white shadow-[0_4px_14px_-8px_rgba(41,16,80,0.45)] transition-transform active:scale-[0.99]'
         }
       >
         Add funds

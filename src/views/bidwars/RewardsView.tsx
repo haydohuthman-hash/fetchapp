@@ -21,7 +21,7 @@ export default function RewardsView({ onBack, onInvite }: Props) {
     <div className="mx-auto flex min-h-dvh w-full max-w-[min(100%,430px)] flex-col bg-[#f8f6fd]">
       <AppHeader title="Rewards" subtitle="Level up, win more" showBack onBack={onBack} />
       <main className="flex flex-1 flex-col gap-3 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] pt-3">
-        <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-[#7c3aed] via-[#5b21b6] to-[#3b0764] p-5 text-white shadow-[0_24px_48px_-22px_rgba(76,29,149,0.7)]">
+        <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-[#7c3aed] via-[#5b21b6] to-[#3b0764] p-5 text-white shadow-[0_24px_48px_-22px_rgba(41,16,80,0.7)]">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/70">Level</p>
@@ -76,7 +76,7 @@ export default function RewardsView({ onBack, onInvite }: Props) {
           <button
             type="button"
             onClick={onInvite}
-            className="mt-3 w-full rounded-full bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] py-3 text-[13px] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(76,29,149,0.55)] ring-1 ring-white/10 active:scale-[0.985]"
+            className="mt-3 w-full rounded-full bg-gradient-to-b from-[#7c3aed] via-[#4f1d93] to-[#291050] py-3 text-[13px] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(41,16,80,0.55)] ring-1 ring-white/10 active:scale-[0.985]"
           >
             Invite friends
           </button>

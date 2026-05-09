@@ -10,7 +10,7 @@ import { playUiFeedback } from '../voice/fetchFeedback'
 const GOOGLE_MAP_LIBRARIES: ('places' | 'geometry')[] = ['places', 'geometry']
 
 const brandedInputClass =
-  'w-full rounded-2xl border border-[#4c1d95]/25 bg-white px-3.5 py-3.5 text-[15px] font-semibold leading-snug text-zinc-900 shadow-[0_10px_24px_-18px_rgba(76,29,149,0.45)] outline-none ring-0 placeholder:text-zinc-400 focus:border-[#4c1d95] focus:ring-2 focus:ring-[#c4b5fd]/80'
+  'w-full rounded-2xl border border-[#291050]/25 bg-white px-3.5 py-3.5 text-[15px] font-semibold leading-snug text-zinc-900 shadow-[0_10px_24px_-18px_rgba(41,16,80,0.45)] outline-none ring-0 placeholder:text-zinc-400 focus:border-[#291050] focus:ring-2 focus:ring-[#c4b5fd]/80'
 
 const GEM_REWARD_COUNT = 100
 const CONFETTI_COUNT = 60
@@ -212,7 +212,7 @@ function SignInPrompt({ gift, onSignIn, onSkip }: { gift: string; onSignIn: () =
   const giftLabel = gift === 'free_travel' ? '$0 Travel Fee' : 'Seller Boost'
   return (
     <div className="relative z-[5] flex min-h-0 flex-1 flex-col items-center justify-center gap-5 px-5 py-6 animate-[fetch-phase-fade-in_0.5s_ease_both]">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-400/25 to-[#4c1d95]/20">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-400/25 to-[#291050]/20">
         <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden>
           <path
             d="M7.15 4.75h9.7l3.35 5.1L12 20.1 3.8 9.85l3.35-5.1z"
@@ -377,7 +377,7 @@ function FetchEntryAddressSheetShell({
           'pointer-events-auto relative mx-auto flex w-full flex-col',
           isFullScreen
             ? 'fetch-entry-galactic max-w-lg flex-1 overflow-hidden rounded-none'
-            : 'max-w-lg max-h-[min(92dvh,720px)] overflow-visible rounded-t-[1.5rem] bg-[#faf8ff] shadow-[0_-18px_52px_-24px_rgba(76,29,149,0.45)] ring-1 ring-[#4c1d95]/12 animate-[fetch-galactic-sheet-up_0.5s_cubic-bezier(0.22,1,0.36,1)_both]',
+            : 'max-w-lg max-h-[min(92dvh,720px)] overflow-visible rounded-t-[1.5rem] bg-[#faf8ff] shadow-[0_-18px_52px_-24px_rgba(41,16,80,0.45)] ring-1 ring-[#291050]/12 animate-[fetch-galactic-sheet-up_0.5s_cubic-bezier(0.22,1,0.36,1)_both]',
         ].join(' ')}
         style={isFullScreen ? undefined : { paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
@@ -400,7 +400,7 @@ function FetchEntryAddressSheetShell({
         {phase === 'address' || isGemPhase ? (
           <>
             <div className="relative z-[10] flex shrink-0 justify-center pt-3 pb-2" aria-hidden>
-              <span className="h-1 w-10 rounded-full bg-[#4c1d95]/18" />
+              <span className="h-1 w-10 rounded-full bg-[#291050]/18" />
         </div>
             <div className={`relative z-[10] flex min-h-0 flex-1 flex-col gap-4 px-5 pb-5 pt-2 transition-[filter,opacity] duration-500 ${isGemPhase ? 'pointer-events-none blur-[6px] opacity-60' : 'blur-0 opacity-100'}`}>
               <div className="space-y-2">
@@ -408,7 +408,7 @@ function FetchEntryAddressSheetShell({
                   Where should we deliver?
             </h2>
                 <p className="text-[13px] font-medium leading-snug text-zinc-500">
-                  Enter your address to <span className="font-extrabold text-[#4c1d95]">collect 100 gems</span>.
+                  Enter your address to <span className="font-extrabold text-[#291050]">collect 100 gems</span>.
             </p>
           </div>
 
@@ -440,7 +440,7 @@ function FetchEntryAddressSheetShell({
 
               <div className="mt-auto flex flex-col gap-2.5 pt-2">
             {hasMapsKey ? (
-                  <button type="button" onClick={useCurrentLocation} disabled={!mapsReady || locBusy} className="self-start text-[12px] font-bold text-[#4c1d95]/75 underline decoration-[#4c1d95]/25 underline-offset-[3px] transition-colors hover:text-[#4c1d95] disabled:cursor-not-allowed disabled:opacity-35">
+                  <button type="button" onClick={useCurrentLocation} disabled={!mapsReady || locBusy} className="self-start text-[12px] font-bold text-[#291050]/75 underline decoration-[#291050]/25 underline-offset-[3px] transition-colors hover:text-[#291050] disabled:cursor-not-allowed disabled:opacity-35">
                     {locBusy ? 'Locating...' : 'Use current address'}
               </button>
             ) : null}
@@ -455,7 +455,7 @@ function FetchEntryAddressSheetShell({
                   className={[
                     'flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-extrabold tracking-tight transition-[transform,background-color,box-shadow,color] duration-300 active:scale-[0.98]',
                     hasAddress
-                      ? 'bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] text-white shadow-[0_18px_34px_-18px_rgba(76,29,149,0.65),inset_0_1px_0_rgba(255,255,255,0.22)] hover:brightness-105'
+                      ? 'bg-gradient-to-b from-[#7c3aed] via-[#4f1d93] to-[#291050] text-white shadow-[0_18px_34px_-18px_rgba(41,16,80,0.65),inset_0_1px_0_rgba(255,255,255,0.22)] hover:brightness-105'
                       : 'cursor-not-allowed bg-zinc-200 text-zinc-400 shadow-none',
                   ].join(' ')}
                 >
@@ -466,7 +466,7 @@ function FetchEntryAddressSheetShell({
                   Collect gems
             </button>
 
-                <button type="button" onClick={onDismiss} className="w-full py-1.5 text-center text-[12px] font-bold text-zinc-400 transition-colors hover:text-[#4c1d95]/75">
+                <button type="button" onClick={onDismiss} className="w-full py-1.5 text-center text-[12px] font-bold text-zinc-400 transition-colors hover:text-[#291050]/75">
               Not now
             </button>
           </div>

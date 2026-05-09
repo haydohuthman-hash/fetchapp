@@ -28,6 +28,14 @@ import {
   useGemBalance,
   useIsVipActive,
 } from '../../lib/data'
+import {
+  earnTaskStartedAtMs,
+  POKIES_VERIFIED_TASK_IDS,
+  readListItemPublishedAtMs,
+  recordEarnTaskStartedAt,
+  setWatchLiveEarnBaselineFromNow,
+  watchLiveEarnProgressSeconds,
+} from '../../lib/tasks/earnTaskSignals'
 import bidBoostIcon from '../../assets/pokies-icons/bid-boost.png'
 import fastBidIcon from '../../assets/pokies-icons/fast-bid.png'
 import freeShippingIcon from '../../assets/pokies-icons/free-shipping.png'
@@ -1138,7 +1146,7 @@ export function PokiesGame({ open, onClose, onEarnTask }: Props) {
                 className={[
                   'fetch-pokies-floater rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.08em] ring-1',
                   f.tone === 'gem'
-                    ? 'bg-violet-100 text-[#4c1d95] ring-violet-300'
+                    ? 'bg-violet-100 text-[#291050] ring-violet-300'
                     : 'bg-amber-100 text-amber-800 ring-amber-300',
                 ].join(' ')}
               >
@@ -1165,7 +1173,7 @@ export function PokiesGame({ open, onClose, onEarnTask }: Props) {
               'fetch-pokies-spin-btn flex w-full items-center justify-center rounded-[1.25rem] border py-2.5 text-white shadow-[0_0_34px_rgba(168,85,247,0.75),inset_0_2px_0_rgba(255,255,255,0.28)] active:scale-[0.98] disabled:opacity-70',
               bonusActive
                 ? 'border-amber-200/65 bg-gradient-to-b from-yellow-300 via-amber-400 to-violet-600 text-zinc-950'
-                : 'border-white/35 bg-gradient-to-b from-[#e879f9] via-[#7c3aed] to-[#4c1d95]',
+                : 'border-white/35 bg-gradient-to-b from-[#e879f9] via-[#7c3aed] to-[#291050]',
               spinning ? 'fetch-pokies-spin-btn--charging' : '',
             ].join(' ')}
           >
@@ -1231,7 +1239,7 @@ export function PokiesGame({ open, onClose, onEarnTask }: Props) {
         <button
           type="button"
           onClick={() => setOutOfGemsOpen(true)}
-          className="mt-1.5 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#a855f7] via-[#7c3aed] to-[#4c1d95] px-4 py-2 text-[12px] font-black uppercase tracking-[0.1em] text-white shadow-[0_12px_28px_-12px_rgba(168,85,247,0.85)] active:scale-[0.98]"
+          className="mt-1.5 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#a855f7] via-[#7c3aed] to-[#291050] px-4 py-2 text-[12px] font-black uppercase tracking-[0.1em] text-white shadow-[0_12px_28px_-12px_rgba(168,85,247,0.85)] active:scale-[0.98]"
         >
           <img src={gemIcon} alt="" className="h-4 w-4 object-contain" />
           Get more gems
@@ -1981,6 +1989,18 @@ function saveEarnTaskState(state: Record<string, EarnTaskStatus>) {
   }
 }
 
+function canClaimEarnTask(t: EarnTask): boolean {
+  if (t.id === 'list_item') {
+    const started = earnTaskStartedAtMs('list_item')
+    const pub = readListItemPublishedAtMs()
+    return started > 0 && pub > 0 && pub >= started
+  }
+  if (t.id === 'watch_live') {
+    return watchLiveEarnProgressSeconds() >= 300
+  }
+  return false
+}
+
 function FreeSpinsEarnCard({
   freeSpins,
   onClaim,
@@ -1992,6 +2012,7 @@ function FreeSpinsEarnCard({
 }) {
   const [statuses, setStatuses] = useState<Record<string, EarnTaskStatus>>(() => loadEarnTaskState())
   const [open, setOpen] = useState(false)
+  const [, watchTick] = useState(0)
 
   const updateStatus = (id: string, status: EarnTaskStatus) => {
     setStatuses((prev) => {
@@ -2000,6 +2021,21 @@ function FreeSpinsEarnCard({
       return next
     })
   }
+
+  useEffect(() => {
+    const watchEarning = EARN_TASKS.some((x) => x.id === 'watch_live' && statuses[x.id] === 'earning')
+    if (!watchEarning) return
+    const bump = () => watchTick((n) => n + 1)
+    const id = window.setInterval(bump, 2500)
+    const onVis = () => {
+      if (document.visibilityState === 'visible') bump()
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [statuses])
 
   const counts = useMemo(() => {
     let claimed = 0
@@ -2081,20 +2117,36 @@ function FreeSpinsEarnCard({
                   </svg>
                 </span>
               ) : status === 'earning' ? (
+                POKIES_VERIFIED_TASK_IDS.has(t.id) ? (
+                  canClaimEarnTask(t) ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateStatus(t.id, 'claimed')
+                        onClaim(t.reward, t.name)
+                      }}
+                      className="fetch-pokies-claim-pulse rounded-full bg-emerald-500/30 px-2 py-0.5 text-[9.5px] font-black uppercase tracking-[0.08em] text-emerald-100 ring-1 ring-emerald-300/40"
+                    >
+                      Claim
+                    </button>
+                  ) : (
+                    <span className="max-w-[5.5rem] text-right text-[8px] font-bold leading-tight text-white/50">
+                      {t.id === 'watch_live'
+                        ? `${Math.min(300, watchLiveEarnProgressSeconds())}/300s live`
+                        : t.id === 'list_item'
+                          ? 'Publish a listing'
+                          : '…'}
+                    </span>
+                  )
+                ) : (
+                  <span className="max-w-[5rem] text-right text-[8px] font-bold text-white/45">Soon</span>
+                )
+              ) : POKIES_VERIFIED_TASK_IDS.has(t.id) ? (
                 <button
                   type="button"
                   onClick={() => {
-                    updateStatus(t.id, 'claimed')
-                    onClaim(t.reward, t.name)
-                  }}
-                  className="fetch-pokies-claim-pulse rounded-full bg-emerald-500/30 px-2 py-0.5 text-[9.5px] font-black uppercase tracking-[0.08em] text-emerald-100 ring-1 ring-emerald-300/40"
-                >
-                  Claim
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
+                    recordEarnTaskStartedAt(t.id)
+                    if (t.id === 'watch_live') setWatchLiveEarnBaselineFromNow()
                     updateStatus(t.id, 'earning')
                     onEarn(t.goal)
                   }}
@@ -2106,6 +2158,8 @@ function FreeSpinsEarnCard({
                     <path d="M9 5l7 7-7 7-1.4-1.4L13.2 12 7.6 6.4 9 5z" />
                   </svg>
                 </button>
+              ) : (
+                <span className="max-w-[5rem] text-right text-[8px] font-bold text-white/45">Soon</span>
               )}
             </li>
           )
@@ -2353,7 +2407,7 @@ function PrizeSpinIntroSheet({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={onClose}
-          className="relative mt-3 w-full rounded-2xl bg-gradient-to-b from-[#e879f9] via-[#7c3aed] to-[#4c1d95] py-3 text-[14px] font-black uppercase tracking-[0.1em] text-white shadow-[0_14px_32px_-16px_rgba(168,85,247,0.9),inset_0_2px_0_rgba(255,255,255,0.25)] active:scale-[0.98]"
+          className="relative mt-3 w-full rounded-2xl bg-gradient-to-b from-[#e879f9] via-[#7c3aed] to-[#291050] py-3 text-[14px] font-black uppercase tracking-[0.1em] text-white shadow-[0_14px_32px_-16px_rgba(168,85,247,0.9),inset_0_2px_0_rgba(255,255,255,0.25)] active:scale-[0.98]"
         >
           Start spinning
         </button>

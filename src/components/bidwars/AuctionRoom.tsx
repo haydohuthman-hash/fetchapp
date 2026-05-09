@@ -147,7 +147,7 @@ export function AuctionRoom({
             aria-label={watching ? 'Unwatch' : 'Watch'}
             className={[
               'grid h-9 w-9 place-items-center rounded-full ring-1 ring-zinc-200',
-              watching ? 'bg-violet-100 text-[#4c1d95]' : 'bg-white text-zinc-700',
+              watching ? 'bg-violet-100 text-[#291050]' : 'bg-white text-zinc-700',
             ].join(' ')}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill={watching ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -293,7 +293,7 @@ function ActiveStage({ mode, phase, auctionId, onBidPress, minNextBidCents }: Ac
                 key={inc}
                 type="button"
                 onClick={() => onBidPress(Math.max(target, minNextBidCents))}
-                className="rounded-full bg-violet-50 px-3 py-2 text-[12px] font-black text-[#4c1d95] ring-1 ring-violet-200 transition-transform active:scale-[0.97]"
+                className="rounded-full bg-violet-50 px-3 py-2 text-[12px] font-black text-[#291050] ring-1 ring-violet-200 transition-transform active:scale-[0.97]"
               >
                 +${(inc / 100).toFixed(0)}
               </button>
@@ -305,7 +305,7 @@ function ActiveStage({ mode, phase, auctionId, onBidPress, minNextBidCents }: Ac
             className={[
               'rounded-full px-3 py-2 text-[12px] font-black ring-1 transition-transform active:scale-[0.97]',
               customOpen
-                ? 'bg-[#4c1d95] text-white ring-[#4c1d95]'
+                ? 'bg-[#291050] text-white ring-[#291050]'
                 : 'bg-white text-zinc-700 ring-zinc-200',
             ].join(' ')}
           >
@@ -314,7 +314,7 @@ function ActiveStage({ mode, phase, auctionId, onBidPress, minNextBidCents }: Ac
         </div>
         {customOpen ? (
           <div className="flex items-center gap-2 rounded-2xl bg-zinc-50 p-2 ring-1 ring-zinc-200">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-[#4c1d95] ring-1 ring-zinc-200">$</span>
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-[#291050] ring-1 ring-zinc-200">$</span>
             <input
               type="number"
               inputMode="decimal"
@@ -330,7 +330,7 @@ function ActiveStage({ mode, phase, auctionId, onBidPress, minNextBidCents }: Ac
                 const cents = Math.round(Number(customDollars || '0') * 100)
                 if (cents > 0) onBidPress(cents)
               }}
-              className="rounded-full bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] px-3 py-2 text-[12px] font-black text-white"
+              className="rounded-full bg-gradient-to-b from-[#7c3aed] via-[#4f1d93] to-[#291050] px-3 py-2 text-[12px] font-black text-white"
             >
               Bid
             </button>
@@ -384,7 +384,7 @@ function ActiveStage({ mode, phase, auctionId, onBidPress, minNextBidCents }: Ac
                       </span>
                     ) : null}
                   </span>
-                  <span className="text-[12px] font-black tabular-nums text-[#4c1d95]">
+                  <span className="text-[12px] font-black tabular-nums text-[#291050]">
                     {formatAud(b.amountCents)}
                   </span>
                 </div>
@@ -412,13 +412,13 @@ function ClassicSummary({ auctionId, minNextBidCents }: { auctionId: string; min
         <p className="mt-1 text-[10.5px] font-semibold text-zinc-500">{auction.bidCount} bids</p>
       </div>
       <div className="rounded-2xl bg-violet-50 p-3 ring-1 ring-violet-200 shadow-sm">
-        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#4c1d95]/70">
+        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#291050]/70">
           Next minimum
         </p>
-        <p className="mt-1 text-[24px] font-black tabular-nums text-[#4c1d95]">
+        <p className="mt-1 text-[24px] font-black tabular-nums text-[#291050]">
           {formatAud(minNextBidCents)}
         </p>
-        <p className="mt-1 text-[10.5px] font-semibold text-[#4c1d95]/75">
+        <p className="mt-1 text-[10.5px] font-semibold text-[#291050]/75">
           Est. value {formatAud(auction.estValueCents)}
         </p>
       </div>
@@ -507,7 +507,7 @@ function SidePill({
       </p>
       <p className={[
         'mt-1 text-[18px] font-black tabular-nums',
-        leading ? 'text-[#4c1d95]' : 'text-zinc-700',
+        leading ? 'text-[#291050]' : 'text-zinc-700',
       ].join(' ')}>
         {formatAud(amount)}
       </p>
@@ -543,7 +543,7 @@ function WonStage({
       <h2 className="mt-2 text-center text-[28px] font-black tracking-[-0.03em] text-zinc-950 sm:text-[32px]">
         {title}
       </h2>
-      <span className="mt-3 block aspect-square w-[60%] max-w-[260px] overflow-hidden rounded-3xl bg-white shadow-[0_28px_48px_-22px_rgba(76,29,149,0.55)] ring-1 ring-zinc-200">
+      <span className="mt-3 block aspect-square w-[60%] max-w-[260px] overflow-hidden rounded-3xl bg-white shadow-[0_28px_48px_-22px_rgba(41,16,80,0.55)] ring-1 ring-zinc-200">
         <img src={imageUrl} alt="" className="h-full w-full object-cover" draggable={false} />
       </span>
       <div className="mt-4 grid w-full max-w-md grid-cols-2 gap-2">
@@ -564,14 +564,14 @@ function WonStage({
         <button
           type="button"
           onClick={onViewOrder}
-          className="rounded-full bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] py-3.5 text-[14px] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(76,29,149,0.55),inset_0_1px_0_rgba(255,255,255,0.25)] ring-1 ring-white/10 transition-transform active:scale-[0.985]"
+          className="rounded-full bg-gradient-to-b from-[#7c3aed] via-[#4f1d93] to-[#291050] py-3.5 text-[14px] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(41,16,80,0.55),inset_0_1px_0_rgba(255,255,255,0.25)] ring-1 ring-white/10 transition-transform active:scale-[0.985]"
         >
           View order
         </button>
         <button
           type="button"
           onClick={onShare}
-          className="rounded-full bg-white py-3 text-[13px] font-black uppercase tracking-[0.06em] text-[#4c1d95] ring-1 ring-violet-200"
+          className="rounded-full bg-white py-3 text-[13px] font-black uppercase tracking-[0.06em] text-[#291050] ring-1 ring-violet-200"
         >
           Share your win
         </button>
@@ -588,7 +588,7 @@ function WonStage({
 }
 
 function ConfettiOverlay() {
-  const palette = ['#4c1d95', '#7c3aed', '#a78bfa', '#f59e0b', '#fbbf24', '#22c55e', '#f472b6']
+  const palette = ['#291050', '#7c3aed', '#a78bfa', '#f59e0b', '#fbbf24', '#22c55e', '#f472b6']
   return (
     <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {Array.from({ length: 22 }, (_, i) => {
@@ -649,14 +649,14 @@ function OutbidStage({
         <button
           type="button"
           onClick={onBidAgain}
-          className="rounded-full bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] py-3.5 text-[14px] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(76,29,149,0.55)] ring-1 ring-white/10 active:scale-[0.985]"
+          className="rounded-full bg-gradient-to-b from-[#7c3aed] via-[#4f1d93] to-[#291050] py-3.5 text-[14px] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(41,16,80,0.55)] ring-1 ring-white/10 active:scale-[0.985]"
         >
           Bid again
         </button>
         <button
           type="button"
           onClick={onFindSimilar}
-          className="rounded-full bg-white py-3 text-[13px] font-black uppercase tracking-[0.06em] text-[#4c1d95] ring-1 ring-violet-200"
+          className="rounded-full bg-white py-3 text-[13px] font-black uppercase tracking-[0.06em] text-[#291050] ring-1 ring-violet-200"
         >
           Find similar deals
         </button>

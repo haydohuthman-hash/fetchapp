@@ -64,6 +64,11 @@ interface ImportMetaEnv {
   readonly VITE_SITE_URL?: string
   /** Explicit OAuth callback URL for Supabase providers; preferred over VITE_SITE_URL when set. */
   readonly VITE_SUPABASE_REDIRECT_URL?: string
+  /**
+   * LiveKit WebSocket URL for `livekit-client` (`wss://…` in prod, `ws://127.0.0.1:7880` for local server).
+   * Token minting stays server-side; optional `url` field on `/api/livekit/token` can override env for multi-region.
+   */
+  readonly VITE_LIVEKIT_URL?: string
 }
 
 interface ImportMeta {

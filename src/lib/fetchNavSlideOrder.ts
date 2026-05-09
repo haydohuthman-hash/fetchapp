@@ -14,6 +14,7 @@ import {
   FETCH_WALLET_ADD_CREDITS_PATH,
   FETCH_WALLET_CASH_OUT_PATH,
   FETCH_WALLET_TRANSACTIONS_PATH,
+  isFetchProfileAccountSubPath,
 } from './fetchRoutes'
 
 /** Larger = further right in the dock. Auth is last so it always slides in from the right. */
@@ -23,6 +24,7 @@ export function navSlideOrder(pathname: string): number {
   if (pathname === FETCH_SHOP_PATH) return 300
   if (pathname === FETCH_SHOP_SETUP_PATH) return 310
   if (pathname === FETCH_PROFILE_PATH) return 400
+  if (isFetchProfileAccountSubPath(pathname)) return 405
   if (pathname === FETCH_PROFILE_EDIT_PATH) return 410
   if (pathname === FETCH_GEMS_PATH) return 420
   if (pathname === FETCH_WALLET_TRANSACTIONS_PATH) return 430

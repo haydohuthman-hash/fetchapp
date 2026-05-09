@@ -9,6 +9,12 @@ type ChromaKeyedMascotProps = {
   className?: string
   /** Logical max width (px) for processing; sharpness uses devicePixelRatio. */
   maxProcessWidth?: number
+  /** Cap displayed height (CSS px) after width scale; defaults to mascot hero limit. */
+  maxCssHeight?: number
+  /** Higher cap ⇒ sharper keyed output on dense displays (costs more CPU per paint). */
+  chromaPixelRatioMax?: number
+  /** Multiplies device pixel ratio before clamp for extra backing‑store clarity. */
+  chromaResolutionScale?: number
   /** When greater than 1, `src` is a horizontal strip of equal-width frames. */
   stripFrameCount?: number
   stripFrameIndex?: number
@@ -18,6 +24,9 @@ export const ChromaKeyedMascot = memo(function ChromaKeyedMascot({
   src,
   className = '',
   maxProcessWidth = 420,
+  maxCssHeight = MASCOT_MAX_CSS_H,
+  chromaPixelRatioMax = 2.5,
+  chromaResolutionScale = 1,
   stripFrameCount,
   stripFrameIndex = 0,
 }: ChromaKeyedMascotProps) {
@@ -32,7 +41,11 @@ export const ChromaKeyedMascot = memo(function ChromaKeyedMascot({
     const wrap = wrapRef.current
     if (!img?.naturalWidth || !canvas || !wrap) return
 
-    const dpr = Math.min(2.5, typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1)
+    const clampMax = chromaPixelRatioMax > 0 ? chromaPixelRatioMax : 2.5
+    const rs = chromaResolutionScale > 0 ? chromaResolutionScale : 1
+    const dpBase = typeof window !== 'undefined' && window.devicePixelRatio ? window.devicePixelRatio : 1
+    const dpr = Math.min(clampMax, Math.max(dpBase * rs, 1))
+
     const targetCssW = Math.min(maxProcessWidth, wrap.clientWidth || maxProcessWidth)
     if (targetCssW < 8) return
 
@@ -60,9 +73,9 @@ export const ChromaKeyedMascot = memo(function ChromaKeyedMascot({
     let outW = Math.max(1, Math.round(baseW * scale))
     let outH = Math.max(1, Math.round(baseH * scale))
 
-    if (outH > MASCOT_MAX_CSS_H) {
-      const shrink = MASCOT_MAX_CSS_H / outH
-      outH = MASCOT_MAX_CSS_H
+    if (outH > maxCssHeight) {
+      const shrink = maxCssHeight / outH
+      outH = maxCssHeight
       outW = Math.max(1, Math.round(outW * shrink))
     }
 
@@ -85,7 +98,7 @@ export const ChromaKeyedMascot = memo(function ChromaKeyedMascot({
     ctx.putImageData(snapshot, 0, 0)
 
     setDrawn(true)
-  }, [maxProcessWidth, stripFrameCount, stripFrameIndex])
+  }, [maxProcessWidth, maxCssHeight, chromaPixelRatioMax, chromaResolutionScale, stripFrameCount, stripFrameIndex])
 
   useLayoutEffect(() => {
     setDrawn(false)

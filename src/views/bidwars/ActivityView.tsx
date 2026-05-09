@@ -32,7 +32,7 @@ const KIND_ICON: Record<ActivityKind, string> = {
 }
 
 const KIND_TONE: Record<ActivityKind, string> = {
-  bid: 'bg-violet-100 text-[#4c1d95]',
+  bid: 'bg-violet-100 text-[#291050]',
   win: 'bg-emerald-100 text-emerald-700',
   outbid: 'bg-rose-100 text-rose-700',
   message: 'bg-amber-100 text-amber-700',
@@ -80,7 +80,7 @@ export default function ActivityView({ onBack, onOpenAuction, onOpenMessages }: 
               className={[
                 'shrink-0 rounded-full px-3 py-1.5 text-[12px] font-black uppercase tracking-[0.06em] ring-1 transition-colors',
                 active
-                  ? 'bg-[#4c1d95] text-white ring-[#4c1d95]'
+                  ? 'bg-[#291050] text-white ring-[#291050]'
                   : 'bg-white text-zinc-600 ring-zinc-200 hover:text-zinc-900',
               ].join(' ')}
             >

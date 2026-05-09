@@ -62,17 +62,17 @@ function ActivityTabBar({
             onClick={() => onChange(t.id)}
             className={[
               'relative flex flex-1 items-center justify-center gap-1.5 border-0 bg-transparent px-1 pb-2.5 pt-3 text-[13px] font-semibold leading-none tracking-[-0.01em] transition-colors sm:text-sm',
-              active ? 'text-[#4c1d95]' : 'text-zinc-400 hover:text-zinc-600',
+              active ? 'text-[#291050]' : 'text-zinc-400 hover:text-zinc-600',
             ].join(' ')}
           >
             <span>{t.label}</span>
             {badge != null && badge > 0 ? (
-              <span className="flex h-[1.05rem] min-w-[1.05rem] items-center justify-center rounded-full bg-[#4c1d95] px-1 text-[10px] font-bold leading-none text-white">
+              <span className="flex h-[1.05rem] min-w-[1.05rem] items-center justify-center rounded-full bg-[#291050] px-1 text-[10px] font-bold leading-none text-white">
                 {badge > 99 ? '99+' : badge}
               </span>
             ) : null}
             {active ? (
-              <span className="absolute inset-x-0 bottom-0 h-[2.5px] rounded-full bg-[#4c1d95]" />
+              <span className="absolute inset-x-0 bottom-0 h-[2.5px] rounded-full bg-[#291050]" />
             ) : null}
           </button>
         )
@@ -122,7 +122,7 @@ function avatarInitials(name: string): string {
 function Avatar({ name, color = '#ede9fe' }: { name: string; color?: string }) {
   return (
     <div
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[13px] font-bold tracking-tight text-[#4c1d95]"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[13px] font-bold tracking-tight text-[#291050]"
       style={{ backgroundColor: color }}
       aria-hidden
     >
@@ -313,7 +313,7 @@ function statusChipFor(status: PurchaseStatus): { label: string; bg: string; fg:
     case 'delivered':
       return { label: 'Delivered', bg: '#dcfce7', fg: '#166534' }
     case 'completed':
-      return { label: 'Completed', bg: '#ede9fe', fg: '#4c1d95' }
+      return { label: 'Completed', bg: '#ede9fe', fg: '#291050' }
   }
 }
 
@@ -447,7 +447,7 @@ function HomeShellChatHubPageInner({
       role="main"
       aria-label="Activity"
     >
-      <header className="shrink-0 border-b border-violet-100 bg-white px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top,0px))] shadow-[0_6px_18px_-18px_rgba(76,29,149,0.45)] sm:px-4">
+      <header className="shrink-0 border-b border-violet-100 bg-white px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top,0px))] shadow-[0_6px_18px_-18px_rgba(41,16,80,0.45)] sm:px-4">
         <div className="mx-auto grid w-full min-w-0 max-w-lg grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-2">
           <div className="h-10 w-10 shrink-0" aria-hidden />
           <div className="flex min-w-0 flex-col items-center justify-center text-center">
@@ -462,7 +462,7 @@ function HomeShellChatHubPageInner({
             <button
               type="button"
               onClick={onMenuAccount}
-              className="flex h-10 w-10 shrink-0 items-center justify-center justify-self-end rounded-full bg-violet-50 text-[#4c1d95] ring-1 ring-violet-200/70 transition-colors active:bg-violet-100"
+              className="flex h-10 w-10 shrink-0 items-center justify-center justify-self-end rounded-full bg-violet-50 text-[#291050] ring-1 ring-violet-200/70 transition-colors active:bg-violet-100"
               aria-label="Profile"
             >
               <AccountNavIconFilled className="h-5 w-5" />
@@ -497,7 +497,7 @@ function HomeShellChatHubPageInner({
                 className="flex w-full items-center gap-3 rounded-2xl bg-white p-3 text-left shadow-sm ring-1 ring-violet-100 transition-transform active:scale-[0.99]"
                 onClick={() => onChatWithField()}
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#4c1d95] text-white">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#291050] text-white">
                   <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
                     <path
                       d="M12 3l9 4-9 4-9-4 9-4zM3 12l9 4 9-4M3 17l9 4 9-4"
@@ -523,7 +523,7 @@ function HomeShellChatHubPageInner({
                 disabled={busy}
                 onClick={() => void openOrCreateSupport()}
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[#4c1d95]">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[#291050]">
                   <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
                     <path
                       d="M12 3a8 8 0 00-8 8v4a3 3 0 003 3h1v-6H6v-1a6 6 0 0112 0v1h-2v6h1a3 3 0 003-3v-4a8 8 0 00-8-8z"
@@ -585,7 +585,7 @@ function HomeShellChatHubPageInner({
                               </p>
                             </div>
                             {t.unreadCount > 0 ? (
-                              <span className="flex h-[1.15rem] min-w-[1.15rem] shrink-0 items-center justify-center rounded-full bg-[#4c1d95] px-1.5 text-[10px] font-bold leading-none text-white">
+                              <span className="flex h-[1.15rem] min-w-[1.15rem] shrink-0 items-center justify-center rounded-full bg-[#291050] px-1.5 text-[10px] font-bold leading-none text-white">
                                 {t.unreadCount > 99 ? '99+' : t.unreadCount}
                               </span>
                             ) : null}
@@ -611,7 +611,7 @@ function HomeShellChatHubPageInner({
                       ].join(' ')}
                     >
                       <div
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#4c1d95]"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#291050]"
                         style={{ backgroundColor: n.accent ?? '#ede9fe' }}
                       >
                         <NotificationIcon kind={n.kind} className="h-[1.35rem] w-[1.35rem]" />
@@ -631,7 +631,7 @@ function HomeShellChatHubPageInner({
                       </div>
                       {n.unread ? (
                         <span
-                          className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#4c1d95]"
+                          className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#291050]"
                           aria-label="Unread"
                         />
                       ) : null}
@@ -690,7 +690,7 @@ function HomeShellChatHubPageInner({
                               @{p.sellerHandle.replace(/^@/, '')} · {formatRelativeTime(p.purchasedAt)} ago
                             </p>
                             <div className="mt-auto flex items-center justify-between gap-2 pt-1.5">
-                              <span className="text-[13px] font-bold tabular-nums text-[#4c1d95]">
+                              <span className="text-[13px] font-bold tabular-nums text-[#291050]">
                                 {formatAudFromCents(p.listing.priceCents ?? 0)}
                               </span>
                               {p.eta ? (
@@ -700,7 +700,7 @@ function HomeShellChatHubPageInner({
                               ) : (
                                 <button
                                   type="button"
-                                  className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-[#4c1d95] ring-1 ring-violet-200/70 active:bg-violet-100"
+                                  className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-[#291050] ring-1 ring-violet-200/70 active:bg-violet-100"
                                   onClick={() => onFetchIt?.(p.listing)}
                                 >
                                   Buy again

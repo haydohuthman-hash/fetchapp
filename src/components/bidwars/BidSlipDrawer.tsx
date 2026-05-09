@@ -120,14 +120,14 @@ export function BidSlipDrawer({ open, auctionId, bidAmountCents, onClose, onConf
 
         <header className="flex items-center justify-between gap-2">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#4c1d95]">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#291050]">
               Bid slip
             </p>
             <h2 id="fetch-bidslip-title" className="text-[20px] font-black tracking-tight text-zinc-900">
               Confirm your bid
             </h2>
           </div>
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-violet-100 text-[#4c1d95]">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-violet-100 text-[#291050]">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
               <path d="M13 2L4.5 14H12l-1 8 8.5-12H12l1-8z" />
             </svg>
@@ -163,10 +163,10 @@ export function BidSlipDrawer({ open, auctionId, bidAmountCents, onClose, onConf
             </dd>
           </div>
           <div className="rounded-2xl bg-violet-50 p-3 ring-1 ring-violet-200">
-            <dt className="text-[10px] font-black uppercase tracking-[0.12em] text-[#4c1d95]/75">
+            <dt className="text-[10px] font-black uppercase tracking-[0.12em] text-[#291050]/75">
               Your bid {useBoost ? '· boosted' : ''}
             </dt>
-            <dd className="mt-1 text-[18px] font-black tabular-nums text-[#4c1d95]">
+            <dd className="mt-1 text-[18px] font-black tabular-nums text-[#291050]">
               {formatAud(finalBidCents)}
             </dd>
             {useBoost ? (
@@ -201,14 +201,14 @@ export function BidSlipDrawer({ open, auctionId, bidAmountCents, onClose, onConf
             className={[
               'mt-3 flex w-full items-center justify-between gap-2 rounded-2xl p-3 ring-1 transition-colors',
               useBoost
-                ? 'bg-violet-50 ring-violet-300 text-[#4c1d95]'
+                ? 'bg-violet-50 ring-violet-300 text-[#291050]'
                 : 'bg-white ring-zinc-200 text-zinc-700',
             ].join(' ')}
           >
             <span className="flex items-center gap-2">
               <span className={[
                 'grid h-9 w-9 place-items-center rounded-xl text-white',
-                useBoost ? 'bg-[#4c1d95]' : 'bg-zinc-300',
+                useBoost ? 'bg-[#291050]' : 'bg-zinc-300',
               ].join(' ')}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                   <path d="M13 2L4.5 14H12l-1 8 8.5-12H12l1-8z" />
@@ -226,7 +226,7 @@ export function BidSlipDrawer({ open, auctionId, bidAmountCents, onClose, onConf
             <span
               className={[
                 'inline-flex h-6 w-10 shrink-0 items-center rounded-full p-0.5 transition-colors',
-                useBoost ? 'bg-[#4c1d95]' : 'bg-zinc-300',
+                useBoost ? 'bg-[#291050]' : 'bg-zinc-300',
               ].join(' ')}
               aria-hidden
             >
@@ -259,7 +259,7 @@ export function BidSlipDrawer({ open, auctionId, bidAmountCents, onClose, onConf
               <p className="text-[10.5px] font-semibold text-zinc-500">Default · charged on win</p>
             </div>
           </div>
-          <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#4c1d95]">
+          <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#291050]">
             Change
           </span>
         </div>
@@ -273,7 +273,7 @@ export function BidSlipDrawer({ open, auctionId, bidAmountCents, onClose, onConf
             type="button"
             onClick={onConfirm}
             disabled={busy || !validBid}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] py-3.5 text-[15px] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(76,29,149,0.55),inset_0_1px_0_rgba(255,255,255,0.25)] ring-1 ring-white/10 transition-transform active:scale-[0.985] disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-[#7c3aed] via-[#4f1d93] to-[#291050] py-3.5 text-[15px] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(41,16,80,0.55),inset_0_1px_0_rgba(255,255,255,0.25)] ring-1 ring-white/10 transition-transform active:scale-[0.985] disabled:opacity-60"
           >
             {busy ? 'Placing bid…' : `Confirm ${formatAud(finalBidCents)} bid`}
           </button>

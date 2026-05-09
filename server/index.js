@@ -141,6 +141,7 @@ import {
   muxExtractReplayAsset,
   muxPlaybackUrl,
 } from './lib/drops-live-mux.js'
+import { buildValidatedLiveShowcaseCommerce } from './lib/live-showcase-commerce.js'
 import { transformVideoBuffer, ffmpegAvailable } from './lib/drops-ffmpeg-process.js'
 import {
   ensureBattlesTables,
@@ -160,6 +161,16 @@ import {
   getSupabaseClientForUserAccessToken,
   parseBearerAccessToken,
 } from './lib/supabase-user-client.js'
+import { AccessToken } from 'livekit-server-sdk'
+import {
+  appendChatMessage,
+  createSession,
+  getSession,
+  listSessions,
+  patchSession,
+  sanitizeIdentity,
+  sanitizeRoomName,
+} from './lib/live-sessions-memory.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -216,6 +227,12 @@ const paymentIntentCreateLimiter = rateLimit({
 const analyticsPingLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+const livekitTokenLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 45,
   standardHeaders: true,
   legacyHeaders: false,
 })
@@ -465,6 +482,7 @@ let marketplaceStreamSeq = 0
 
 async function createConfiguredMarketplaceStore() {
   const onAfterWrite = () => marketplaceEventBus.emit()
+  /** For multi-browser realtime off one API, prefer `FETCH_MARKETPLACE_STORE=postgres` + `DATABASE_URL`. File/SQLite modes work for single-host demos. SSE subscribers are per Node process only. */
   if (process.env.FETCH_MARKETPLACE_STORE === 'postgres') {
     if (!sharedPgPool) {
       throw new Error('DATABASE_URL is required when FETCH_MARKETPLACE_STORE=postgres')
@@ -703,6 +721,11 @@ async function buildReviewedBookingPayload(payload) {
 function vercelRestoreApiRequestPath(req, _res, next) {
   if (process.env.VERCEL !== '1') return next()
   const raw = typeof req.url === 'string' ? req.url : '/'
+  /** `vercel.json` sends these through `/api/...` so `api/[[...slug]]` runs; Express still mounts them without `/api`. */
+  if (raw.startsWith('/api/listing-uploads') || raw.startsWith('/api/drops-uploads')) {
+    req.url = '/' + raw.slice('/api/'.length)
+    return next()
+  }
   if (raw.startsWith('/api')) return next()
   const pathOnly = raw.split('?')[0] || '/'
   if (
@@ -1195,6 +1218,309 @@ app.post('/api/fetch-ai/review', async (req, res) => {
       error: 'fetch_ai_review_failed',
       detail: error instanceof Error ? error.message : 'unknown_error',
     })
+  }
+})
+
+/** LiveKit: `{ roomName, identity, role }` → `{ token, url, roomName }` (`LIVEKIT_URL` server-only). */
+app.post('/api/livekit/token', livekitTokenLimiter, async (req, res) => {
+  const apiKey = (process.env.LIVEKIT_API_KEY || '').trim()
+  const apiSecret = (process.env.LIVEKIT_API_SECRET || '').trim()
+  const livekitUrl = (process.env.LIVEKIT_URL || '').trim()
+
+  if (!apiKey || !apiSecret) {
+    return res.status(503).json({
+      error: 'livekit_not_configured',
+      detail: 'Set LIVEKIT_API_KEY and LIVEKIT_API_SECRET on the server (never expose secrets to the browser).',
+    })
+  }
+
+  if (!livekitUrl) {
+    return res.status(503).json({
+      error: 'livekit_url_missing',
+      detail: 'Set LIVEKIT_URL to your LiveKit websocket URL (e.g. wss://xxx.livekit.cloud).',
+    })
+  }
+
+  try {
+    const authUser = await supabaseAuthUserFromRequest(req)
+    if (!authUser?.id) return res.status(401).json({ error: 'auth_required' })
+
+    const body = req.body ?? {}
+    const roomName = sanitizeRoomName(typeof body.roomName === 'string' ? body.roomName : '')
+    const roleOk = body.role === 'host' || body.role === 'viewer'
+
+    if (!roomName) {
+      return res.status(400).json({
+        error: 'room_name_required',
+        detail: 'POST JSON includes roomName (string, 6+ safe characters).',
+      })
+    }
+
+    const identityResolved = sanitizeIdentity(body.identity ?? '', '')
+    if (!identityResolved || identityResolved.length < 2) {
+      return res.status(400).json({
+        error: 'identity_required',
+        detail: 'POST JSON includes identity (string).',
+      })
+    }
+
+    if (!roleOk) {
+      return res.status(400).json({
+        error: 'role_invalid',
+        detail: 'role must be \"host\" or \"viewer\".',
+      })
+    }
+
+    const role = /** @type {'host' | 'viewer'} */ (body.role)
+    const uid = String(authUser.id)
+
+    const sess = getSession(roomName)
+
+    const canPublish = role === 'host'
+    const canSubscribe = true
+
+    if (role === 'host') {
+      if (!sess || sess.sellerId !== uid) {
+        return res.status(403).json({
+          error: 'not_room_host',
+          detail: 'Only the listed seller can publish video to this room.',
+        })
+      }
+      if (sess.status !== 'live') {
+        return res.status(403).json({
+          error: 'host_requires_live',
+          detail: 'Start the live session before connecting as host.',
+        })
+      }
+    } else if (!sess || sess.status !== 'live') {
+      return res.status(403).json({
+        error: 'live_session_required',
+        detail: 'Viewers may only join when the show is live.',
+      })
+    }
+
+    const dispName =
+      typeof authUser.email === 'string' && authUser.email.trim()
+        ? authUser.email.trim().slice(0, 120)
+        : identityResolved
+
+    console.log('[LiveKit] mint token', {
+      stage: '[LiveKit]',
+      roomName,
+      role,
+      identity: identityResolved.slice(0, 24),
+    })
+
+    const at = new AccessToken(apiKey, apiSecret, {
+      identity: identityResolved,
+      name: dispName,
+      ttl: '45m',
+    })
+
+    at.addGrant({
+      roomJoin: true,
+      room: roomName,
+      canPublish,
+      canSubscribe,
+    })
+    const token = await at.toJwt()
+
+    console.log('[LiveKit] token ready', {
+      stage: '[LiveKit]',
+      roomName,
+      role,
+    })
+
+    return res.json({
+      token,
+      url: livekitUrl,
+      roomName,
+    })
+  } catch (e) {
+    console.error('[livekit/token]', e)
+    return res.status(500).json({ error: 'livekit_token_failed' })
+  }
+})
+
+const liveSessionsWriteLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 90,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+})
+
+/** Fetchit livecommerce sessions — in-memory by default (`server/lib/live-sessions-memory.js`). */
+app.get('/api/live/sessions', async (req, res) => {
+  try {
+    const statusRaw = typeof req.query?.status === 'string' ? req.query.status.trim() : ''
+    const filter = statusRaw === 'live' ? { status: 'live' } : {}
+    return res.json({ sessions: listSessions(filter) })
+  } catch (e) {
+    console.error('[live/sessions list]', e)
+    return res.status(500).json({ error: 'live_sessions_failed' })
+  }
+})
+
+app.get('/api/live/sessions/:roomName', async (req, res) => {
+  try {
+    const roomName = sanitizeRoomName(req.params.roomName ?? '')
+    if (!roomName) return res.status(400).json({ error: 'invalid_room_name' })
+    const s = getSession(roomName)
+    if (!s) return res.status(404).json({ error: 'session_not_found' })
+    return res.json({ session: s })
+  } catch (e) {
+    console.error('[live/session get]', e)
+    return res.status(500).json({ error: 'live_session_failed' })
+  }
+})
+
+app.post('/api/live/sessions', liveSessionsWriteLimiter, async (req, res) => {
+  try {
+    const authUser = await supabaseAuthUserFromRequest(req)
+    if (!authUser?.id) return res.status(401).json({ error: 'auth_required' })
+
+    const body = req.body ?? {}
+    const cleanSeller = String(authUser.id).replace(/[^a-zA-Z0-9]/g, '').slice(0, 48)
+    const suggested = `fetchit-live-${cleanSeller}-${Date.now()}`
+    const roomNameCandidate =
+      typeof body.roomName === 'string' && body.roomName.trim() ? body.roomName.trim() : suggested
+    const roomNameSan = sanitizeRoomName(roomNameCandidate)
+    if (!roomNameSan) return res.status(400).json({ error: 'invalid_room_name', detail: 'Use a safer room slug.' })
+
+    const statusIn =
+      body.status === 'draft' || body.status === 'preview' || body.status === 'live'
+        ? body.status
+        : 'live'
+
+    const coverSquareUrl = typeof body.coverSquareUrl === 'string' ? body.coverSquareUrl.trim() : ''
+    const coverVerticalUrl = typeof body.coverVerticalUrl === 'string' ? body.coverVerticalUrl.trim() : ''
+    const legacyCoverUrl = typeof body.coverImageUrl === 'string' ? body.coverImageUrl.trim() : ''
+
+    if (statusIn === 'live') {
+      const hasSquare = Boolean(coverSquareUrl) || Boolean(legacyCoverUrl)
+      const hasVertical = Boolean(coverVerticalUrl)
+      if (!hasSquare || !hasVertical) {
+        return res.status(400).json({
+          error: 'covers_required',
+          detail: 'Square and vertical live cover image URLs are required to go live.',
+        })
+      }
+    }
+
+    const result = createSession(roomNameSan, {
+      sellerId: String(authUser.id),
+      sellerDisplay: typeof body.sellerDisplay === 'string' ? body.sellerDisplay : '',
+      title: typeof body.title === 'string' ? body.title : '',
+      category: typeof body.category === 'string' ? body.category : '',
+      description: typeof body.description === 'string' ? body.description : '',
+      coverSquareUrl: coverSquareUrl || legacyCoverUrl,
+      coverVerticalUrl,
+      coverImageUrl: legacyCoverUrl,
+      listings: Array.isArray(body.listings) ? body.listings : [],
+      pinnedListingId: body.pinnedListingId ?? undefined,
+      status: statusIn,
+      viewerCount: 0,
+    })
+
+    if (!result.ok && result.error === 'invalid_or_duplicate_room') {
+      return res.status(409).json({ error: 'room_exists', detail: 'Try a different roomName.' })
+    }
+    if (!result.ok || !result.session) {
+      return res.status(400).json({ error: 'live_session_invalid' })
+    }
+
+    console.log('[LiveKit] live session saved', {
+      stage: '[LiveKit]',
+      roomName: roomNameSan,
+      status: result.session.status,
+    })
+
+    return res.json({ session: result.session })
+  } catch (e) {
+    console.error('[live/sessions POST]', e)
+    return res.status(500).json({ error: 'live_session_create_failed' })
+  }
+})
+
+app.patch('/api/live/sessions/:roomName', liveSessionsWriteLimiter, async (req, res) => {
+  try {
+    const authUser = await supabaseAuthUserFromRequest(req)
+    if (!authUser?.id) return res.status(401).json({ error: 'auth_required' })
+
+    const roomName = sanitizeRoomName(req.params.roomName ?? '')
+    if (!roomName) return res.status(400).json({ error: 'invalid_room_name' })
+
+    const s0 = getSession(roomName)
+    if (!s0) return res.status(404).json({ error: 'session_not_found' })
+    if (String(s0.sellerId) !== String(authUser.id)) {
+      return res.status(403).json({ error: 'forbidden' })
+    }
+
+    const body = req.body ?? {}
+    /** @type {Parameters<typeof patchSession>[1]} */
+    const patch = { ...body }
+    if (body.chatAppend) delete patch.chatAppend
+
+    const r = patchSession(roomName, patch)
+    if (!r.ok || !r.session) return res.status(400).json({ error: 'patch_failed' })
+    console.log('[LiveKit] session patched', { roomName, fields: Object.keys(body) })
+    return res.json({ session: r.session })
+  } catch (e) {
+    console.error('[live/sessions PATCH]', e)
+    return res.status(500).json({ error: 'live_session_patch_failed' })
+  }
+})
+
+app.post('/api/live/sessions/:roomName/end', liveSessionsWriteLimiter, async (req, res) => {
+  try {
+    const authUser = await supabaseAuthUserFromRequest(req)
+    if (!authUser?.id) return res.status(401).json({ error: 'auth_required' })
+
+    const roomName = sanitizeRoomName(req.params.roomName ?? '')
+    if (!roomName) return res.status(400).json({ error: 'invalid_room_name' })
+
+    const s0 = getSession(roomName)
+    if (!s0) return res.status(404).json({ error: 'session_not_found' })
+    if (String(s0.sellerId) !== String(authUser.id)) {
+      return res.status(403).json({ error: 'forbidden' })
+    }
+
+    const r = patchSession(roomName, { status: 'ended' })
+    if (!r.ok || !r.session) return res.status(400).json({ error: 'end_failed' })
+    console.log('[LiveKit] live ended', { stage: '[LiveKit]', roomName })
+    return res.json({ session: r.session })
+  } catch (e) {
+    console.error('[live/sessions end]', e)
+    return res.status(500).json({ error: 'live_session_end_failed' })
+  }
+})
+
+app.post('/api/live/sessions/:roomName/chat', liveSessionsWriteLimiter, async (req, res) => {
+  try {
+    const authUser = await supabaseAuthUserFromRequest(req)
+    if (!authUser?.id) return res.status(401).json({ error: 'auth_required' })
+
+    const roomName = sanitizeRoomName(req.params.roomName ?? '')
+    if (!roomName) return res.status(400).json({ error: 'invalid_room_name' })
+
+    const s0 = getSession(roomName)
+    if (!s0 || s0.status !== 'live') return res.status(404).json({ error: 'live_session_not_active' })
+
+    const text =
+      typeof req.body?.text === 'string' ? req.body.text : typeof req.body?.message === 'string' ? req.body.message : ''
+
+    const senderId = String(authUser.id).slice(0, 128)
+    const senderName =
+      typeof authUser.email === 'string' && authUser.email.includes('@')
+        ? authUser.email.trim().slice(0, 80).split('@')[0] || 'Friend'
+        : 'Friend'
+
+    const r = appendChatMessage(roomName, senderId, senderName, text)
+    if (!r.ok || !r.session) return res.status(400).json({ error: 'chat_append_failed' })
+    return res.json({ session: r.session })
+  } catch (e) {
+    console.error('[live/sessions chat]', e)
+    return res.status(500).json({ error: 'live_chat_failed' })
   }
 })
 
@@ -2982,7 +3308,60 @@ app.patch('/api/drops/:id', dropsWriteLimiter, async (req, res) => {
   const sk = peerListingSellerKey(req)
   if (!sk) return res.status(401).json({ error: 'auth_required' })
   try {
-    const row = await updateDrop(sharedPgPool, req.params.id, sk, req.body ?? {})
+    const body = { ...(req.body ?? {}) }
+    if (body.commerce && body.commerce.kind === 'live_showcase') {
+      const existing = await getDropWithMedia(sharedPgPool, req.params.id)
+      if (!existing?.drop) return res.status(404).json({ error: 'drop_not_found' })
+      if (String(existing.drop.seller_key) !== String(sk).trim())
+        return res.status(403).json({ error: 'forbidden' })
+      const c = body.commerce
+      const showcaseRaw = Array.isArray(c.showcaseItems) ? c.showcaseItems : []
+      let normalized
+      try {
+        normalized = await buildValidatedLiveShowcaseCommerce(peerListingsStore, sk, {
+          showcaseRaw,
+          coverSquareUrl: c.coverSquareUrl,
+          coverVerticalUrl: c.coverVerticalUrl,
+          previousCommerce: existing.drop.commerce,
+        })
+      } catch (e) {
+        const code = typeof e === 'object' && e && 'code' in e ? String(/** @type {{ code?: string }} */ (e).code) : ''
+        const msg = e instanceof Error ? e.message : ''
+        if (code === 'covers_required' || msg === 'covers_required') {
+          return res.status(400).json({
+            error: 'covers_required',
+            detail: 'Cover image paths are missing or invalid. Your existing live covers should be reused automatically.',
+          })
+        }
+        if (code === 'showcase_required' || msg === 'showcase_required') {
+          return res.status(400).json({
+            error: 'showcase_required',
+            detail: 'Add at least one of your marketplace listings to the showcase.',
+          })
+        }
+        throw e
+      }
+      body.commerce = normalized
+      const items = normalized.items
+      const blurbParts = items
+        .map((/** @type {{ label?: string, listingId?: string, productId?: string }} */ i) => i.label || i.listingId || i.productId)
+        .filter(Boolean)
+        .slice(0, 8)
+      if (blurbParts.length && typeof body.blurb !== 'string') {
+        body.blurb = `Live showcase · ${blurbParts.join(' · ')}`.slice(0, 400)
+      }
+      const listingCount = items.filter((/** @type {{ kind?: string }} */ i) => i.kind === 'buy_sell_listing').length
+      const productCount = items.filter((/** @type {{ kind?: string }} */ i) => i.kind === 'marketplace_product').length
+      if (typeof body.priceLabel !== 'string') {
+        body.priceLabel =
+          productCount && listingCount
+            ? `Live · ${productCount} store · ${listingCount} listing${listingCount === 1 ? '' : 's'}`
+            : productCount
+              ? `Live · ${productCount} product${productCount === 1 ? '' : 's'}`
+              : `Live · ${listingCount} listing${listingCount === 1 ? '' : 's'}`
+      }
+    }
+    const row = await updateDrop(sharedPgPool, req.params.id, sk, body)
     if (!row) return res.status(404).json({ error: 'drop_not_found' })
     const full = await getDropWithMedia(sharedPgPool, row.id)
     return res.json({ drop: full?.public ?? null })
@@ -3238,43 +3617,40 @@ app.post('/api/drops/live/start', dropsWriteLimiter, async (req, res) => {
     const title = typeof body.title === 'string' ? body.title.trim().slice(0, 200) : 'Live'
     const MAX_SHOWCASE = 24
     const showcaseRaw = body.showcaseItems
-    const commerceItems = []
-    if (Array.isArray(showcaseRaw)) {
-      for (const x of showcaseRaw) {
-        if (commerceItems.length >= MAX_SHOWCASE) break
-        if (!x || typeof x !== 'object') continue
-        const label = typeof x.label === 'string' ? x.label.trim().slice(0, 120) : ''
-        if (x.type === 'product' && typeof x.id === 'string') {
-          const id = x.id.trim().slice(0, 128)
-          if (id) {
-            const row = { kind: 'marketplace_product', productId: id }
-            if (label) row.label = label
-            commerceItems.push(row)
-          }
-        }
-        if (x.type === 'listing' && typeof x.id === 'string') {
-          const id = x.id.trim().slice(0, 128)
-          if (!id) continue
-          const listing = await peerListingsStore.getListing(id)
-          if (!listing) continue
-          const listSk = peerListingsStore.sellerKey(listing.sellerUserId, listing.sellerEmail)
-          if (listSk !== sk) continue
-          const safeLabel =
-            label ||
-            (typeof listing.title === 'string' ? listing.title.trim().slice(0, 120) : '')
-          const row = { kind: 'buy_sell_listing', listingId: id }
-          if (safeLabel) row.label = safeLabel
-          commerceItems.push(row)
-        }
+    let commerce
+    try {
+      commerce = await buildValidatedLiveShowcaseCommerce(peerListingsStore, sk, {
+        showcaseRaw,
+        coverSquareUrl: body.coverSquareUrl,
+        coverVerticalUrl: body.coverVerticalUrl,
+        previousCommerce: null,
+      })
+    } catch (e) {
+      const code = typeof e === 'object' && e && 'code' in e ? String(/** @type {{ code?: string }} */ (e).code) : ''
+      const msg = e instanceof Error ? e.message : ''
+      if (code === 'covers_required' || msg === 'covers_required') {
+        return res.status(400).json({
+          error: 'covers_required',
+          detail:
+            'Upload a square cover and a vertical cover (both as /listing-uploads/... paths from listing image upload).',
+        })
       }
+      if (code === 'showcase_required' || msg === 'showcase_required') {
+        return res.status(400).json({
+          error: 'showcase_required',
+          detail: 'Select at least one store product or one of your marketplace listings.',
+        })
+      }
+      throw e
     }
-    if (!commerceItems.length) {
+    /** @type {Record<string, string>[]} */
+    const commerceItems = commerce.items
+    if (!commerceItems.length || commerceItems.length > MAX_SHOWCASE) {
       return res.status(400).json({
         error: 'showcase_required',
         detail: 'Select at least one store product or one of your marketplace listings.',
       })
     }
-    const commerce = { kind: 'live_showcase', items: commerceItems }
     const productCount = commerceItems.filter((i) => i.kind === 'marketplace_product').length
     const listingCount = commerceItems.filter((i) => i.kind === 'buy_sell_listing').length
     const blurbParts = commerceItems
@@ -3328,11 +3704,21 @@ app.post('/api/drops/live/start', dropsWriteLimiter, async (req, res) => {
       pids[0] && typeof pids[0] === 'object' && pids[0] && 'id' in pids[0]
         ? String(/** @type {{ id?: string }} */ (pids[0]).id || '')
         : ''
+    const playbackUrl = firstPid ? muxPlaybackUrl(firstPid) : null
+    if (!playbackUrl) {
+      return res.status(502).json({ error: 'mux_no_playback', detail: 'Missing playback id from Mux.', dropId: row.id })
+    }
+    await addDropMedia(sharedPgPool, String(row.id), {
+      kind: 'video',
+      url: playbackUrl,
+      sortOrder: 0,
+    })
+    await publishDrop(sharedPgPool, String(row.id), sk)
     return res.json({
       dropId: row.id,
       rtmpUrl: 'rtmps://global-live.mux.com:443/app',
       streamKey,
-      playbackUrl: firstPid ? muxPlaybackUrl(firstPid) : null,
+      playbackUrl,
     })
   } catch (e) {
     console.error('[drops/live/start]', e)
@@ -4668,6 +5054,7 @@ app.post('/api/payments/intents', paymentIntentCreateLimiter, async (req, res) =
     typeof meta === 'object' &&
     meta.type === 'supply' &&
     typeof meta.sku === 'string'
+  const isWalletTopUp = meta && typeof meta === 'object' && meta.type === 'wallet_top_up'
 
   let bookingId = typeof req.body?.bookingId === 'string' ? req.body.bookingId : null
   const requestedAmount =
@@ -4699,6 +5086,17 @@ app.post('/api/payments/intents', paymentIntentCreateLimiter, async (req, res) =
       Number.isFinite(qtyRaw) && qtyRaw >= 1 ? Math.min(20, Math.floor(qtyRaw)) : 1
     amount = Math.round(unit * qty)
     intentMetadata = { type: 'supply', sku: meta.sku, qty }
+  } else if (isWalletTopUp) {
+    bookingId = null
+    const raw = requestedAmount
+    if (!Number.isFinite(raw) || raw < 1 || raw > 25_000) {
+      return res.status(400).json({
+        error: 'wallet_amount_invalid',
+        detail: 'Top-up amount must be between 1 and 25000 AUD.',
+      })
+    }
+    amount = Math.round(raw * 100) / 100
+    intentMetadata = { type: 'wallet_top_up' }
   } else {
     const booking =
       bookingId ? state.bookings.find((row) => row.id === bookingId) ?? null : null
@@ -5058,6 +5456,41 @@ app.patch('/api/marketplace/bookings/:bookingId/location', async (req, res) => {
   booking.updatedAt = Date.now()
   await marketplaceStore.writeState(state)
   return res.json({ booking })
+})
+
+app.post('/api/marketplace/drivers/presence', authRouteLimiter, async (req, res) => {
+  const body = req.body ?? {}
+  const driverId = typeof body.driverId === 'string' ? body.driverId.trim() : ''
+  if (!driverId) {
+    return res.status(400).json({ error: 'driver_id_required' })
+  }
+  const actor = resolveMarketplaceActor(req)
+  if (actor.driverId && actor.driverId !== driverId) {
+    return res.status(403).json({ error: 'forbidden', detail: 'driver_id does not match session' })
+  }
+  const rating =
+    typeof body.rating === 'number' && Number.isFinite(body.rating) ? body.rating : null
+  const completedJobs =
+    typeof body.completedJobs === 'number' && Number.isFinite(body.completedJobs)
+      ? body.completedJobs
+      : null
+  const lat = typeof body.lat === 'number' && Number.isFinite(body.lat) ? body.lat : null
+  const lng = typeof body.lng === 'number' && Number.isFinite(body.lng) ? body.lng : null
+
+  const state = await marketplaceStore.readState()
+  const presence = marketplaceStore.upsertDriverPresence(state, {
+    driverId,
+    online: Boolean(body.online),
+    lat,
+    lng,
+    rating,
+    completedJobs,
+  })
+  if (!presence) {
+    return res.status(400).json({ error: 'presence_upsert_failed' })
+  }
+  await marketplaceStore.writeState(state)
+  return res.json({ presence })
 })
 
 app.patch('/api/marketplace/bookings/:bookingId/status', async (req, res) => {

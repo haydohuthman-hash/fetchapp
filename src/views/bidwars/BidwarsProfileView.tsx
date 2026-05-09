@@ -20,6 +20,11 @@ type Props = {
   onOpenWallet: () => void
   onOpenRewards: () => void
   onInvite?: () => void
+  onEditProfile?: () => void
+  onOpenPaymentsShipping?: () => void
+  onOpenAddresses?: () => void
+  onOpenNotifications?: () => void
+  onOpenHelp?: () => void
 }
 
 export default function BidwarsProfileView({
@@ -28,6 +33,11 @@ export default function BidwarsProfileView({
   onOpenWallet,
   onOpenRewards,
   onInvite,
+  onEditProfile,
+  onOpenPaymentsShipping,
+  onOpenAddresses,
+  onOpenNotifications,
+  onOpenHelp,
 }: Props) {
   const user = useBidwarsUser()
   const auctions = useAuctions()
@@ -51,7 +61,8 @@ export default function BidwarsProfileView({
             </div>
             <button
               type="button"
-              className="rounded-full bg-violet-100 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-[#4c1d95]"
+              onClick={() => onEditProfile?.()}
+              className="rounded-full bg-violet-100 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-[#291050]"
             >
               Edit
             </button>
@@ -69,7 +80,7 @@ export default function BidwarsProfileView({
             onClick={onOpenWallet}
             className="flex flex-col items-start gap-1 rounded-2xl bg-white p-3 text-left shadow-sm ring-1 ring-zinc-200 transition-transform active:scale-[0.98]"
           >
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-100 text-[18px] font-black text-[#4c1d95]">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-100 text-[18px] font-black text-[#291050]">
               💼
             </span>
             <span className="text-[12.5px] font-black tracking-tight text-zinc-950">Wallet</span>
@@ -106,10 +117,10 @@ export default function BidwarsProfileView({
         </section>
 
         <section className="rounded-3xl bg-white p-2 shadow-sm ring-1 ring-zinc-200">
-          <ProfileRow icon="📍" title="Shipping address" value="12 Adelaide St, Brisbane QLD" />
-          <ProfileRow icon="💳" title="Payment methods" value="Visa ··4242" />
-          <ProfileRow icon="🔔" title="Notifications" value="Pushes on" />
-          <ProfileRow icon="🛟" title="Help center" value="Chat with support" />
+          <ProfileRow icon="📍" title="Shipping address" value="12 Adelaide St, Brisbane QLD" onPress={onOpenAddresses} />
+          <ProfileRow icon="💳" title="Payment methods" value="Visa ··4242" onPress={onOpenPaymentsShipping} />
+          <ProfileRow icon="🔔" title="Notifications" value="Pushes on" onPress={onOpenNotifications} />
+          <ProfileRow icon="🛟" title="Help center" value="Chat with support" onPress={onOpenHelp} />
           <ProfileRow icon="🤝" title="Invite friends" value="$15 each, both ways" onPress={onInvite} />
         </section>
       </main>
@@ -137,12 +148,8 @@ function ProfileRow({
   value: string
   onPress?: () => void
 }) {
-  return (
-    <button
-      type="button"
-      onClick={onPress}
-      className="flex w-full items-center gap-3 border-b border-zinc-100 px-2 py-3 text-left last:border-0"
-    >
+  const body = (
+    <>
       <span className="grid h-9 w-9 place-items-center rounded-xl bg-zinc-100 text-[18px]">{icon}</span>
       <div className="min-w-0 flex-1">
         <p className="text-[12.5px] font-black tracking-tight text-zinc-950">{title}</p>
@@ -151,6 +158,22 @@ function ProfileRow({
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="text-zinc-300">
         <path d="M9 5l7 7-7 7" />
       </svg>
+    </>
+  )
+
+  if (!onPress) {
+    return (
+      <div className="flex w-full items-center gap-3 border-b border-zinc-100 px-2 py-3 last:border-0">{body}</div>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onPress}
+      className="flex w-full items-center gap-3 border-b border-zinc-100 px-2 py-3 text-left last:border-0"
+    >
+      {body}
     </button>
   )
 }

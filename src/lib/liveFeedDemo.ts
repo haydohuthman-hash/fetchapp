@@ -1,5 +1,6 @@
 import { CURATED_DROP_REELS } from './drops/constants'
 import type { DropReel } from './drops/types'
+import { listingImageAbsoluteUrl } from './listingsApi'
 import { liveStreamViewerCountSeed, formatLiveViewerShort } from './marketplaceAuctionUi'
 
 export type LiveFeedTag = 'live' | 'ending_soon' | 'hot' | 'just_started'
@@ -9,6 +10,8 @@ export type LiveFeedStream = {
   id: string
   listingId: string
   imageUrl: string
+  /** Portrait / carousel thumb (defaults to square cover when unset). */
+  portraitImageUrl?: string
   title: string
   streamTitle: string
   seller: string
@@ -19,8 +22,10 @@ export type LiveFeedStream = {
   category: LiveFeedCategory
   location: string
   minutesAgo: number
-  /** Demo countdown seconds for ring timer. */
+  /** Demo countdown seconds for ring timer (ignored when `playbackUrl` is set). */
   endsInSec: number
+  /** HLS playback URL from Mux when this row is backed by the drops API. */
+  playbackUrl?: string
 }
 
 function hash(s: string): number {
@@ -44,7 +49,47 @@ const CATEGORIES: LiveFeedCategory[] = [
 
 const LOCATIONS = ['Brisbane', 'Sydney', 'Melbourne', 'Gold Coast', 'Perth', 'Adelaide']
 
-/** Map any drops reel (Explore “live now” tiles included) into the Live floor stream model. */
+const REGION_LOCATION: Record<string, string> = {
+  SEQ: 'Brisbane',
+  NSW: 'Sydney',
+  VIC: 'Melbourne',
+  AU_WIDE: 'Australia',
+}
+
+function primaryListingIdFromReel(r: DropReel): string {
+  if (r.commerce?.kind === 'buy_sell_listing') return r.commerce.listingId
+  if (r.commerce?.kind === 'live_showcase') {
+    const hit = r.commerce.items.find((x) => x.kind === 'buy_sell_listing')
+    if (hit?.listingId) return hit.listingId
+  }
+  return ''
+}
+
+/** Listing-backed row with playable stream URL — HLS/Mux or progressive mp4/webm. */
+export function dropReelIsLivestreamCapable(r: DropReel): boolean {
+  const v = r.videoUrl?.trim()
+  if (!v) return false
+  const hlsLike = v.includes('.m3u8') || v.includes('stream.mux.com')
+  const progressiveLike = /\.(mp4|webm)(\?|$)/i.test(v)
+  if (!hlsLike && !progressiveLike) return false
+  if (r.commerce?.kind === 'live_showcase') return true
+  if (r.mediaKind === 'video' || r.mediaKind === 'live_replay') return true
+  if (r.commerce?.kind === 'buy_sell_listing') return true
+  return false
+}
+
+function streamPlaybackUrlFromReel(r: DropReel): string | undefined {
+  const v = r.videoUrl?.trim()
+  if (!v || !dropReelIsLivestreamCapable(r)) return undefined
+  return v
+}
+
+function absListingImage(raw?: string): string {
+  const t = raw?.trim()
+  if (!t) return ''
+  return listingImageAbsoluteUrl(t)
+}
+
 export function dropReelToLiveFeedStream(r: DropReel, i: number): LiveFeedStream {
   const h = hash(r.id)
   const priceCents = Math.max(500, Number.parseInt(r.priceLabel.replace(/[^0-9]/g, ''), 10) * 100 || 9900)
@@ -57,12 +102,20 @@ export function dropReelToLiveFeedStream(r: DropReel, i: number): LiveFeedStream
   else if (minutesAgo <= 3) tag = 'just_started'
 
   const endsInSec = 45 + (h % 220)
-  const listingId = r.commerce?.kind === 'buy_sell_listing' ? r.commerce.listingId : ''
+  const listingId = primaryListingIdFromReel(r)
+  const playbackUrl = streamPlaybackUrlFromReel(r)
+  const squareCover =
+    absListingImage(r.liveCoverSquareUrl) ||
+    absListingImage(r.imageUrls?.[0]) ||
+    absListingImage(r.poster) ||
+    ''
+  const portraitCover = absListingImage(r.liveCoverVerticalUrl) || squareCover
 
   return {
     id: r.id,
     listingId,
-    imageUrl: r.imageUrls?.[0]?.trim() ?? r.poster?.trim() ?? '',
+    imageUrl: squareCover,
+    ...(portraitCover && portraitCover !== squareCover ? { portraitImageUrl: portraitCover } : {}),
     title: r.title,
     streamTitle: STREAM_TITLES[i % STREAM_TITLES.length]!,
     seller: r.seller,
@@ -71,15 +124,21 @@ export function dropReelToLiveFeedStream(r: DropReel, i: number): LiveFeedStream
     watchersLabel: formatLiveViewerShort(watchers),
     tag,
     category: CATEGORIES[i % CATEGORIES.length]!,
-    location: LOCATIONS[h % LOCATIONS.length]!,
+    location: REGION_LOCATION[r.region] ?? LOCATIONS[h % LOCATIONS.length]!,
     minutesAgo,
     endsInSec,
+    ...(playbackUrl ? { playbackUrl } : {}),
   }
 }
 
 export function buildLiveFeedStreams(): LiveFeedStream[] {
   const reels = CURATED_DROP_REELS.filter((r) => r.commerce?.kind === 'buy_sell_listing')
   return reels.map((r, i) => dropReelToLiveFeedStream(r, i))
+}
+
+/** Reels with stream URL + commerce/media context — marketplace live rail + random live jump. */
+export function dropsReelsForLiveAuctionFloor(reels: DropReel[]): DropReel[] {
+  return reels.filter(dropReelIsLivestreamCapable)
 }
 
 export function formatAud(cents: number): string {

@@ -56,7 +56,10 @@ import { isBidWarsAdventureUnlocked } from '../lib/fetchAdventureRewards'
 import {
   FETCH_AUTH_PATH,
   FETCH_GEMS_PATH,
+  FETCH_GO_LIVE_PATH,
+  FETCH_LIVES_FEED_PATH,
   FETCH_MARKETPLACE_LIST_PATH,
+  FETCH_PROFILE_NOTIFICATIONS_PATH,
   FETCH_SHOP_PATH,
   FETCH_WALLET_TRANSACTIONS_PATH,
 } from '../lib/fetchRoutes'
@@ -3419,6 +3422,11 @@ export default function HomeView({
     onHomeShellTabChange('chat')
   }, [bumpInteraction, onHomeShellTabChange])
 
+  const onAppTopNotifications = useCallback(() => {
+    bumpInteraction()
+    navigate(FETCH_PROFILE_NOTIFICATIONS_PATH)
+  }, [bumpInteraction, navigate])
+
   const onAppTopOpenCart = useCallback(() => {
     bumpInteraction()
     onHomeShellTabChange('marketplace')
@@ -5816,8 +5824,7 @@ export default function HomeView({
         onSellItem={() => navigate(FETCH_MARKETPLACE_LIST_PATH)}
         onGoLive={() => {
           setSellSheetOpen(false)
-          setSellerHubHandoff({ id: Date.now(), panel: 'create' })
-          onHomeShellTabChange('marketplace')
+          navigate(FETCH_GO_LIVE_PATH)
         }}
       />
 
@@ -5829,7 +5836,7 @@ export default function HomeView({
           if (goal === 'list') {
             navigate(FETCH_MARKETPLACE_LIST_PATH)
           } else if (goal === 'live') {
-            onHomeShellTabChange('marketplace')
+            navigate(FETCH_GO_LIVE_PATH)
           }
           // 'streak' / 'invite' just dismiss for now — there's no dedicated route yet.
         }}
@@ -5910,14 +5917,14 @@ export default function HomeView({
         <>
         <div
           className={[
-            'fetch-explore-full-page-shell absolute inset-0 z-[52] flex min-h-dvh min-w-0 flex-col overflow-x-hidden bg-[#f3f0fa]',
+            'fetch-explore-full-page-shell absolute inset-0 z-[52] flex min-h-dvh min-w-0 flex-col overflow-x-hidden bg-transparent',
             homeShellTab === 'services' ? homeShellTabEnterClass : '',
           ].join(' ')}
         >
           {!forYouLoaded ? (
             <main
               className={[
-                'mx-auto flex min-h-0 min-w-0 w-full max-w-[min(100%,430px)] flex-1 flex-col overflow-x-hidden bg-[#f3f0fa] pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+1rem)]',
+                'mx-auto flex min-h-0 min-w-0 w-full max-w-[min(100%,430px)] flex-1 flex-col overflow-x-hidden bg-transparent pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+1rem)]',
                 exploreFullPageMainTopPad,
               ].join(' ')}
               role="main"
@@ -5928,7 +5935,7 @@ export default function HomeView({
           ) : (
             <main
               className={[
-                'mx-auto flex min-h-0 min-w-0 w-full max-w-[min(100%,430px)] flex-1 flex-col overflow-x-hidden bg-[#f3f0fa] pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+1rem)] animate-[fetch-for-you-fadein_0.45s_ease_both]',
+                'mx-auto flex min-h-0 min-w-0 w-full max-w-[min(100%,430px)] flex-1 flex-col overflow-x-hidden bg-transparent pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+1rem)] animate-[fetch-for-you-fadein_0.45s_ease_both]',
               ].join(' ')}
               role="main"
               aria-label="Explore"
@@ -5954,7 +5961,7 @@ export default function HomeView({
                 onOpenMarketplaceShop={openMarketplaceShopEntry}
                 onOpenSearch={() => {
                   bumpInteraction()
-                  onHomeShellTabChange('search')
+                  navigate(FETCH_LIVES_FEED_PATH)
                 }}
                 onOpenMarketplaceBrowse={openExploreMarketplaceBrowse}
                 onOpenPeerListing={(listingId) => {
@@ -5969,7 +5976,10 @@ export default function HomeView({
                 onViewBackpack={onAppTopOpenCart}
                 onViewTransactions={() => navigate(FETCH_WALLET_TRANSACTIONS_PATH)}
                 onOpenGifts={onAppTopOpenGems}
-                onOpenNotifications={onAppTopChat}
+                onOpenChat={onAppTopChat}
+                onOpenNotifications={onAppTopNotifications}
+                onSellerGoLive={() => navigate(FETCH_GO_LIVE_PATH)}
+                onBrowseLive={() => navigate(FETCH_LIVES_FEED_PATH)}
                 onJoinBidWar={() => {
                   bumpInteraction()
                   if (!isBidWarsAdventureUnlocked()) {
@@ -6402,7 +6412,7 @@ export default function HomeView({
                     onOpenMarketplaceShop={openMarketplaceShopEntry}
                     onOpenSearch={() => {
                       bumpInteraction()
-                      onHomeShellTabChange('search')
+                      navigate(FETCH_LIVES_FEED_PATH)
                     }}
                     onOpenMarketplaceBrowse={openExploreMarketplaceBrowse}
                     onOpenPeerListing={(listingId) => {
@@ -6417,7 +6427,9 @@ export default function HomeView({
                     onViewBackpack={onAppTopOpenCart}
                     onViewTransactions={() => navigate(FETCH_WALLET_TRANSACTIONS_PATH)}
                     onOpenGifts={onAppTopOpenGems}
-                    onOpenNotifications={onAppTopChat}
+                    onOpenNotifications={onAppTopNotifications}
+                    onSellerGoLive={() => navigate(FETCH_GO_LIVE_PATH)}
+                    onBrowseLive={() => navigate(FETCH_LIVES_FEED_PATH)}
                     onJoinBidWar={() => {
                       bumpInteraction()
                       if (!isBidWarsAdventureUnlocked()) {
@@ -6594,7 +6606,7 @@ export default function HomeView({
                       <button
                         type="button"
                         onClick={onFetchItBookDelivery}
-                        className="w-full min-h-[3.15rem] rounded-full bg-[#4c1d95] py-3.5 text-center text-[15px] font-bold uppercase tracking-[0.06em] text-white transition-transform active:scale-[0.98]"
+                        className="w-full min-h-[3.15rem] rounded-full bg-[#291050] py-3.5 text-center text-[15px] font-bold uppercase tracking-[0.06em] text-white transition-transform active:scale-[0.98]"
                       >
                         Book Fetch delivery
                       </button>
@@ -8042,7 +8054,7 @@ export default function HomeView({
                         bumpInteraction()
                         setSearchQuery('')
                       }}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-100/60 text-[#4c1d95] transition-colors active:bg-violet-100"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-100/60 text-[#291050] transition-colors active:bg-violet-100"
                       aria-label="Clear search"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -8131,7 +8143,7 @@ export default function HomeView({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="fetch-search-category-choice-title"
-                className="relative z-[1] mx-auto w-full max-w-[min(100%,430px)] rounded-t-2xl border border-violet-200/50 bg-white px-0 pb-[max(1rem,env(safe-area-inset-bottom))] pt-1 shadow-[0_-14px_44px_rgba(76,29,149,0.1)]"
+                className="relative z-[1] mx-auto w-full max-w-[min(100%,430px)] rounded-t-2xl border border-violet-200/50 bg-white px-0 pb-[max(1rem,env(safe-area-inset-bottom))] pt-1 shadow-[0_-14px_44px_rgba(41,16,80,0.1)]"
               >
                 <div className="mx-auto mt-1.5 h-1 w-10 shrink-0 rounded-full bg-zinc-300" aria-hidden />
                 <h2
@@ -8152,7 +8164,7 @@ export default function HomeView({
                     }}
                     className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-[15px] font-semibold text-zinc-900 transition-colors active:bg-violet-50"
                   >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-[#4c1d95]">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-[#291050]">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
                         <rect x="4" y="5" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.75" />
                         <path d="M8 9h8M8 12h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

@@ -76,6 +76,9 @@ export function stripeMetadataForIntent(bookingId, intentMetadata) {
         meta.listingOrderId = intentMetadata.listingOrderId.slice(0, 120)
       }
     }
+    if (intentMetadata.type === 'wallet_top_up') {
+      meta.checkout = 'wallet_top_up'
+    }
   }
   return meta
 }

@@ -103,7 +103,7 @@ export function StartingSoonListingSheet({
       />
 
       {/* Sheet */}
-      <div className="fetch-sheet-slide-up relative z-[1] flex max-h-[92dvh] flex-col overflow-hidden rounded-t-3xl bg-white shadow-[0_-30px_60px_-20px_rgba(76,29,149,0.55)]">
+      <div className="fetch-sheet-slide-up relative z-[1] flex max-h-[92dvh] flex-col overflow-hidden rounded-t-3xl bg-white shadow-[0_-30px_60px_-20px_rgba(41,16,80,0.55)]">
         {/* Drag handle */}
         <div className="flex shrink-0 justify-center pt-2">
           <span className="h-1.5 w-10 rounded-full bg-zinc-300" aria-hidden />
@@ -179,7 +179,7 @@ export function StartingSoonListingSheet({
                   Battle ended
                 </span>
               ) : (
-                <span className="rounded-md bg-white/90 px-2 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[#4c1d95] shadow-sm">
+                <span className="rounded-md bg-white/90 px-2 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[#291050] shadow-sm">
                   Starts in {formatMmSs(remaining)}
                 </span>
               )}
@@ -189,7 +189,7 @@ export function StartingSoonListingSheet({
           {/* Title + price block. Shows current bid when live, est. value otherwise. */}
           <div className="mt-4 flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#4c1d95]/80">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#291050]/80">
                 Battle {battle.battleNumber}
               </p>
               <p className="mt-0.5 text-[22px] font-black leading-tight text-[#1c1528]">
@@ -224,10 +224,10 @@ export function StartingSoonListingSheet({
               </div>
             ) : (
               <div className="shrink-0 rounded-xl bg-violet-50 px-3 py-2 text-right ring-1 ring-violet-100">
-                <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-[#4c1d95]/70">
+                <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-[#291050]/70">
                   Est. value
                 </p>
-                <p className="text-[16px] font-black leading-none tabular-nums text-[#4c1d95]">
+                <p className="text-[16px] font-black leading-none tabular-nums text-[#291050]">
                   {formatAudCents(battle.estValueCents)}
                 </p>
               </div>
@@ -294,7 +294,7 @@ export function StartingSoonListingSheet({
                     className={[
                       'h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-zinc-100 transition-[outline-width,transform] active:scale-95',
                       i === activeIdx
-                        ? 'outline outline-2 outline-[#4c1d95]'
+                        ? 'outline outline-2 outline-[#291050]'
                         : 'outline outline-1 outline-zinc-200',
                     ].join(' ')}
                     aria-label={`Show photo ${i + 1}`}
@@ -321,8 +321,8 @@ export function StartingSoonListingSheet({
             className={[
               'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-[background-color,color,transform] active:scale-[0.94]',
               reminded
-                ? 'bg-[#4c1d95] text-white shadow-sm'
-                : 'bg-violet-50 text-[#4c1d95] ring-1 ring-violet-200',
+                ? 'bg-[#291050] text-white shadow-sm'
+                : 'bg-violet-50 text-[#291050] ring-1 ring-violet-200',
             ].join(' ')}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -346,7 +346,7 @@ export function StartingSoonListingSheet({
                 ? 'fetch-battle-join-pulse bg-gradient-to-b from-red-500 via-red-600 to-red-700 shadow-[0_14px_28px_-10px_rgba(239,68,68,0.75)]'
                 : isDone
                   ? 'bg-zinc-500'
-                  : 'bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] shadow-[0_16px_34px_-14px_rgba(76,29,149,0.7)]',
+                  : 'bg-gradient-to-b from-[#7c3aed] via-[#4f1d93] to-[#291050] shadow-[0_16px_34px_-14px_rgba(41,16,80,0.7)]',
             ].join(' ')}
           >
             {isLive ? (

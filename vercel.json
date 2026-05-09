@@ -4,6 +4,14 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
+    {
+      "source": "/listing-uploads/:path*",
+      "destination": "/api/listing-uploads/:path*"
+    },
+    {
+      "source": "/drops-uploads/:path*",
+      "destination": "/api/drops-uploads/:path*"
+    },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "functions": {

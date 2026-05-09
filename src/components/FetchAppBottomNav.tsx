@@ -24,8 +24,8 @@ import {
   FETCH_APP_PATH,
   FETCH_AUTH_PATH,
   FETCH_GEMS_PATH,
+  FETCH_LIVES_FEED_PATH,
   FETCH_MARKETPLACE_LIST_PATH,
-  FETCH_PROFILE_EDIT_PATH,
   FETCH_PROFILE_PATH,
   FETCH_SHOP_PATH,
   FETCH_SHOP_SETUP_PATH,
@@ -37,12 +37,15 @@ import {
 type ActiveTab = 'forYou' | 'search' | 'sell' | 'activity' | 'profile' | null
 
 function activeTabFor(pathname: string): ActiveTab {
+  if (pathname === FETCH_LIVES_FEED_PATH || pathname.startsWith('/live/')) {
+    return 'search'
+  }
   if (pathname === FETCH_SHOP_PATH || pathname === FETCH_SHOP_SETUP_PATH) {
     return 'activity'
   }
   if (
     pathname === FETCH_PROFILE_PATH ||
-    pathname === FETCH_PROFILE_EDIT_PATH ||
+    pathname.startsWith(`${FETCH_PROFILE_PATH}/`) ||
     pathname === FETCH_GEMS_PATH ||
     pathname === FETCH_WALLET_CASH_OUT_PATH ||
     pathname === FETCH_WALLET_ADD_CREDITS_PATH ||
@@ -81,7 +84,7 @@ export function FetchAppBottomNav({ activeTab, hidden }: FetchAppBottomNavProps)
   )
 
   const onForYou = useCallback(() => navigateToHomeShellTab('services'), [navigateToHomeShellTab])
-  const onSearch = useCallback(() => navigateToHomeShellTab('search'), [navigateToHomeShellTab])
+  const onSearch = useCallback(() => navigate(FETCH_LIVES_FEED_PATH), [navigate])
   const onActivity = useCallback(() => {
     if (shopLocked) {
       navigate(FETCH_AUTH_PATH)

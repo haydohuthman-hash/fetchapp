@@ -26,7 +26,7 @@ function audFromCents(cents: number): string {
   return (safe / 100).toLocaleString('en-AU', { style: 'currency', currency: 'AUD' })
 }
 
-const BRAND = '#4c1d95'
+const BRAND = '#291050'
 const BRAND_BG = '#faf8ff'
 
 function fmtCompact(n: number): string {
@@ -62,7 +62,7 @@ function ProfileHexAchievement({
         className={[
           'relative flex h-[4.85rem] w-[4.2rem] shrink-0 items-center justify-center p-[5px]',
           unlocked
-            ? 'drop-shadow-[0_10px_18px_-8px_rgba(76,29,149,0.55)]'
+            ? 'drop-shadow-[0_10px_18px_-8px_rgba(41,16,80,0.55)]'
             : 'opacity-75 saturate-[0.45]',
         ].join(' ')}
         style={{
@@ -78,7 +78,7 @@ function ProfileHexAchievement({
           className={[
             'flex h-[calc(100%-2px)] w-[calc(100%-2px)] items-center justify-center',
             unlocked
-              ? 'bg-[linear-gradient(165deg,#2e1064_8%,#4c1d95_45%,#1e0638_92%)]'
+              ? 'bg-[linear-gradient(165deg,#2e1064_8%,#291050_45%,#1e0638_92%)]'
               : 'bg-[linear-gradient(165deg,#3f3f46_12%,#27272a_55%,#18181b_92%)]',
           ].join(' ')}
           style={{
@@ -340,7 +340,7 @@ export default function FetchProfilePage({
         <section className="flex items-start gap-4 pt-0">
           <div className="relative shrink-0">
             <div
-              className="flex h-[5.75rem] w-[5.75rem] items-center justify-center overflow-hidden rounded-full bg-white ring-[3px] ring-white shadow-[0_12px_40px_-12px_rgba(76,29,149,0.45)]"
+              className="flex h-[5.75rem] w-[5.75rem] items-center justify-center overflow-hidden rounded-full bg-white ring-[3px] ring-white shadow-[0_12px_40px_-12px_rgba(41,16,80,0.45)]"
               style={
                 avatarUrl
                   ? { backgroundImage: `url(${avatarUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
@@ -396,7 +396,7 @@ export default function FetchProfilePage({
               <button
                 type="button"
                 onClick={onEditProfile}
-                className="shrink-0 rounded-full px-4 py-2 text-[12px] font-black uppercase tracking-wide text-white shadow-[0_6px_20px_-6px_rgba(76,29,149,0.55)] transition active:translate-y-[0.5px] active:scale-[0.98]"
+                className="shrink-0 rounded-full px-4 py-2 text-[12px] font-black uppercase tracking-wide text-white shadow-[0_6px_20px_-6px_rgba(41,16,80,0.55)] transition active:translate-y-[0.5px] active:scale-[0.98]"
                 style={{ background: BRAND }}
               >
                 Edit
@@ -427,7 +427,7 @@ export default function FetchProfilePage({
         </p>
 
         {/* Stats */}
-        <section className="mt-6 overflow-hidden rounded-2xl border border-white/95 bg-white shadow-[0_16px_40px_-28px_rgba(76,29,149,0.35)] ring-1 ring-violet-100/80">
+        <section className="mt-6 overflow-hidden rounded-2xl border border-white/95 bg-white shadow-[0_16px_40px_-28px_rgba(41,16,80,0.35)] ring-1 ring-violet-100/80">
           <div className="grid grid-cols-4 divide-x divide-zinc-100 py-4">
             {[
               {
@@ -596,7 +596,7 @@ export default function FetchProfilePage({
                   onClick={() => setContentTab(t.id)}
                   className={[
                     'relative shrink-0 border-0 bg-transparent pb-3 pt-1 text-[13px] font-black tracking-tight',
-                    sel ? 'text-[#4c1d95]' : 'text-[#1c1340] hover:text-[#4c1d95]',
+                    sel ? 'text-[#291050]' : 'text-[#1c1340] hover:text-[#291050]',
                   ].join(' ')}
                   style={
                     sel
@@ -714,7 +714,7 @@ export default function FetchProfilePage({
 
               {loading ? (
                 <div className="flex justify-center py-12">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-200 border-t-[#4c1d95]" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-200 border-t-[#291050]" />
                 </div>
               ) : listings.length === 0 ? (
                 <div className="flex flex-col items-center rounded-2xl border border-zinc-100 bg-white px-5 py-10 text-center">

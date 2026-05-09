@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { WalletEarningsChart } from '../components/bidwars/WalletEarningsChart'
 import type { WalletTransaction, WalletTxnKind } from '../lib/data'
 import { formatAud, useWalletBalanceCents, useWalletTxns } from '../lib/data'
 import { FETCH_APP_PATH, FETCH_WALLET_ADD_CREDITS_PATH } from '../lib/fetchRoutes'
@@ -181,6 +182,10 @@ export default function FetchWalletTransactionsView({ onBack }: FetchWalletTrans
             </div>
           </div>
         </section>
+
+        <div className="mt-5">
+          <WalletEarningsChart txns={txns} />
+        </div>
 
         <section className="mt-5" aria-label="Transaction history">
           <div className="mb-3 flex items-baseline justify-between px-1">

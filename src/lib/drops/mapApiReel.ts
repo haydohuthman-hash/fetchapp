@@ -3,6 +3,7 @@ import type {
   DropRegionCode,
   DropReel,
   DropsCommerceTarget,
+  DropsLiveShowcaseCommerce,
   LiveShowcaseCommerceItem,
 } from './types'
 
@@ -38,7 +39,19 @@ function asCommerce(raw: unknown): DropsCommerceTarget | undefined {
         items.push({ kind: 'buy_sell_listing', listingId: rec.listingId.trim(), ...(label ? { label } : {}) })
       }
     }
-    if (items.length) return { kind: 'live_showcase', items }
+    const coverSquareUrl =
+      typeof o.coverSquareUrl === 'string' ? o.coverSquareUrl.trim().slice(0, 2048) : ''
+    const coverVerticalUrl =
+      typeof o.coverVerticalUrl === 'string' ? o.coverVerticalUrl.trim().slice(0, 2048) : ''
+    if (items.length) {
+      const out: DropsLiveShowcaseCommerce = {
+        kind: 'live_showcase',
+        items,
+      }
+      if (coverSquareUrl) out.coverSquareUrl = coverSquareUrl
+      if (coverVerticalUrl) out.coverVerticalUrl = coverVerticalUrl
+      return out
+    }
   }
   return undefined
 }
@@ -98,6 +111,12 @@ export function mapApiDropToReel(raw: Record<string, unknown>): DropReel | null 
     ...(videoUrl && !imageUrls?.length ? { videoUrl, mediaKind: vidKind } : {}),
     ...(poster ? { poster } : {}),
     ...(commerce ? { commerce } : {}),
+    ...(commerce?.kind === 'live_showcase' && commerce.coverSquareUrl
+      ? { liveCoverSquareUrl: commerce.coverSquareUrl }
+      : {}),
+    ...(commerce?.kind === 'live_showcase' && commerce.coverVerticalUrl
+      ? { liveCoverVerticalUrl: commerce.coverVerticalUrl }
+      : {}),
     commerceSaleMode,
     isOfficial: Boolean(raw.isOfficial),
     isSponsored: Boolean(raw.isSponsored),

@@ -76,7 +76,7 @@ function LiveNowCard({ reel, onOpen }: { reel: DropReel; onOpen: (reel: DropReel
     >
       <div className="mb-1.5 flex min-w-0 items-center gap-1.5 px-0.5">
         <span
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#9f67ff] to-[#4c1d95] text-[11px] font-black text-white ring-2 ring-white"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#9f67ff] to-[#291050] text-[11px] font-black text-white ring-2 ring-white"
           aria-hidden
         >
           {initial}
@@ -102,11 +102,11 @@ function LiveNowCard({ reel, onOpen }: { reel: DropReel; onOpen: (reel: DropReel
           aria-hidden
         />
         <BoostedBadge id={reel.id} />
-        <div className="pointer-events-none absolute left-1 top-1 z-[3] flex max-w-[calc(100%-0.5rem)] items-stretch overflow-hidden whitespace-nowrap rounded-md shadow-[0_6px_18px_-10px_rgba(76,29,149,0.6)] ring-1 ring-black/15">
+        <div className="pointer-events-none absolute left-1 top-1 z-[3] flex max-w-[calc(100%-0.5rem)] items-stretch overflow-hidden whitespace-nowrap rounded-md shadow-[0_6px_18px_-10px_rgba(41,16,80,0.6)] ring-1 ring-black/15">
           <span className="flex items-center bg-rose-600 px-1.5 py-[3px] text-[10px] font-extrabold uppercase leading-none tracking-wide text-white">
             Live
           </span>
-          <span className="flex items-center gap-1 bg-[#4c1d95] px-1.5 py-[3px] text-[11px] font-extrabold tabular-nums leading-none text-white">
+          <span className="flex items-center gap-1 bg-[#291050] px-1.5 py-[3px] text-[11px] font-extrabold tabular-nums leading-none text-white">
             <svg
               className="h-3 w-3 shrink-0 text-white/90"
               viewBox="0 0 24 24"
@@ -174,7 +174,7 @@ export const LiveNowGrid = memo(function LiveNowGrid({
           <button
             type="button"
             onClick={handleGetNotified}
-            className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#4c1d95] px-6 text-[14px] font-extrabold text-white shadow-[0_10px_22px_-12px_rgba(76,29,149,0.75)] ring-1 ring-black/10 transition-transform active:scale-[0.98] dark:ring-white/15"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#291050] px-6 text-[14px] font-extrabold text-white shadow-[0_10px_22px_-12px_rgba(41,16,80,0.75)] ring-1 ring-black/10 transition-transform active:scale-[0.98] dark:ring-white/15"
           >
             Get notified
           </button>
@@ -515,7 +515,7 @@ function UpNextHeroCard({
         'fetch-battle-hero relative overflow-hidden rounded-3xl p-3 transition-colors',
         isLive
           ? 'fetch-battle-hero--live border border-red-200/90 bg-gradient-to-br from-white via-[#fff7f7] to-[#ffe9e9] shadow-[0_18px_44px_-28px_rgba(239,68,68,0.35)]'
-          : 'fetch-battle-hero--upnext border border-violet-200/80 bg-gradient-to-br from-white via-[#faf8ff] to-[#f3e8ff] shadow-[0_18px_44px_-28px_rgba(76,29,149,0.22)]',
+          : 'fetch-battle-hero--upnext border border-violet-200/80 bg-gradient-to-br from-white via-[#faf8ff] to-[#f3e8ff] shadow-[0_18px_44px_-28px_rgba(41,16,80,0.22)]',
         aboutToStart ? 'fetch-battle-hero--imminent' : '',
       ].join(' ')}
       aria-label={
@@ -531,7 +531,7 @@ function UpNextHeroCard({
               'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] shadow-sm ring-1 backdrop-blur-sm',
               isLive
                 ? 'fetch-battle-live-pill bg-red-600 text-white ring-white/15'
-                : 'bg-violet-600 text-white ring-violet-500/25 shadow-[0_1px_2px_rgba(76,29,149,0.12)]',
+                : 'bg-violet-600 text-white ring-violet-500/25 shadow-[0_1px_2px_rgba(41,16,80,0.12)]',
             ].join(' ')}
           >
             {isLive ? (
@@ -554,7 +554,7 @@ function UpNextHeroCard({
                 ? ['bg-white/95 ring-red-200/90', remaining <= 5 ? 'text-red-700' : 'text-red-600'].join(' ')
                 : aboutToStart
                   ? 'bg-amber-50 text-amber-800 ring-amber-200/90'
-                  : 'bg-white/95 text-violet-950 ring-violet-200/90 shadow-[0_2px_8px_-4px_rgba(76,29,149,0.12)]',
+                  : 'bg-white/95 text-violet-950 ring-violet-200/90 shadow-[0_2px_8px_-4px_rgba(41,16,80,0.12)]',
             ].join(' ')}
           >
             {formatMmSs(remaining)}
@@ -679,7 +679,7 @@ function UpNextHeroCard({
             'flex w-full items-center justify-center gap-1.5 rounded-full px-4 py-3 text-[12px] font-black uppercase tracking-[0.1em] active:scale-[0.97]',
             isLive
               ? 'fetch-battle-join-pulse bg-gradient-to-b from-red-500 via-red-600 to-red-700 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_6px_0_0_#b91c1c] ring-1 ring-red-400/35'
-              : 'bg-violet-600 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_6px_0_0_#4c1d95] ring-1 ring-violet-500/30 hover:bg-violet-700',
+              : 'bg-violet-600 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_6px_0_0_#291050] ring-1 ring-violet-500/30 hover:bg-violet-700',
           ].join(' ')}
         >
           {isLive ? (
@@ -753,7 +753,7 @@ function StartingSoonRow({
         'group relative flex flex-col overflow-hidden rounded-2xl bg-white text-left transition-[box-shadow,transform]',
         isLive
           ? 'ring-2 ring-red-300/90 shadow-[0_14px_28px_-18px_rgba(239,68,68,0.35)]'
-          : 'ring-1 ring-violet-200/70 shadow-[0_8px_20px_-14px_rgba(76,29,149,0.35)]',
+          : 'ring-1 ring-violet-200/70 shadow-[0_8px_20px_-14px_rgba(41,16,80,0.35)]',
       ].join(' ')}
     >
       <button
@@ -834,8 +834,8 @@ function StartingSoonRow({
         className={[
           'absolute right-1.5 top-1.5 z-[2] flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-[background-color,color,transform] active:scale-[0.94] backdrop-blur-sm',
           reminded
-            ? 'bg-[#4c1d95] text-white shadow-sm'
-            : 'bg-white/85 text-[#4c1d95] ring-1 ring-violet-200',
+            ? 'bg-[#291050] text-white shadow-sm'
+            : 'bg-white/85 text-[#291050] ring-1 ring-violet-200',
         ].join(' ')}
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -1007,7 +1007,7 @@ export const UpcomingLivesList = memo(function UpcomingLivesList() {
         onOpenDetails={() => setDetailsBattleId(hero.id)}
       />
 
-      <section className="rounded-3xl border border-violet-200/70 bg-white/95 p-3 shadow-[0_12px_28px_-20px_rgba(76,29,149,0.28)]">
+      <section className="rounded-3xl border border-violet-200/70 bg-white/95 p-3 shadow-[0_12px_28px_-20px_rgba(41,16,80,0.28)]">
         <div className="mb-2 flex items-center justify-between gap-2">
           <div className="min-w-0">
             <p className="text-[11px] font-black uppercase tracking-[0.1em] text-violet-700">Round Queue</p>

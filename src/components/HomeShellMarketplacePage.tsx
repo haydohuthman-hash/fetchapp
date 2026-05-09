@@ -39,10 +39,13 @@ import type { HomeShellTab } from './FetchHomeBookingSheet'
 import { FetchStripePaymentElement } from './FetchStripePaymentElement'
 import {
   buildLiveFeedStreams,
+  dropReelToLiveFeedStream,
+  dropsReelsForLiveAuctionFloor,
   LIVE_FEED_FILTER_CHIPS,
   type LiveFeedCategory,
   type LiveFeedStream,
 } from '../lib/liveFeedDemo'
+import { useDropsApiFeed } from '../lib/drops/useDropsApiFeed'
 import { LiveFeedCard, LiveVideoAuction } from './LiveFeedPage'
 import fetchitQuickLiveTile from '../assets/fetchit-quick-live-auctions.png'
 import imgLiveCatHome from '../assets/fetchit-home-living-room-hero.png'
@@ -82,21 +85,6 @@ function storeBrowseSegment(segment: 'auctions' | 'shop'): void {
   }
 }
 
-type ListingSort = 'newest' | 'price_asc' | 'price_desc'
-type AuctionSort = 'viewers' | 'ending_soon' | 'price_low'
-
-const LISTING_SORT_OPTIONS: { id: ListingSort; label: string }[] = [
-  { id: 'newest', label: 'Newest' },
-  { id: 'price_asc', label: 'Price: low to high' },
-  { id: 'price_desc', label: 'Price: high to low' },
-]
-
-const AUCTION_SORT_OPTIONS: { id: AuctionSort; label: string }[] = [
-  { id: 'viewers', label: 'Most viewers' },
-  { id: 'ending_soon', label: 'Ending soonest' },
-  { id: 'price_low', label: 'Price: low to high' },
-]
-
 const SHOP_PRICE_PRESETS: { id: string; label: string; cents: number | null }[] = [
   { id: 'any', label: 'Any price', cents: null },
   { id: 'p25', label: 'Under $25', cents: 2500 },
@@ -122,7 +110,7 @@ export type MarketplaceBrowseHandoff = {
 export type MarketplaceSellerHubHandoff = {
   id: number
   /** First screen inside seller overlay (default feed). */
-  panel: 'feed' | 'create'
+  panel: 'feed' | 'create' | 'live' | 'liveStudio'
 }
 
 export type MarketplaceSegmentHandoff = {
@@ -456,7 +444,7 @@ function HomeShellMarketplacePageInner({
   const [peerCheckoutBusy, setPeerCheckoutBusy] = useState(false)
   const [sellerToolsOpen, setSellerToolsOpen] = useState(false)
   const [sellerOverlayMountKey, setSellerOverlayMountKey] = useState(0)
-  const [sellerOverlayLanding, setSellerOverlayLanding] = useState<'feed' | 'create'>('feed')
+  const [sellerOverlayLanding, setSellerOverlayLanding] = useState<'feed' | 'create' | 'live' | 'liveStudio'>('feed')
   const lastSellerHubIdRef = useRef<number | null>(null)
   const [peerListFilter, setPeerListFilter] = useState<{
     q?: string
@@ -477,11 +465,18 @@ function HomeShellMarketplacePageInner({
   }, [browseSegment])
   const [liveCategory, setLiveCategory] = useState<LiveFeedCategory>('all')
   const [listingCategory, setListingCategory] = useState<LiveFeedCategory>('all')
-  const [auctionSort, setAuctionSort] = useState<AuctionSort>('viewers')
-  const [listingSort, setListingSort] = useState<ListingSort>('newest')
   const [activeLiveStream, setActiveLiveStream] = useState<LiveFeedStream | null>(null)
 
-  const liveStreams = useMemo(() => buildLiveFeedStreams(), [])
+  const dropsApiFeed = useDropsApiFeed()
+
+  const liveStreams = useMemo(() => {
+    const demos = buildLiveFeedStreams()
+    const apiRows = dropsReelsForLiveAuctionFloor(dropsApiFeed.reels)
+    const apiMapped = apiRows.map((r, idx) => dropReelToLiveFeedStream(r, idx))
+    if (!dropsApiFeed.database) return demos
+    if (apiMapped.length === 0) return demos
+    return apiMapped
+  }, [dropsApiFeed.reels, dropsApiFeed.database])
 
   const filteredLiveStreams = useMemo(() => {
     let s = liveStreams
@@ -497,15 +492,9 @@ function HomeShellMarketplacePageInner({
       )
     }
     const sorted = [...s]
-    if (auctionSort === 'viewers') {
-      sorted.sort((a, b) => b.watchers - a.watchers)
-    } else if (auctionSort === 'ending_soon') {
-      sorted.sort((a, b) => a.endsInSec - b.endsInSec)
-    } else if (auctionSort === 'price_low') {
-      sorted.sort((a, b) => a.priceCents - b.priceCents)
-    }
+    sorted.sort((a, b) => b.watchers - a.watchers)
     return sorted
-  }, [liveStreams, liveCategory, peerListFilter.q, auctionSort])
+  }, [liveStreams, liveCategory, peerListFilter.q])
 
   const onListingBrowseCategory = useCallback((id: LiveFeedCategory) => {
     setListingCategory(id)
@@ -575,15 +564,9 @@ function HomeShellMarketplacePageInner({
       )
     }
     const sorted = [...list]
-    if (listingSort === 'newest') {
-      sorted.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
-    } else if (listingSort === 'price_asc') {
-      sorted.sort((a, b) => (a.priceCents ?? 0) - (b.priceCents ?? 0))
-    } else if (listingSort === 'price_desc') {
-      sorted.sort((a, b) => (b.priceCents ?? 0) - (a.priceCents ?? 0))
-    }
+    sorted.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
     return sorted
-  }, [peerListings, applyPeerListClientFilters, listingCategory, listingSort])
+  }, [peerListings, applyPeerListClientFilters, listingCategory])
 
   const loadPeerListings = useCallback(async () => {
     const catRaw = peerListFilter.category?.trim()
@@ -616,6 +599,22 @@ function HomeShellMarketplacePageInner({
   useEffect(() => {
     void loadPeerListings()
   }, [loadPeerListings])
+
+  useEffect(() => {
+    if (subView !== 'browse') return
+    const pollMs = 22_000
+    const id = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void loadPeerListings()
+    }, pollMs)
+    const onVis = () => {
+      if (document.visibilityState === 'visible') void loadPeerListings()
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [subView, loadPeerListings])
 
   useEffect(() => {
     if (!browseHandoff) return
@@ -1078,87 +1077,6 @@ function HomeShellMarketplacePageInner({
                   aria-label={browseSegment === 'auctions' ? 'Live auctions' : 'Local listings'}
                 >
                   <div className="shrink-0 border-b border-zinc-50 bg-white">
-                    <div className="mx-auto flex w-full max-w-[min(100%,430px)] items-center gap-2 px-3 pt-2.5">
-                      <div
-                        role="tablist"
-                        aria-label="Marketplace segment"
-                        className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-zinc-100 p-0.5"
-                      >
-                        {(['auctions', 'shop'] as const).map((seg) => {
-                          const active = browseSegment === seg
-                          return (
-                            <button
-                              key={seg}
-                              type="button"
-                              role="tab"
-                              aria-selected={active}
-                              onClick={() => setBrowseSegment(seg)}
-                              className={[
-                                'rounded-full px-3.5 py-1.5 text-[12px] font-bold tracking-tight transition-colors',
-                                active
-                                  ? 'bg-white text-zinc-900 shadow-[0_1px_3px_rgba(0,0,0,0.08)] ring-1 ring-zinc-200/80'
-                                  : 'text-zinc-500 active:bg-zinc-200/70',
-                              ].join(' ')}
-                            >
-                              {seg === 'auctions' ? 'Auctions' : 'Shop'}
-                            </button>
-                          )
-                        })}
-                      </div>
-                      <div className="ml-auto shrink-0">
-                        {browseSegment === 'auctions' ? (
-                          <label className="relative flex h-9 items-center rounded-full bg-zinc-100 pl-3 pr-7 text-[12px] font-semibold text-zinc-700">
-                            <span className="sr-only">Sort auctions</span>
-                            <select
-                              value={auctionSort}
-                              onChange={(e) => setAuctionSort(e.target.value as AuctionSort)}
-                              className="appearance-none bg-transparent pr-1 outline-none"
-                            >
-                              {AUCTION_SORT_OPTIONS.map((o) => (
-                                <option key={o.id} value={o.id}>
-                                  {o.label}
-                                </option>
-                              ))}
-                            </select>
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              aria-hidden
-                              className="pointer-events-none absolute right-2.5 text-zinc-500"
-                            >
-                              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </label>
-                        ) : (
-                          <label className="relative flex h-9 items-center rounded-full bg-zinc-100 pl-3 pr-7 text-[12px] font-semibold text-zinc-700">
-                            <span className="sr-only">Sort listings</span>
-                            <select
-                              value={listingSort}
-                              onChange={(e) => setListingSort(e.target.value as ListingSort)}
-                              className="appearance-none bg-transparent pr-1 outline-none"
-                            >
-                              {LISTING_SORT_OPTIONS.map((o) => (
-                                <option key={o.id} value={o.id}>
-                                  {o.label}
-                                </option>
-                              ))}
-                            </select>
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              aria-hidden
-                              className="pointer-events-none absolute right-2.5 text-zinc-500"
-                            >
-                              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </label>
-                        )}
-                      </div>
-                    </div>
                     {browseSegment === 'shop' ? (
                       <div
                         className="mx-auto flex w-full max-w-[min(100%,430px)] gap-1.5 overflow-x-auto px-3 pt-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -1182,7 +1100,7 @@ function HomeShellMarketplacePageInner({
                               className={[
                                 'shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold transition-colors',
                                 active
-                                  ? 'bg-[#4c1d95] text-white'
+                                  ? 'bg-[#291050] text-white'
                                   : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200',
                               ].join(' ')}
                             >
@@ -1219,7 +1137,7 @@ function HomeShellMarketplacePageInner({
                               className={[
                                 'relative h-[3.6rem] w-[3.6rem] overflow-hidden rounded-2xl bg-zinc-100 transition-shadow',
                                 selected
-                                  ? 'ring-[3px] ring-[#4c1d95] shadow-md'
+                                  ? 'ring-[3px] ring-[#291050] shadow-md'
                                   : 'ring-1 ring-zinc-200/90',
                               ].join(' ')}
                             >
@@ -1402,7 +1320,7 @@ function HomeShellMarketplacePageInner({
                       <button
                         type="button"
                         disabled={cartLines.length === 0}
-                        className="w-full rounded-xl bg-[#4c1d95] py-3.5 text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40 active:opacity-90"
+                        className="w-full rounded-xl bg-[#291050] py-3.5 text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40 active:opacity-90"
                         onClick={goCheckout}
                       >
                         Checkout
@@ -1519,7 +1437,7 @@ function HomeShellMarketplacePageInner({
                     <button
                       type="button"
                       disabled={!checkoutValid || cartLines.length === 0 || checkoutBusy}
-                      className="w-full rounded-xl bg-[#4c1d95] py-3.5 text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40 active:opacity-90"
+                      className="w-full rounded-xl bg-[#291050] py-3.5 text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40 active:opacity-90"
                       onClick={() => void placeStoreOrder()}
                     >
                       {checkoutBusy ? 'Processingâ€¦' : 'Place order'}
@@ -1549,7 +1467,7 @@ function HomeShellMarketplacePageInner({
                 </p>
                 <button
                   type="button"
-                  className="mt-8 w-full max-w-xs rounded-xl bg-[#4c1d95] py-3.5 text-[15px] font-semibold text-white active:opacity-90"
+                  className="mt-8 w-full max-w-xs rounded-xl bg-[#291050] py-3.5 text-[15px] font-semibold text-white active:opacity-90"
                   onClick={goBrowse}
                 >
                   Back to auctions
@@ -1650,7 +1568,7 @@ function HomeShellMarketplacePageInner({
                       <>
                         <button
                           type="button"
-                          className="w-full rounded-xl bg-[#4c1d95] py-3.5 text-[15px] font-semibold text-white active:opacity-90"
+                          className="w-full rounded-xl bg-[#291050] py-3.5 text-[15px] font-semibold text-white active:opacity-90"
                           onClick={() => {
                             addOne(productSheet)
                           }}
@@ -1815,7 +1733,7 @@ function HomeShellMarketplacePageInner({
                           </div>
                           <button
                             type="button"
-                            className="shrink-0 rounded-lg bg-[#4c1d95] px-3 py-2 text-[12px] font-bold text-white active:bg-[#5b21b6]"
+                            className="shrink-0 rounded-lg bg-[#291050] px-3 py-2 text-[12px] font-bold text-white active:bg-[#5b21b6]"
                             onClick={openSellerTools}
                           >
                             View in Drops
@@ -1883,7 +1801,7 @@ function HomeShellMarketplacePageInner({
                         <button
                           type="button"
                           disabled={peerCheckoutBusy || isViewerSeller || isDemoListing}
-                          className="w-full rounded-xl bg-[#4c1d95] py-3.5 text-[15px] font-semibold text-white disabled:opacity-50"
+                          className="w-full rounded-xl bg-[#291050] py-3.5 text-[15px] font-semibold text-white disabled:opacity-50"
                           onClick={() => void startPeerBuy(selected)}
                         >
                           {peerCheckoutBusy ? 'â€¦' : isDemoListing ? 'Checkout unavailable' : 'Buy now'}

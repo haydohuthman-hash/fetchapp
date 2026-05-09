@@ -10,6 +10,8 @@ import {
 import { createPortal } from 'react-dom'
 import { buildLiveFeedStreams, formatAud, type LiveFeedStream } from '../lib/liveFeedDemo'
 import { loadSession } from '../lib/fetchUserSession'
+import Hls from 'hls.js'
+import { addWatchLivePlaybackSeconds } from '../lib/tasks/earnTaskSignals'
 
 function SearchIcon({ className }: { className?: string }) {
   return (
@@ -567,52 +569,136 @@ export function LiveVideoAuction({
   onClose: () => void
   onOpenListing: (listingId: string) => void
 }) {
+  const hasRealPlayback = Boolean(stream.playbackUrl?.trim())
   const [sec, setSec] = useState(stream.endsInSec)
   const [bidCents, setBidCents] = useState(stream.priceCents)
   const [incrementCents, setIncrementCents] = useState<number>(500)
-  const videoRef = useRef<HTMLDivElement>(null)
+  const videoWrapRef = useRef<HTMLDivElement>(null)
+  const videoElRef = useRef<HTMLVideoElement | null>(null)
+  const hlsRef = useRef<Hls | null>(null)
+  const lastVideoTimeRef = useRef(0)
 
   const session = useMemo(() => loadSession(), [])
   const hasDetails = Boolean(session?.email)
 
   useEffect(() => {
+    if (hasRealPlayback) return
     const id = window.setInterval(() => setSec((s) => Math.max(0, s - 1)), 1000)
     return () => window.clearInterval(id)
-  }, [])
+  }, [hasRealPlayback])
 
   useEffect(() => {
+    if (hasRealPlayback) return
     const id = window.setInterval(() => {
       setBidCents((c) => c + 500)
     }, 4000 + Math.random() * 3000)
     return () => window.clearInterval(id)
-  }, [])
+  }, [hasRealPlayback])
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
 
+  useEffect(() => {
+    const url = stream.playbackUrl?.trim()
+    const el = videoElRef.current
+    if (!url || !el) return
+
+    lastVideoTimeRef.current = 0
+    let cancelled = false
+    const safeCleanup = () => {
+      cancelled = true
+      hlsRef.current?.destroy()
+      hlsRef.current = null
+      try {
+        el.pause()
+        el.removeAttribute('src')
+        el.load()
+      } catch {
+        /* ignore */
+      }
+    }
+
+    el.muted = true
+
+    const isHlsSource = /\.m3u8(\?|$)/i.test(url) || url.includes('stream.mux.com')
+
+    if (!isHlsSource && /\.(mp4|webm)(\?|$)/i.test(url)) {
+      el.src = url
+      void el.play().catch(() => undefined)
+      return safeCleanup
+    }
+
+    if (el.canPlayType('application/vnd.apple.mpegurl')) {
+      el.src = url
+      void el.play().catch(() => undefined)
+      return safeCleanup
+    }
+
+    const hls = new Hls({ enableWorker: true, lowLatencyMode: true })
+    hlsRef.current = hls
+    hls.loadSource(url)
+    hls.attachMedia(el)
+    hls.on(Hls.Events.ERROR, (_ev, data) => {
+      if (!data?.fatal || cancelled) return
+      try {
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad()
+        else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError()
+        else safeCleanup()
+      } catch {
+        safeCleanup()
+      }
+    })
+    void el.play().catch(() => undefined)
+
+    return safeCleanup
+  }, [stream.playbackUrl, stream.id])
+
+  const onVideoTimeUpdate = useCallback(() => {
+    if (!hasRealPlayback) return
+    const el = videoElRef.current
+    if (!el || el.paused) return
+    const ct = el.currentTime
+    const delta = ct - lastVideoTimeRef.current
+    lastVideoTimeRef.current = ct
+    if (delta > 0 && delta < 5) addWatchLivePlaybackSeconds(delta)
+  }, [hasRealPlayback])
+
   const handleSlideConfirm = useCallback(() => {
-    if (hasDetails) {
+    if (!hasRealPlayback && hasDetails) {
       setBidCents((c) => c + incrementCents)
     }
     const id = stream.listingId.trim()
     if (id) onOpenListing(id)
-  }, [onOpenListing, stream.listingId, hasDetails, incrementCents])
+  }, [onOpenListing, stream.listingId, hasDetails, incrementCents, hasRealPlayback])
 
   const m = Math.floor(sec / 60)
   const s = sec % 60
   const timerLabel = `${m}:${s.toString().padStart(2, '0')}`
 
-  const sliderLabel = hasDetails
-    ? `Slide to bid ${formatAud(bidCents + incrementCents)}`
-    : 'Add Payment Details'
+  const sliderLabel = hasRealPlayback
+    ? stream.listingId.trim()
+      ? 'Slide to open listing'
+      : 'Slide to browse'
+    : hasDetails
+      ? `Slide to bid ${formatAud(bidCents + incrementCents)}`
+      : 'Add Payment Details'
 
   return createPortal(
     <div className="fixed inset-0 z-[90] bg-black">
       {/* Full-screen video */}
-      <div ref={videoRef} className="absolute inset-0">
-        {stream.imageUrl ? (
+      <div ref={videoWrapRef} className="absolute inset-0">
+        {stream.playbackUrl?.trim() ? (
+          <video
+            ref={videoElRef}
+            className="absolute inset-0 h-full w-full object-cover bg-black"
+            playsInline
+            muted
+            autoPlay
+            onTimeUpdate={onVideoTimeUpdate}
+          />
+        ) : stream.imageUrl ? (
           <img
             src={stream.imageUrl}
             alt=""
@@ -766,12 +852,12 @@ function WelcomeSliderDemo() {
         'fetch-slide-bid-outer relative w-full rounded-full p-[3px]',
         shocking ? 'fetch-slide-bid-shock' : '',
       ].join(' ')}
-      style={{ border: '1.5px solid rgba(76,29,149,0.72)' }}
+      style={{ border: '1.5px solid rgba(41,16,80,0.72)' }}
     >
       <div
         ref={trackRef}
         className="relative flex h-[50px] w-full touch-none items-center overflow-hidden rounded-full"
-        style={{ background: 'rgba(76,29,149,0.12)' }}
+        style={{ background: 'rgba(41,16,80,0.12)' }}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
@@ -784,7 +870,7 @@ function WelcomeSliderDemo() {
         tabIndex={0}
       >
         <div
-          className="absolute inset-y-0 left-0 rounded-full bg-white shadow-[0_0_0_1px_rgba(76,29,149,0.08)]"
+          className="absolute inset-y-0 left-0 rounded-full bg-white shadow-[0_0_0_1px_rgba(41,16,80,0.08)]"
           style={{ width: `${fillPct}%`, transition: trans }}
         />
         <div
@@ -799,17 +885,17 @@ function WelcomeSliderDemo() {
             className="flex shrink-0 items-center pr-1.5"
             style={{ opacity: confirmed ? 0 : 1, transition: 'opacity 0.2s ease' }}
           >
-            <BoltIcon size={22} color="#4c1d95" />
+            <BoltIcon size={22} color="#291050" />
             <svg width="28" height="42" viewBox="0 0 28 42" fill="none" aria-hidden className="ml-[-4px]">
               <path
                 d="M5 9l10 12L5 33"
-                stroke={isSliding || shocking ? 'rgba(76,29,149,0.85)' : 'rgba(76,29,149,0.28)'}
+                stroke={isSliding || shocking ? 'rgba(41,16,80,0.85)' : 'rgba(41,16,80,0.28)'}
                 strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
                 style={{ transition: 'stroke 0.15s ease' }}
               />
               <path
                 d="M15 12l7 9-7 9"
-                stroke={isSliding || shocking ? 'rgba(76,29,149,0.55)' : 'rgba(76,29,149,0.18)'}
+                stroke={isSliding || shocking ? 'rgba(41,16,80,0.55)' : 'rgba(41,16,80,0.18)'}
                 strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
                 style={{ transition: 'stroke 0.15s ease' }}
               />
@@ -858,20 +944,20 @@ function LiveWelcomeSheet({ onDismiss }: { onDismiss: () => void }) {
   return createPortal(
     <div className="fixed inset-0 z-[95] flex items-end justify-center bg-[#2e1065]/35 backdrop-blur-[3px]" onClick={onDismiss}>
       <div
-        className="relative mx-auto w-full max-w-[430px] animate-[fetch-welcome-sheet-up_0.4s_ease-out_both] rounded-t-[1.5rem] bg-[#faf8ff] px-6 pb-[max(2rem,env(safe-area-inset-bottom,0px)+1.5rem)] pt-5 shadow-[0_-18px_52px_-24px_rgba(76,29,149,0.45)] ring-1 ring-[#4c1d95]/12"
+        className="relative mx-auto w-full max-w-[430px] animate-[fetch-welcome-sheet-up_0.4s_ease-out_both] rounded-t-[1.5rem] bg-[#faf8ff] px-6 pb-[max(2rem,env(safe-area-inset-bottom,0px)+1.5rem)] pt-5 shadow-[0_-18px_52px_-24px_rgba(41,16,80,0.45)] ring-1 ring-[#291050]/12"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle */}
-        <div className="mx-auto mb-5 h-[4px] w-10 rounded-full bg-[#4c1d95]/18" />
+        <div className="mx-auto mb-5 h-[4px] w-10 rounded-full bg-[#291050]/18" />
 
         {/* Demo slider */}
         <div className="mb-5">
-          <p className="mb-2 text-center text-[11px] font-black uppercase tracking-[0.18em] text-[#4c1d95]/60">Try it out</p>
+          <p className="mb-2 text-center text-[11px] font-black uppercase tracking-[0.18em] text-[#291050]/60">Try it out</p>
           <WelcomeSliderDemo />
         </div>
 
         {/* Headline */}
-        <div className="mb-6 rounded-2xl bg-white px-4 py-3 text-center shadow-[0_10px_24px_-20px_rgba(76,29,149,0.5)] ring-1 ring-[#4c1d95]/12">
+        <div className="mb-6 rounded-2xl bg-white px-4 py-3 text-center shadow-[0_10px_24px_-20px_rgba(41,16,80,0.5)] ring-1 ring-[#291050]/12">
           <h2 className="text-[1.2rem] font-black tracking-tight text-zinc-950">Buy, Sell, Live</h2>
           <p className="mt-1 text-[12px] font-semibold text-zinc-500">Everything happens in real-time, locally.</p>
         </div>
@@ -881,7 +967,7 @@ function LiveWelcomeSheet({ onDismiss }: { onDismiss: () => void }) {
           {!hasDetails ? (
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#4c1d95]/30 bg-white py-3.5 text-[14px] font-extrabold text-[#4c1d95] shadow-sm transition-colors active:bg-violet-50"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#291050]/30 bg-white py-3.5 text-[14px] font-extrabold text-[#291050] shadow-sm transition-colors active:bg-violet-50"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <rect x="2" y="5" width="20" height="14" rx="3" stroke="currentColor" strokeWidth="2" />
@@ -893,7 +979,7 @@ function LiveWelcomeSheet({ onDismiss }: { onDismiss: () => void }) {
           <button
             type="button"
             onClick={onDismiss}
-            className="flex w-full items-center justify-center rounded-2xl bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] py-3.5 text-[14px] font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(76,29,149,0.65),inset_0_1px_0_rgba(255,255,255,0.22)] transition-transform active:scale-[0.98]"
+            className="flex w-full items-center justify-center rounded-2xl bg-gradient-to-b from-[#7c3aed] via-[#4f1d93] to-[#291050] py-3.5 text-[14px] font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(41,16,80,0.65),inset_0_1px_0_rgba(255,255,255,0.22)] transition-transform active:scale-[0.98]"
           >
             Start Browsing
           </button>

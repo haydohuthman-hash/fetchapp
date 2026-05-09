@@ -46,13 +46,13 @@ export function CountdownTimer({
         <span
           className={[
             'absolute inline-flex h-full w-full animate-ping rounded-full opacity-75',
-            urgent ? 'bg-red-500' : 'bg-[#4c1d95]',
+            urgent ? 'bg-red-500' : 'bg-[#291050]',
           ].join(' ')}
         />
         <span
           className={[
             'relative inline-flex h-1.5 w-1.5 rounded-full',
-            urgent ? 'bg-red-500' : 'bg-[#4c1d95]',
+            urgent ? 'bg-red-500' : 'bg-[#291050]',
           ].join(' ')}
         />
       </span>

@@ -1,15 +1,20 @@
 import { normalizeEmail, type FetchUserRecord, loadSession } from './fetchUserSession'
 import { completePlatformOnboarding, needsPlatformOnboarding } from './fetchPlatformIdentity'
 
+/** True when the SPA is loaded on loopback — use to gate dev-only/mock UI not meant for deployed builds. */
+export function isFetchAppLocalHostname(): boolean {
+  if (typeof window === 'undefined') return false
+  const h = window.location.hostname
+  return h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '[::1]'
+}
+
 /** Password for the local Supabase demo user (pair with {@link getFetchDevDemoUserEmail}). */
 export const FETCH_DEV_DEMO_DEFAULT_PASSWORD = 'demo12345678'
 
 /** Prefill email sign-in password on localhost in dev (empty in production builds). */
 export function getFetchDevDemoPasswordPrefill(): string {
   if (!import.meta.env.DEV) return ''
-  if (typeof window === 'undefined') return ''
-  const h = window.location.hostname
-  if (h !== 'localhost' && h !== '127.0.0.1') return ''
+  if (!isFetchAppLocalHostname()) return ''
   return FETCH_DEV_DEMO_DEFAULT_PASSWORD
 }
 
@@ -22,8 +27,7 @@ export function getFetchDevDemoUserEmail(): string {
 
 export function isFetchDevDemoSession(session: FetchUserRecord | null): boolean {
   if (!import.meta.env.DEV || typeof window === 'undefined') return false
-  const host = window.location.hostname
-  if (host !== 'localhost' && host !== '127.0.0.1') return false
+  if (!isFetchAppLocalHostname()) return false
   if (!session?.email?.trim()) return false
   return normalizeEmail(session.email) === getFetchDevDemoUserEmail()
 }

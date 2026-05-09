@@ -14,7 +14,10 @@ import { handlePostAuthUser } from './lib/fetchHandlePostAuth'
 import {
   FETCH_APP_PATH,
   FETCH_AUTH_PATH,
+  FETCH_GO_LIVE_PATH,
+  FETCH_GEMS_PATH,
   FETCH_LEGACY_APP_REDIRECT_PATH,
+  FETCH_LIVES_FEED_PATH,
   FETCH_MARKETPLACE_LIST_PATH,
   FETCH_PROFILE_EDIT_PATH,
   FETCH_PROFILE_PATH,
@@ -23,7 +26,9 @@ import {
   FETCH_WALLET_ADD_CREDITS_PATH,
   FETCH_WALLET_CASH_OUT_PATH,
   FETCH_WALLET_TRANSACTIONS_PATH,
-  FETCH_GEMS_PATH,
+  liveRoomSlugFromPathname,
+  accountSettingsSectionFromPath,
+  isFetchProfileAccountSubPath,
 } from './lib/fetchRoutes'
 import { tryDevAutoSignIn } from './lib/fetchDevAutoSignIn'
 import { applyFetchDevDemoLocalBootstrap, isFetchDevDemoSession } from './lib/fetchDevDemo'
@@ -51,6 +56,8 @@ const DriverDashboardView = lazy(driverChunk)
 
 const accountPageChunk = () => import('./views/AccountPage')
 const AccountPage = lazy(accountPageChunk)
+const accountSubPageChunk = () => import('./views/AccountSubPageView')
+const AccountSubPageView = lazy(accountSubPageChunk)
 const fetchProfileEditChunk = () => import('./views/FetchProfileEditView')
 const FetchProfileEditView = lazy(fetchProfileEditChunk)
 const fetchMarketplaceListingCreateChunk = () => import('./views/FetchMarketplaceListingCreateView')
@@ -65,6 +72,13 @@ const fetchShopPageChunk = () => import('./views/FetchShopPageView')
 const FetchShopPageView = lazy(fetchShopPageChunk)
 const fetchShopSetupChunk = () => import('./views/FetchShopSetupView')
 const FetchShopSetupView = lazy(fetchShopSetupChunk)
+
+const fetchGoLiveChunk = () => import('./views/GoLiveView')
+const FetchGoLiveView = lazy(fetchGoLiveChunk)
+const fetchLivesFeedChunk = () => import('./views/LivesFeedView')
+const LivesFeedView = lazy(fetchLivesFeedChunk)
+const fetchLiveRoomChunk = () => import('./views/LiveRoomView')
+const LiveRoomView = lazy(fetchLiveRoomChunk)
 
 type AppPhase = 'splash' | 'home' | 'auth' | 'driver'
 type PostAuthTrace = {
@@ -140,6 +154,7 @@ function App() {
     pathname === FETCH_SHOP_SETUP_PATH ||
     pathname === FETCH_PROFILE_PATH ||
     pathname === FETCH_PROFILE_EDIT_PATH ||
+    isFetchProfileAccountSubPath(pathname) ||
     (Boolean(authSessionUserId) &&
       (pathname === FETCH_MARKETPLACE_LIST_PATH ||
         pathname === FETCH_WALLET_CASH_OUT_PATH ||
@@ -197,6 +212,7 @@ function App() {
     const gated =
       pathname === FETCH_MARKETPLACE_LIST_PATH ||
       pathname === FETCH_SHOP_SETUP_PATH ||
+      pathname === FETCH_GO_LIVE_PATH ||
       pathname === FETCH_WALLET_CASH_OUT_PATH ||
       pathname === FETCH_WALLET_ADD_CREDITS_PATH ||
       pathname === FETCH_GEMS_PATH
@@ -273,6 +289,9 @@ function App() {
     void driverChunk()
     void fetchShopPageChunk()
     void fetchShopSetupChunk()
+    void fetchGoLiveChunk()
+    void fetchLivesFeedChunk()
+    void fetchLiveRoomChunk()
   }, [])
 
   /** Warm home chunk while user is on sign-in so post-auth transition feels instant. */
@@ -462,12 +481,54 @@ function App() {
       )
     }
     if (phase === 'home') {
+      const liveSlug = liveRoomSlugFromPathname(pathname)
+      if (liveSlug) {
+        return (
+          <Suspense
+            fallback={
+              <FetchAppShellSuspenseFallback title="Loading live…" subtitle="Opening the Fetchit stream." />
+            }
+          >
+            <LiveRoomView roomName={liveSlug} />
+          </Suspense>
+        )
+      }
+
+      if (pathname === FETCH_GO_LIVE_PATH) {
+        return (
+          <>
+            <FetchNavRouteSlide pathname={pathname}>
+              <Suspense fallback={<FetchAppShellSuspenseFallback title="Go live" subtitle="Preparing studio steps." />}>
+                <FetchGoLiveView />
+              </Suspense>
+            </FetchNavRouteSlide>
+            <FetchAppBottomNav />
+          </>
+        )
+      }
+
+      if (pathname === FETCH_LIVES_FEED_PATH) {
+        return (
+          <>
+            <FetchNavRouteSlide pathname={pathname}>
+              <Suspense
+                fallback={<FetchAppShellSuspenseFallback title="Watch live" subtitle="Fetching live sellers." />}
+              >
+                <LivesFeedView />
+              </Suspense>
+            </FetchNavRouteSlide>
+            <FetchAppBottomNav />
+          </>
+        )
+      }
+
       const isProfileSurface =
         pathname === FETCH_WALLET_TRANSACTIONS_PATH ||
         pathname === FETCH_SHOP_PATH ||
         pathname === FETCH_SHOP_SETUP_PATH ||
         pathname === FETCH_PROFILE_PATH ||
         pathname === FETCH_PROFILE_EDIT_PATH ||
+        isFetchProfileAccountSubPath(pathname) ||
         (Boolean(authSessionUserId) &&
           (pathname === FETCH_MARKETPLACE_LIST_PATH ||
             pathname === FETCH_WALLET_CASH_OUT_PATH ||
@@ -500,6 +561,11 @@ function App() {
                     <FetchShopPageView />
                   ) : pathname === FETCH_PROFILE_PATH ? (
                     <AccountPage />
+                  ) : isFetchProfileAccountSubPath(pathname) ? (
+                    <AccountSubPageView
+                      section={accountSettingsSectionFromPath(pathname)!}
+                      onBack={() => navigate(FETCH_PROFILE_PATH)}
+                    />
                   ) : pathname === FETCH_PROFILE_EDIT_PATH ? (
                     <FetchProfileEditView onDone={() => navigate(FETCH_PROFILE_PATH, { replace: true })} />
                   ) : pathname === FETCH_MARKETPLACE_LIST_PATH ? (
@@ -567,7 +633,13 @@ function App() {
     )
   })()
 
-  const homeLightShell = phase === 'home' && !isHomeProfileSurface
+  const immersiveLiveSlug = liveRoomSlugFromPathname(pathname)
+  const homeLightShell =
+    phase === 'home' &&
+    !isHomeProfileSurface &&
+    pathname !== FETCH_GO_LIVE_PATH &&
+    pathname !== FETCH_LIVES_FEED_PATH &&
+    immersiveLiveSlug == null
 
   return (
     <FetchVoiceProvider>

@@ -26,6 +26,16 @@ import {
   FETCH_AUTH_PATH,
   FETCH_GEMS_PATH,
   FETCH_PROFILE_EDIT_PATH,
+  FETCH_PROFILE_ACCOUNT_CONTROLS_PATH,
+  FETCH_PROFILE_ADDRESSES_PATH,
+  FETCH_PROFILE_EMAIL_PATH,
+  FETCH_PROFILE_NOTIFICATIONS_PATH,
+  FETCH_PROFILE_PASSWORD_PATH,
+  FETCH_PROFILE_PASSKEYS_PATH,
+  FETCH_PROFILE_PAYMENTS_SHIPPING_PATH,
+  FETCH_PROFILE_PREFERENCES_PATH,
+  FETCH_PROFILE_TAX_EXEMPT_PATH,
+  FETCH_PROFILE_USER_REPORTS_PATH,
   FETCH_WALLET_ADD_CREDITS_PATH,
   FETCH_WALLET_TRANSACTIONS_PATH,
 } from '../lib/fetchRoutes'
@@ -111,19 +121,19 @@ export default function AccountPage() {
         <section className="space-y-0">
           <SettingsRow icon={Shield} title="Account Health" onClick={() => gated(FETCH_WALLET_TRANSACTIONS_PATH)} />
           <SettingsRow icon={Users} title="Affiliate Program: Earn Cash" onClick={() => gated(FETCH_GEMS_PATH)} />
-          <SettingsRow icon={CreditCard} title="Payments & Shipping" onClick={() => gated(FETCH_WALLET_ADD_CREDITS_PATH)} />
-          <SettingsRow icon={MapPin} title="Addresses" onClick={() => gated(FETCH_PROFILE_EDIT_PATH)} />
-          <SettingsRow icon={Bell} title="Notifications" onClick={() => gated(FETCH_PROFILE_EDIT_PATH)} />
-          <SettingsRow icon={UserCog} title="Account Controls" onClick={() => gated(FETCH_PROFILE_EDIT_PATH)} />
+          <SettingsRow icon={CreditCard} title="Payments & Shipping" onClick={() => gated(FETCH_PROFILE_PAYMENTS_SHIPPING_PATH)} />
+          <SettingsRow icon={MapPin} title="Addresses" onClick={() => gated(FETCH_PROFILE_ADDRESSES_PATH)} />
+          <SettingsRow icon={Bell} title="Notifications" onClick={() => gated(FETCH_PROFILE_NOTIFICATIONS_PATH)} />
+          <SettingsRow icon={UserCog} title="Account Controls" onClick={() => gated(FETCH_PROFILE_ACCOUNT_CONTROLS_PATH)} />
           <SettingsRow
             icon={Mail}
             title="Change Email"
             subtitle={emailSubtitle}
-            onClick={() => gated(FETCH_PROFILE_EDIT_PATH)}
+            onClick={() => gated(FETCH_PROFILE_EMAIL_PATH)}
           />
-          <SettingsRow icon={Lock} title="Change Password" onClick={() => gated(FETCH_PROFILE_EDIT_PATH)} />
-          <SettingsRow icon={ScanFace} title="Manage Passkeys" onClick={() => gated(FETCH_PROFILE_EDIT_PATH)} />
-          <SettingsRow icon={SlidersHorizontal} title="Preferences" onClick={() => gated(FETCH_PROFILE_EDIT_PATH)} />
+          <SettingsRow icon={Lock} title="Change Password" onClick={() => gated(FETCH_PROFILE_PASSWORD_PATH)} />
+          <SettingsRow icon={ScanFace} title="Manage Passkeys" onClick={() => gated(FETCH_PROFILE_PASSKEYS_PATH)} />
+          <SettingsRow icon={SlidersHorizontal} title="Preferences" onClick={() => gated(FETCH_PROFILE_PREFERENCES_PATH)} />
         </section>
 
         <div className="-mx-6 h-3 w-[calc(100%+3rem)] bg-[#F2F2F2]" aria-hidden />
@@ -134,8 +144,8 @@ export default function AccountPage() {
             title="Contact Us"
             onClick={openExternal('mailto:support@fetchit.app')}
           />
-          <SettingsRow icon={AlertTriangle} title="User Reports" onClick={() => gated(FETCH_APP_PATH)} />
-          <SettingsRow icon={Percent} title="Sales Tax Exemption" onClick={() => gated(FETCH_PROFILE_EDIT_PATH)} />
+          <SettingsRow icon={AlertTriangle} title="User Reports" onClick={() => gated(FETCH_PROFILE_USER_REPORTS_PATH)} />
+          <SettingsRow icon={Percent} title="Sales Tax Exemption" onClick={() => gated(FETCH_PROFILE_TAX_EXEMPT_PATH)} />
           <SettingsRow
             icon={FileText}
             title="Privacy Policy"

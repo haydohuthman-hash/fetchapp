@@ -18,7 +18,7 @@ export default function FetchGemsView({ onBack }: FetchGemsViewProps) {
         <button
           type="button"
           onClick={handleBack}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-violet-200/60 bg-violet-50 text-[#4c1d95] active:scale-[0.97]"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-violet-200/60 bg-violet-50 text-[#291050] active:scale-[0.97]"
           aria-label="Back"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>

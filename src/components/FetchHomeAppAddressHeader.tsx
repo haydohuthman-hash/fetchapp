@@ -31,7 +31,7 @@ function PurpleGemGlyph({ className = '' }: { className?: string }) {
     <svg className={className} width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M7.15 4.75h9.7l3.35 5.1L12 20.1 3.8 9.85l3.35-5.1z"
-        fill="rgba(76,29,149,0.08)"
+        fill="rgba(41,16,80,0.08)"
         stroke="currentColor"
         strokeWidth="1.75"
         strokeLinejoin="round"
@@ -120,10 +120,10 @@ export function FetchItWordmark({
 
 /** Round header controls (account, chat, gems, backpack) — shared chrome. */
 const headerChromeIconBtn =
-  'fetch-apple-warp-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-transparent text-[#1c1528] transition-colors hover:text-[#4c1d95] active:scale-[0.98]'
+  'fetch-apple-warp-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-transparent text-[#1c1528] transition-colors hover:text-[#291050] active:scale-[0.98]'
 
 const brandMinimalIconBtn =
-  'fetch-apple-warp-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-transparent text-[#1c1528] transition-colors hover:text-[#4c1d95] active:scale-[0.97]'
+  'fetch-apple-warp-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-transparent text-[#1c1528] transition-colors hover:text-[#291050] active:scale-[0.97]'
 
 const headerEase =
   'duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:duration-150 motion-reduce:ease-out'
@@ -165,8 +165,8 @@ function HeaderWalletChip({ onOpen }: { onOpen: () => void }) {
       className="fetch-apple-warp-btn flex w-max max-w-[min(52vw,12rem)] shrink-0 items-center gap-2 rounded-full border border-violet-200/80 bg-violet-50/60 py-1.5 pl-2.5 pr-2.5 transition-[background-color,transform] hover:bg-violet-100/80 active:scale-[0.98] sm:gap-2.5 sm:py-2 sm:pl-3 sm:pr-3"
       aria-label={`Wallet, balance ${label}`}
     >
-      <span className="flex shrink-0 items-center justify-center text-[#4c1d95]/80" aria-hidden>
-        <WalletGlyph className="text-[#4c1d95]/80" size={18} />
+      <span className="flex shrink-0 items-center justify-center text-[#291050]/80" aria-hidden>
+        <WalletGlyph className="text-[#291050]/80" size={18} />
       </span>
       <span className="min-w-0 truncate text-left text-[12px] font-semibold tabular-nums leading-none text-[#1c1528] sm:text-[13px]">
         {label}
@@ -234,7 +234,7 @@ export function FetchHomeAppAddressHeader({
             <button
               type="button"
               onClick={onOpenSearch}
-              className="fetch-apple-warp-btn fetch-home-search-chip-bar flex min-w-0 flex-1 items-center gap-2 rounded-full border border-violet-200/80 bg-white/60 px-3 py-2 text-left shadow-[0_1px_0_rgba(76,29,149,0.06)] backdrop-blur-[2px] transition-[color,transform,border-color,background-color] hover:border-violet-300/90 hover:text-[#4c1d95] active:scale-[0.99]"
+              className="fetch-apple-warp-btn fetch-home-search-chip-bar flex min-w-0 flex-1 items-center gap-2 rounded-full border border-violet-200/80 bg-white/60 px-3 py-2 text-left shadow-[0_1px_0_rgba(41,16,80,0.06)] backdrop-blur-[2px] transition-[color,transform,border-color,background-color] hover:border-violet-300/90 hover:text-[#291050] active:scale-[0.99]"
               aria-label="Search Fetchit"
             >
               <SearchNavGlyph className="block h-[24px] w-[24px] shrink-0 text-[#1c1528]" />

@@ -107,10 +107,10 @@ export default function OrderConfirmedView({ onBack, onContinue }: Props) {
             </section>
 
             <section className="rounded-3xl bg-violet-50 p-4 ring-1 ring-violet-200">
-              <p className="text-[12px] font-black uppercase tracking-[0.12em] text-[#4c1d95]">
+              <p className="text-[12px] font-black uppercase tracking-[0.12em] text-[#291050]">
                 Need help?
               </p>
-              <p className="mt-1 text-[12.5px] font-semibold text-[#4c1d95]/80">
+              <p className="mt-1 text-[12.5px] font-semibold text-[#291050]/80">
                 Tap support in your profile and we&apos;ll respond within an hour.
               </p>
             </section>
@@ -128,7 +128,7 @@ export default function OrderConfirmedView({ onBack, onContinue }: Props) {
           <button
             type="button"
             onClick={onContinue}
-            className="w-full rounded-full bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] py-3.5 text-[14px] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(76,29,149,0.55),inset_0_1px_0_rgba(255,255,255,0.25)] ring-1 ring-white/10 transition-transform active:scale-[0.985]"
+            className="w-full rounded-full bg-gradient-to-b from-[#7c3aed] via-[#4f1d93] to-[#291050] py-3.5 text-[14px] font-black uppercase tracking-[0.06em] text-white shadow-[0_18px_38px_-14px_rgba(41,16,80,0.55),inset_0_1px_0_rgba(255,255,255,0.25)] ring-1 ring-white/10 transition-transform active:scale-[0.985]"
           >
             Continue shopping
           </button>

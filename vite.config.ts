@@ -33,6 +33,7 @@ export default defineConfig({
   server: {
     host: true,
     port: fetchDevVitePort,
+    /** Proxied to Express so `/api/*` (including SSE `GET /api/marketplace/stream`) shares the dev origin. */
     proxy: {
       '/api': {
         target: `http://127.0.0.1:${fetchDevApiPort}`,
@@ -52,6 +53,7 @@ export default defineConfig({
     },
   },
   preview: {
+    /** Same as dev: API + SSE under one origin during `vite preview`. */
     proxy: {
       '/api': {
         target: `http://127.0.0.1:${fetchDevApiPort}`,

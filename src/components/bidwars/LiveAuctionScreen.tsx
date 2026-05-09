@@ -511,7 +511,7 @@ function FloatingChat({ lines, stage }: { lines: Array<{ id: string; name: strin
               <span className="flex items-center gap-1 text-[11px] font-black text-white">
                 {c.name}
                 {c.mod ? (
-                  <span className="rounded-md bg-[#4c1d95] px-1.5 py-[1px] text-[9px] font-black uppercase tracking-[0.08em] text-white">
+                  <span className="rounded-md bg-[#291050] px-1.5 py-[1px] text-[9px] font-black uppercase tracking-[0.08em] text-white">
                     Mod
                   </span>
                 ) : null}
@@ -564,7 +564,7 @@ function ChatInputBar({
         <button
           type="submit"
           aria-label="Send message"
-          className="grid h-7 w-7 place-items-center rounded-full bg-white text-[#4c1d95] active:scale-95"
+          className="grid h-7 w-7 place-items-center rounded-full bg-white text-[#291050] active:scale-95"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
             <path d="M3 11l18-8-8 18-2-8-8-2z" />

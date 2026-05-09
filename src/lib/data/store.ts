@@ -5,6 +5,7 @@
  *
  * Backed by mock data today; flip the seeds in [./mock.ts](./mock.ts) to fetch
  * from Supabase when the API lands without changing call sites.
+ * Server live battles (`GET /api/battles`, SSE streams) are separate — wire a merge layer here when Bid Wars should mirror the API.
  */
 
 import { useMemo, useRef, useSyncExternalStore } from 'react'

@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ambientRegisterBidWars } from '../../lib/audio/fetchAmbientMusic'
 import { createPortal } from 'react-dom'
 import { AuctionRoom } from '../../components/bidwars'
@@ -20,6 +21,13 @@ import OrderConfirmedView from './OrderConfirmedView'
 import RewardsView from './RewardsView'
 import UpcomingAuctionsView from './UpcomingAuctionsView'
 import WalletView from './WalletView'
+import {
+  FETCH_GEMS_PATH,
+  FETCH_PROFILE_ADDRESSES_PATH,
+  FETCH_PROFILE_EDIT_PATH,
+  FETCH_PROFILE_NOTIFICATIONS_PATH,
+  FETCH_PROFILE_PAYMENTS_SHIPPING_PATH,
+} from '../../lib/fetchRoutes'
 
 export type BidwarsHubView =
   | { kind: 'activity' }
@@ -41,6 +49,7 @@ type Props = {
 }
 
 export function BidwarsHub({ open, initial, onClose, onOpenChat, bottomNav }: Props) {
+  const navigate = useNavigate()
   const [stack, setStack] = useState<BidwarsHubView[]>([initial])
   const [openAuction, setOpenAuction] = useState<Auction | null>(null)
   const [postWin, setPostWin] = useState(false)
@@ -70,6 +79,11 @@ export function BidwarsHub({ open, initial, onClose, onOpenChat, bottomNav }: Pr
   }
   const push = (v: BidwarsHubView) => setStack((s) => [...s, v])
   const reset = (v: BidwarsHubView) => setStack([v])
+
+  const openInMainApp = (path: string) => {
+    onClose()
+    queueMicrotask(() => navigate(path))
+  }
 
   const onOpenAuction = (a: Auction) => setOpenAuction(a)
 
@@ -116,7 +130,14 @@ export function BidwarsHub({ open, initial, onClose, onOpenChat, bottomNav }: Pr
           }}
           onOpenWallet={() => push({ kind: 'wallet' })}
           onOpenRewards={() => push({ kind: 'rewards' })}
-          onInvite={() => undefined}
+          onInvite={() => openInMainApp(FETCH_GEMS_PATH)}
+          onEditProfile={() => openInMainApp(FETCH_PROFILE_EDIT_PATH)}
+          onOpenPaymentsShipping={() => openInMainApp(FETCH_PROFILE_PAYMENTS_SHIPPING_PATH)}
+          onOpenAddresses={() => openInMainApp(FETCH_PROFILE_ADDRESSES_PATH)}
+          onOpenNotifications={() => openInMainApp(FETCH_PROFILE_NOTIFICATIONS_PATH)}
+          onOpenHelp={() =>
+            window.open('https://fetchit.app/help', '_blank', 'noopener,noreferrer')
+          }
         />
       ) : null}
       {top.kind === 'upcoming' ? <UpcomingAuctionsView onBack={goBack} /> : null}

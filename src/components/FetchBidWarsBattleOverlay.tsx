@@ -462,7 +462,7 @@ function BattleHeader({
         type="button"
         onClick={onClose}
         aria-label="Close battle"
-        className="absolute left-3 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-[4] flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#4c1d95] shadow-[0_10px_24px_-16px_rgba(76,29,149,0.75)] ring-1 ring-[#4c1d95]/12 backdrop-blur-sm active:scale-95"
+        className="absolute left-3 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-[4] flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#291050] shadow-[0_10px_24px_-16px_rgba(41,16,80,0.75)] ring-1 ring-[#291050]/12 backdrop-blur-sm active:scale-95"
       >
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden>
           <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
@@ -569,9 +569,9 @@ function LobbyStage({
   return (
     <div className="relative flex min-h-0 flex-1 flex-col px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-[max(3.75rem,env(safe-area-inset-top,0px)+3rem)]">
       {/* Upcoming listing preview card */}
-      <div className="relative mb-3 overflow-hidden rounded-3xl bg-white p-3 shadow-[0_18px_40px_-26px_rgba(76,29,149,0.45)] ring-1 ring-[#4c1d95]/12">
+      <div className="relative mb-3 overflow-hidden rounded-3xl bg-white p-3 shadow-[0_18px_40px_-26px_rgba(41,16,80,0.45)] ring-1 ring-[#291050]/12">
         <div className="flex items-center gap-3">
-          <div className="relative h-[5.5rem] w-[5.5rem] shrink-0 overflow-hidden rounded-2xl bg-violet-50 ring-2 ring-[#4c1d95]/12">
+          <div className="relative h-[5.5rem] w-[5.5rem] shrink-0 overflow-hidden rounded-2xl bg-violet-50 ring-2 ring-[#291050]/12">
             <img
               src={battle.imageUrl}
               alt=""
@@ -580,7 +580,7 @@ function LobbyStage({
             />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#4c1d95]">
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#291050]">
               Up next · Battle {battle.battleNumber}
             </p>
             <p className="mt-0.5 truncate text-[18px] font-black uppercase leading-tight text-zinc-950">
@@ -600,7 +600,7 @@ function LobbyStage({
           <div
             className={[
               'flex shrink-0 flex-col items-center justify-center rounded-xl px-3 py-2 transition-colors',
-              urgent ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-[#4c1d95] text-white ring-1 ring-[#4c1d95]/20',
+              urgent ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-[#291050] text-white ring-1 ring-[#291050]/20',
             ].join(' ')}
             aria-label={`${lobbySec} seconds until battle`}
           >
@@ -623,7 +623,7 @@ function LobbyStage({
 
         {/* Condition + short description — shown when available to build anticipation */}
         {(battle.condition || battle.description) ? (
-          <div className="mt-2.5 border-t border-[#4c1d95]/10 pt-2.5">
+          <div className="mt-2.5 border-t border-[#291050]/10 pt-2.5">
             {battle.condition ? (
               <p className="mb-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-emerald-600">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -654,7 +654,7 @@ function LobbyStage({
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
           </span>
-          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-[#4c1d95]">Live chat</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-[#291050]">Live chat</p>
         </div>
         <p className="text-[11px] font-bold text-zinc-500">
           {formatCountLabel(battle.attendees)} in lobby
@@ -662,7 +662,7 @@ function LobbyStage({
       </div>
 
       {/* Chat feed */}
-      <div className="fetch-battle-lobby-chat relative flex min-h-0 flex-1 flex-col overflow-y-auto rounded-3xl bg-white px-2.5 py-2 shadow-[0_18px_40px_-30px_rgba(76,29,149,0.5)] ring-1 ring-[#4c1d95]/12 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="fetch-battle-lobby-chat relative flex min-h-0 flex-1 flex-col overflow-y-auto rounded-3xl bg-white px-2.5 py-2 shadow-[0_18px_40px_-30px_rgba(41,16,80,0.5)] ring-1 ring-[#291050]/12 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {chat.map((msg) => (
           <LobbyChatBubble key={msg.id} msg={msg} />
         ))}
@@ -671,8 +671,8 @@ function LobbyStage({
 
       {/* Chat input (read-only — hype bar) */}
       <div className="mt-2 flex items-center gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full bg-white px-3 py-2.5 shadow-sm ring-1 ring-[#4c1d95]/12">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0 text-[#4c1d95]/50">
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full bg-white px-3 py-2.5 shadow-sm ring-1 ring-[#291050]/12">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0 text-[#291050]/50">
             <path
               d="M4 12a8 8 0 0114 5l1 4-4-1a8 8 0 01-11-8z"
               stroke="currentColor"
@@ -714,7 +714,7 @@ function LobbyChatBubble({ msg }: { msg: LobbyChatMessage }) {
         src={msg.author.avatar}
         alt=""
         draggable={false}
-        className="mt-0.5 h-7 w-7 shrink-0 rounded-full object-cover ring-2 ring-[#4c1d95]/10"
+        className="mt-0.5 h-7 w-7 shrink-0 rounded-full object-cover ring-2 ring-[#291050]/10"
       />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
@@ -729,7 +729,7 @@ function LobbyChatBubble({ msg }: { msg: LobbyChatMessage }) {
 
 function AuthorTag({ tag, tone = 'violet' }: { tag: string; tone?: LobbyChatAuthor['tagTone'] }) {
   const palette: Record<NonNullable<LobbyChatAuthor['tagTone']>, string> = {
-    violet: 'bg-violet-100 text-[#4c1d95] ring-violet-200',
+    violet: 'bg-violet-100 text-[#291050] ring-violet-200',
     amber: 'bg-amber-100 text-amber-800 ring-amber-200',
     emerald: 'bg-emerald-100 text-emerald-800 ring-emerald-200',
     rose: 'bg-rose-100 text-rose-800 ring-rose-200',
@@ -758,7 +758,7 @@ function CountdownStage({ count, from, imageUrl }: { count: number; from: number
         <p className="fetch-battle-title text-[42px] font-black leading-[0.95] tracking-[-0.02em] text-[#1e1b4b] sm:text-[48px]">
           BATTLE
         </p>
-        <p className="fetch-battle-title mt-0.5 text-[38px] font-black leading-[0.95] tracking-[-0.02em] text-[#4c1d95] sm:text-[44px]">
+        <p className="fetch-battle-title mt-0.5 text-[38px] font-black leading-[0.95] tracking-[-0.02em] text-[#291050] sm:text-[44px]">
           BEGINS IN
         </p>
       </div>
@@ -790,7 +790,7 @@ function CountdownRing({ value, from }: { value: number; from: number }) {
 
   return (
     <div
-      className="fetch-battle-ring relative flex items-center justify-center rounded-full bg-white/85 shadow-[0_18px_38px_-16px_rgba(76,29,149,0.55)] ring-1 ring-white/60 backdrop-blur-sm"
+      className="fetch-battle-ring relative flex items-center justify-center rounded-full bg-white/85 shadow-[0_18px_38px_-16px_rgba(41,16,80,0.55)] ring-1 ring-white/60 backdrop-blur-sm"
       style={{ width: size, height: size }}
     >
       <svg width={size} height={size} className="absolute inset-0 -rotate-90" aria-hidden>
@@ -816,13 +816,13 @@ function CountdownRing({ value, from }: { value: number; from: number }) {
         <defs>
           <linearGradient id="fetch-ring-grad" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="#a78bfa" />
-            <stop offset="100%" stopColor="#4c1d95" />
+            <stop offset="100%" stopColor="#291050" />
           </linearGradient>
         </defs>
       </svg>
       <span
         key={value}
-        className="fetch-battle-ring__num relative z-[1] select-none text-[58px] font-black leading-none tracking-[-0.04em] text-[#4c1d95]"
+        className="fetch-battle-ring__num relative z-[1] select-none text-[58px] font-black leading-none tracking-[-0.04em] text-[#291050]"
       >
         {value}
       </span>
@@ -842,7 +842,7 @@ function BattleBeginsStage({ imageUrl }: { imageUrl: string }) {
         <p className="fetch-battle-title text-[44px] font-black leading-[0.95] tracking-[-0.02em] text-[#1e1b4b] sm:text-[52px]">
           BATTLE
         </p>
-        <p className="fetch-battle-title mt-1 text-[46px] font-black leading-[0.95] tracking-[-0.02em] text-[#4c1d95] sm:text-[54px]">
+        <p className="fetch-battle-title mt-1 text-[46px] font-black leading-[0.95] tracking-[-0.02em] text-[#291050] sm:text-[54px]">
           BEGINS
         </p>
         <p className="fetch-battle-now fetch-battle-title mt-1 text-[56px] font-black leading-[0.95] tracking-[-0.02em] text-[#f97316] sm:text-[64px]">
@@ -998,19 +998,19 @@ function LiveStage({
       </div>
 
       {/* ── WHITE BOTTOM SHEET (z-10 so seam-straddling thumbs from hero paint above) ─ */}
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col rounded-t-3xl bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] pt-7 shadow-[0_-20px_40px_-10px_rgba(76,29,149,0.3)]">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col rounded-t-3xl bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] pt-7 shadow-[0_-20px_40px_-10px_rgba(41,16,80,0.3)]">
         {/* Current bid row */}
         <div className="mb-3 flex items-end gap-3">
           <div>
             <div className="flex items-center gap-1.5">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="#6d28d9" aria-hidden>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#4f1d93" aria-hidden>
                 <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
               </svg>
               <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-zinc-400">
                 Current bid
               </span>
             </div>
-            <p className="text-[38px] font-black leading-none tabular-nums text-[#4c1d95]">
+            <p className="text-[38px] font-black leading-none tabular-nums text-[#291050]">
               {formatAudCents(live.currentBidCents)}
             </p>
           </div>
@@ -1082,7 +1082,7 @@ function LiveStage({
                 <span
                   className={[
                     'text-[13px] font-bold tabular-nums',
-                    isTop ? 'text-[#4c1d95]' : 'text-zinc-600',
+                    isTop ? 'text-[#291050]' : 'text-zinc-600',
                   ].join(' ')}
                 >
                   {formatAudCents(entry.amountCents)}
@@ -1132,7 +1132,7 @@ function LiveStage({
             'fetch-battle-bid-btn relative flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[16px] font-extrabold uppercase tracking-[0.08em] text-white transition-transform active:scale-[0.98] disabled:opacity-50',
             itemEnded
               ? 'bg-zinc-400'
-              : 'bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] shadow-[0_18px_40px_-16px_rgba(76,29,149,0.7)]',
+              : 'bg-gradient-to-b from-[#7c3aed] via-[#4f1d93] to-[#291050] shadow-[0_18px_40px_-16px_rgba(41,16,80,0.7)]',
             justBid ? 'fetch-battle-bid-btn--flash' : '',
           ].join(' ')}
         >
@@ -1177,9 +1177,9 @@ function MascotFrame({
       style={{ width: dim, height: dim }}
       aria-hidden
     >
-      <span className="fetch-battle-mascot__halo pointer-events-none absolute inset-[-10%] rounded-full border-2 border-dashed border-[#4c1d95]/30" />
+      <span className="fetch-battle-mascot__halo pointer-events-none absolute inset-[-10%] rounded-full border-2 border-dashed border-[#291050]/30" />
       {imageUrl ? (
-        <div className="relative z-[1] h-[88%] w-[88%] overflow-hidden rounded-2xl shadow-[0_20px_50px_-18px_rgba(76,29,149,0.6)] ring-4 ring-white">
+        <div className="relative z-[1] h-[88%] w-[88%] overflow-hidden rounded-2xl shadow-[0_20px_50px_-18px_rgba(41,16,80,0.6)] ring-4 ring-white">
           <img
             src={imageUrl}
             alt=""
@@ -1189,11 +1189,11 @@ function MascotFrame({
         </div>
       ) : (
         <>
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/90 via-violet-100/80 to-violet-200/70 shadow-[0_20px_50px_-18px_rgba(76,29,149,0.55),inset_0_6px_18px_rgba(76,29,149,0.08)]" />
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/90 via-violet-100/80 to-violet-200/70 shadow-[0_20px_50px_-18px_rgba(41,16,80,0.55),inset_0_6px_18px_rgba(41,16,80,0.08)]" />
           <img
             src={boomerangUrl}
             alt=""
-            className="relative z-[1] h-[70%] w-[70%] object-contain drop-shadow-[0_10px_16px_rgba(76,29,149,0.35)]"
+            className="relative z-[1] h-[70%] w-[70%] object-contain drop-shadow-[0_10px_16px_rgba(41,16,80,0.35)]"
             draggable={false}
           />
         </>
@@ -1251,7 +1251,7 @@ function WonStage({
       </div>
 
       {/* Product card */}
-      <div className="mb-4 overflow-hidden rounded-3xl bg-white shadow-[0_32px_64px_-24px_rgba(76,29,149,0.55)]">
+      <div className="mb-4 overflow-hidden rounded-3xl bg-white shadow-[0_32px_64px_-24px_rgba(41,16,80,0.55)]">
         <div className="px-5 pb-0.5 pt-5">
           <p className="text-[18px] font-black uppercase leading-tight text-[#1c1528]">
             {battle.title}
@@ -1268,7 +1268,7 @@ function WonStage({
         </div>
         <div className="px-5 pb-5 pt-3 text-center">
           <p className="text-[13px] font-semibold text-zinc-400">Winning bid</p>
-          <p className="mt-0.5 text-[44px] font-black leading-none text-[#4c1d95]">
+          <p className="mt-0.5 text-[44px] font-black leading-none text-[#291050]">
             {formatAudCents(winningBidCents)}
           </p>
         </div>
@@ -1296,7 +1296,7 @@ function WonStage({
       <button
         type="button"
         onClick={onViewOrder}
-        className="mb-3 w-full rounded-2xl bg-gradient-to-b from-[#5b21b6] to-[#4c1d95] py-4 text-[15px] font-extrabold uppercase tracking-[0.1em] text-white shadow-[0_18px_40px_-16px_rgba(76,29,149,0.7)] active:scale-[0.98]"
+        className="mb-3 w-full rounded-2xl bg-gradient-to-b from-[#5b21b6] to-[#291050] py-4 text-[15px] font-extrabold uppercase tracking-[0.1em] text-white shadow-[0_18px_40px_-16px_rgba(41,16,80,0.7)] active:scale-[0.98]"
       >
         View Order
       </button>
@@ -1377,9 +1377,9 @@ function WonStepIcon({ type }: { type: 'payment' | 'shipping' | 'track' }) {
     return (
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-100">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <rect x="2" y="5" width="20" height="14" rx="2" stroke="#6d28d9" strokeWidth="1.9" />
-          <path d="M2 10h20" stroke="#6d28d9" strokeWidth="1.9" strokeLinecap="round" />
-          <rect x="5" y="14" width="4" height="2" rx="1" fill="#6d28d9" />
+          <rect x="2" y="5" width="20" height="14" rx="2" stroke="#4f1d93" strokeWidth="1.9" />
+          <path d="M2 10h20" stroke="#4f1d93" strokeWidth="1.9" strokeLinecap="round" />
+          <rect x="5" y="14" width="4" height="2" rx="1" fill="#4f1d93" />
         </svg>
       </span>
     )
@@ -1408,7 +1408,7 @@ function WonStepIcon({ type }: { type: 'payment' | 'shipping' | 'track' }) {
 
 function WonCheckIcon({ filled }: { filled: boolean }) {
   return filled ? (
-    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#4c1d95]">
+    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#291050]">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
         <path d="M5 12l5 5L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>

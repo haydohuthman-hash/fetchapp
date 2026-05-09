@@ -25,7 +25,7 @@ export function FetchAppShellSuspenseFallback({ title, subtitle }: Props) {
         <span className="grid h-16 w-16 place-items-center rounded-3xl bg-violet-100 ring-1 ring-violet-200">
           <svg
             viewBox="0 0 20 20"
-            className="h-9 w-9 text-[#4c1d95]"
+            className="h-9 w-9 text-[#291050]"
             fill="currentColor"
             aria-hidden
           >
@@ -38,7 +38,7 @@ export function FetchAppShellSuspenseFallback({ title, subtitle }: Props) {
         </span>
         <div className="max-w-sm">
           <p className="text-[18px] font-black tracking-tight text-zinc-950">Fetchit</p>
-          <p className="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-[#4c1d95]">
+          <p className="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-[#291050]">
             Bid Wars
           </p>
           <p className="mt-3 text-[14px] font-medium leading-snug text-zinc-700">{title}</p>
@@ -48,13 +48,13 @@ export function FetchAppShellSuspenseFallback({ title, subtitle }: Props) {
         </div>
       </div>
       <div className="flex items-center gap-1.5" aria-hidden="true">
-        <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#4c1d95]/70" />
+        <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#291050]/70" />
         <span
-          className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#4c1d95]/55"
+          className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#291050]/55"
           style={{ animationDelay: '140ms' }}
         />
         <span
-          className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#4c1d95]/35"
+          className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#291050]/35"
           style={{ animationDelay: '280ms' }}
         />
       </div>

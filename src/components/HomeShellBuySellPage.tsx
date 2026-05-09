@@ -26,6 +26,8 @@ import {
 import { formatDropHandle, getMyDropProfile } from '../lib/drops/profileStore'
 import { syncCustomerSessionCookie } from '../lib/fetchServerSession'
 import { FETCH_MARKETPLACE_LIST_PATH } from '../lib/fetchRoutes'
+import type { StartDropLiveShowcaseResult } from '../lib/drops/liveStartApi'
+import { readLiveStudioHandoff } from '../lib/drops/liveStudioHandoff'
 import { loadSession } from '../lib/fetchUserSession'
 import { confirmDemoPaymentIntent, isStripePublishableConfigured } from '../lib/paymentCheckout'
 import {
@@ -42,6 +44,8 @@ import {
 } from './icons/HomeShellNavIcons'
 import { FetchShopModeSegment } from './FetchShopModeSegment'
 import { FetchStripePaymentElement } from './FetchStripePaymentElement'
+import { SellerGoLivePanel } from './SellerGoLivePanel'
+import { SellerLivestreamStudioPanel } from './SellerLivestreamStudioPanel'
 import { PeerListingDeliveryLines, peerListingDeliveryAriaSuffix } from './PeerListingDeliveryLines'
 import {
   formatPeerListingDistanceEta,
@@ -191,7 +195,15 @@ export type BuySellDropsListingHandoff = {
   mode: 'sheet' | 'buyNow' | 'bid'
 }
 
-type Panel = 'feed' | 'create' | 'connect' | 'earnings' | 'myListings' | 'editListing'
+type Panel =
+  | 'feed'
+  | 'create'
+  | 'live'
+  | 'liveStudio'
+  | 'connect'
+  | 'earnings'
+  | 'myListings'
+  | 'editListing'
 
 export type HomeShellBuySellPageProps = {
   bottomNav: ReactNode
@@ -292,6 +304,7 @@ function HomeShellBuySellPageInner({
   )
   const prevPanelRef = useRef<Panel>('feed')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [liveStudioSession, setLiveStudioSession] = useState<StartDropLiveShowcaseResult | null>(null)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [categoryId, setCategoryId] = useState('all')
@@ -475,6 +488,23 @@ function HomeShellBuySellPageInner({
     if (overlayMode) return
     void loadBrowse()
   }, [loadBrowse, overlayMode])
+
+  useEffect(() => {
+    if (overlayMode) return
+    if (panel !== 'feed') return
+    const pollMs = 22_000
+    const id = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void loadBrowse()
+    }, pollMs)
+    const onVis = () => {
+      if (document.visibilityState === 'visible') void loadBrowse()
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [overlayMode, panel, loadBrowse])
 
   const loadMyListings = useCallback(async () => {
     if (!sessionEmail) {
@@ -968,8 +998,18 @@ function HomeShellBuySellPageInner({
       navigate(FETCH_MARKETPLACE_LIST_PATH)
       return
     }
+    if (to === 'liveStudio') {
+      setLiveStudioSession(readLiveStudioHandoff())
+      setPanel('liveStudio')
+      return
+    }
     setPanel(to)
   }
+
+  useEffect(() => {
+    if (panel !== 'liveStudio') return
+    setLiveStudioSession((prev) => prev ?? readLiveStudioHandoff())
+  }, [panel])
 
   const openSetLocation = useCallback(() => {
     if (mapsApiKey) {
@@ -1307,6 +1347,26 @@ function HomeShellBuySellPageInner({
               <button
                 type="button"
                 className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[15px] font-semibold text-zinc-900 active:bg-zinc-100"
+                onClick={() => menuNavigate('live')}
+              >
+                <span className="grid h-[1.35rem] w-[1.35rem] shrink-0 place-items-center text-[1rem]" aria-hidden>
+                  📡
+                </span>
+                <span className="min-w-0">Go live</span>
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[15px] font-semibold text-zinc-900 active:bg-zinc-100"
+                onClick={() => menuNavigate('liveStudio')}
+              >
+                <span className="grid h-[1.35rem] w-[1.35rem] shrink-0 place-items-center text-[1rem]" aria-hidden>
+                  🎯
+                </span>
+                <span className="min-w-0">Live studio</span>
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[15px] font-semibold text-zinc-900 active:bg-zinc-100"
                 onClick={() => menuNavigate('myListings')}
               >
                 <ShellMenuListingsIcon className="h-[1.35rem] w-[1.35rem] shrink-0 text-zinc-500" />
@@ -1562,6 +1622,13 @@ function HomeShellBuySellPageInner({
                 </button>
                 <button
                   type="button"
+                  onClick={() => setPanel('live')}
+                  className="w-full rounded-xl border border-violet-300/80 bg-gradient-to-r from-violet-600 to-[#291050] py-3 text-[15px] font-semibold text-white shadow-sm active:opacity-90"
+                >
+                  Go live
+                </button>
+                <button
+                  type="button"
                   onClick={() => setPanel('myListings')}
                   className="w-full rounded-xl border border-zinc-200 bg-white py-3 text-[15px] font-semibold text-zinc-900 active:bg-zinc-50"
                 >
@@ -1753,6 +1820,27 @@ function HomeShellBuySellPageInner({
               </div>
             </>
           )
+        ) : null}
+
+        {panel === 'live' ? (
+          <SellerGoLivePanel
+            sessionEmail={sessionEmail}
+            onBack={() => setPanel('feed')}
+            onOverlayClose={overlayMode ? onOverlayClose : undefined}
+            onOpenLiveStudio={(sess) => {
+              setLiveStudioSession(sess)
+              setPanel('liveStudio')
+            }}
+          />
+        ) : null}
+
+        {panel === 'liveStudio' ? (
+          <SellerLivestreamStudioPanel
+            sessionEmail={sessionEmail}
+            handoff={liveStudioSession}
+            onBack={() => setPanel('feed')}
+            onOverlayClose={overlayMode ? onOverlayClose : undefined}
+          />
         ) : null}
 
         {panel === 'create' || isEditMode ? (

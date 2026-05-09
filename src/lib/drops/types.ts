@@ -20,10 +20,20 @@ export type LiveShowcaseCommerceItem =
   | { kind: 'marketplace_product'; productId: string; label?: string }
   | { kind: 'buy_sell_listing'; listingId: string; label?: string }
 
+/** Live showcase commerce — artwork for feed layouts when present. */
+export type DropsLiveShowcaseCommerce = {
+  kind: 'live_showcase'
+  items: LiveShowcaseCommerceItem[]
+  /** `/listing-uploads/...` — 1:1 feed row cover (required for `POST /api/drops/live/start`). */
+  coverSquareUrl?: string
+  /** `/listing-uploads/...` — tall carousel slide (required for `POST /api/drops/live/start`). */
+  coverVerticalUrl?: string
+}
+
 export type DropsCommerceTarget =
   | { kind: 'marketplace_product'; productId: string }
   | { kind: 'buy_sell_listing'; listingId: string }
-  | { kind: 'live_showcase'; items: LiveShowcaseCommerceItem[] }
+  | DropsLiveShowcaseCommerce
 
 /** Optional payload when confirming a drops commerce action (e.g. auction bid). */
 export type DropsCommerceActionMeta = {
@@ -37,6 +47,10 @@ export type DropMediaKind = 'video' | 'images' | 'live_replay'
 
 export type DropReel = {
   id: string
+  /** Populated when `commerce.kind === 'live_showcase'` — feed row cover image. */
+  liveCoverSquareUrl?: string
+  /** Populated when `commerce.kind === 'live_showcase'` — portrait carousel art. */
+  liveCoverVerticalUrl?: string
   /** Vertical video URL (omit when `imageUrls` is used for photo carousel). */
   videoUrl?: string
   /** One or more photos — mobile-first carousel when set. */

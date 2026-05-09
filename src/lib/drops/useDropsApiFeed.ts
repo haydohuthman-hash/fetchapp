@@ -86,6 +86,21 @@ export function useDropsApiFeed(): UseDropsApiFeedState {
     }
   }, [tick])
 
+  useEffect(() => {
+    const pollMs = 24_000
+    const id = window.setInterval(() => {
+      if (document.visibilityState === 'visible') refresh()
+    }, pollMs)
+    const onVis = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [refresh])
+
   return { loading, error, reels, database, refresh }
 }
 

@@ -106,7 +106,10 @@ export async function insertMarketplacePost(pool, dropId, sellerKey, mediaKind) 
 export function serializeDropPublic(row, media) {
   const sorted = [...media].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
   const images = sorted.filter((m) => m.kind === 'image').map((m) => m.url)
-  const videoRow = sorted.find((m) => m.kind === 'video' || m.kind === 'live_replay')
+  /** Prefer finished replay over transient live HLS when both exist. */
+  const videoRow =
+    sorted.find((m) => m.kind === 'live_replay') ||
+    sorted.find((m) => m.kind === 'video')
   /** @type {Record<string, unknown>} */
   const out = {
     id: String(row.id),

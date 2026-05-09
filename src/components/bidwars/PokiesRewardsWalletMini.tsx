@@ -46,7 +46,7 @@ export function PokiesRewardsWalletMini({ variant = 'light' }: { variant?: 'ligh
   ]
 
   const shell = variant === 'purple'
-    ? 'bg-[#4c1d95] text-white ring-[#7c3aed]/40 shadow-[0_16px_34px_-22px_rgba(76,29,149,0.75)]'
+    ? 'bg-[#291050] text-white ring-[#7c3aed]/40 shadow-[0_16px_34px_-22px_rgba(41,16,80,0.75)]'
     : 'bg-white text-zinc-950 ring-zinc-200 shadow-sm'
   const chip = variant === 'purple'
     ? 'bg-white/10 ring-white/12'

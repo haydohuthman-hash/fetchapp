@@ -312,11 +312,11 @@ function PawIcon({ className = '', color = '#7c3aed' }: { className?: string; co
 function ChestIcon({ open: chestOpen = false, className = '' }: { open?: boolean; className?: string }) {
   return (
     <svg viewBox="0 0 32 32" fill="none" aria-hidden className={className}>
-      <rect x="4" y="14" width="24" height="14" rx="2" fill="#7c3aed" stroke="#4c1d95" strokeWidth="1.5" />
+      <rect x="4" y="14" width="24" height="14" rx="2" fill="#7c3aed" stroke="#291050" strokeWidth="1.5" />
       <path
         d={chestOpen ? 'M4 14c0-6 24-6 24 0v-4H4v4Z' : 'M4 14c0-6 24-6 24 0v2H4v-2Z'}
         fill="#a78bfa"
-        stroke="#4c1d95"
+        stroke="#291050"
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
@@ -361,7 +361,7 @@ const GameTopNav = memo(function GameTopNav({
               type="button"
               onClick={onAddGems}
               aria-label="Add gems"
-              className="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#7c3aed] text-white active:bg-[#6d28d9]"
+              className="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#7c3aed] text-white active:bg-[#4f1d93]"
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
@@ -747,7 +747,7 @@ function ActionButtons({
         <button
           type="button"
           onClick={onTryAgain}
-          className="col-span-5 flex h-14 items-center justify-center gap-2 rounded-2xl border-b-[4px] border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
+          className="col-span-5 flex h-14 items-center justify-center gap-2 rounded-2xl border-b-[4px] border-[#291050] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
         >
           <span className="text-[15px] font-black uppercase tracking-[0.06em]">Try again</span>
         </button>
@@ -756,7 +756,7 @@ function ActionButtons({
           <button
             type="button"
             onClick={onPrimaryHint}
-            className="col-span-3 flex h-14 items-center justify-center gap-2 rounded-2xl border-b-[4px] border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
+            className="col-span-3 flex h-14 items-center justify-center gap-2 rounded-2xl border-b-[4px] border-[#291050] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
             aria-label={`Flip card. Cost ${flipCost} gem.`}
           >
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/20">
@@ -895,7 +895,7 @@ function BottomNav({ onClose }: { onClose: () => void }) {
               type="button"
               onClick={onClose}
               aria-label="Sell"
-              className="mx-auto -mt-5 flex h-12 w-12 items-center justify-center rounded-full border-b-[4px] border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white shadow-[0_10px_22px_-12px_rgba(124,58,237,0.7)] active:translate-y-0.5 active:border-b-2"
+              className="mx-auto -mt-5 flex h-12 w-12 items-center justify-center rounded-full border-b-[4px] border-[#291050] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white shadow-[0_10px_22px_-12px_rgba(124,58,237,0.7)] active:translate-y-0.5 active:border-b-2"
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />

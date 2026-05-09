@@ -34,7 +34,7 @@ export function LiveBadge({ viewers, className = '', size = 'md' }: Props) {
       </span>
       {viewers != null ? (
         <span
-          className={`flex items-center gap-1 bg-[#4c1d95] ${px} ${countText} font-extrabold tabular-nums leading-none text-white`}
+          className={`flex items-center gap-1 bg-[#291050] ${px} ${countText} font-extrabold tabular-nums leading-none text-white`}
         >
           <svg
             className="h-3 w-3 shrink-0 text-white/90"

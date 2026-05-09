@@ -42,7 +42,7 @@ export function AuctionCard({ auction, onPress, className = '' }: Props) {
           {isLive ? (
             <LiveBadge viewers={auction.viewerCount} size="sm" />
           ) : isUpcoming ? (
-            <span className="inline-flex items-center gap-1 rounded-md bg-[#4c1d95] px-2 py-[3px] text-[10px] font-black uppercase leading-none tracking-wide text-white shadow-sm">
+            <span className="inline-flex items-center gap-1 rounded-md bg-[#291050] px-2 py-[3px] text-[10px] font-black uppercase leading-none tracking-wide text-white shadow-sm">
               Upcoming
             </span>
           ) : (
@@ -63,14 +63,14 @@ export function AuctionCard({ auction, onPress, className = '' }: Props) {
           <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-500">
             {isUpcoming ? 'Starting bid' : 'Current bid'}
           </span>
-          <span className="text-[14px] font-black tabular-nums text-[#4c1d95]">
+          <span className="text-[14px] font-black tabular-nums text-[#291050]">
             {formatAud(isUpcoming ? auction.startingBidCents : auction.currentBidCents)}
           </span>
         </span>
         {seller ? (
           <span className="line-clamp-1 text-[10.5px] font-semibold text-zinc-500">
             {seller.handle}
-            {seller.isVerified ? <span className="ml-1 text-[#4c1d95]">✓</span> : null}
+            {seller.isVerified ? <span className="ml-1 text-[#291050]">✓</span> : null}
           </span>
         ) : null}
       </span>

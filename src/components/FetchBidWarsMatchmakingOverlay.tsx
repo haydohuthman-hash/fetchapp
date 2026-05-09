@@ -214,7 +214,7 @@ function FetchBidWarsMatchmakingOverlayInner({ open, onClose }: Props) {
         type="button"
         onClick={onClose}
         aria-label="Leave Bid Wars matchmaking"
-        className="absolute right-3 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-[6] flex h-10 w-10 items-center justify-center rounded-full bg-white text-zinc-700 shadow-[0_10px_24px_-12px_rgba(76,29,149,0.3)] ring-1 ring-zinc-200 active:scale-95"
+        className="absolute right-3 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-[6] flex h-10 w-10 items-center justify-center rounded-full bg-white text-zinc-700 shadow-[0_10px_24px_-12px_rgba(41,16,80,0.3)] ring-1 ring-zinc-200 active:scale-95"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
           <path
@@ -229,7 +229,7 @@ function FetchBidWarsMatchmakingOverlayInner({ open, onClose }: Props) {
       {saved.length > 0 ? (
         <div
           aria-live="polite"
-          className="absolute left-3 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-[6] flex h-10 items-center gap-2 rounded-full bg-white px-3 text-[12px] font-bold text-zinc-700 shadow-[0_10px_24px_-12px_rgba(76,29,149,0.3)] ring-1 ring-zinc-200"
+          className="absolute left-3 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-[6] flex h-10 items-center gap-2 rounded-full bg-white px-3 text-[12px] font-bold text-zinc-700 shadow-[0_10px_24px_-12px_rgba(41,16,80,0.3)] ring-1 ring-zinc-200"
         >
           <HeartIcon filled className="h-4 w-4 text-rose-500" />
           {saved.length} saved
@@ -334,7 +334,7 @@ function SearchPhase({ players, max }: { players: MatchmakingPlayer[]; max: numb
       </p>
 
       <div className="relative mt-8 flex h-[230px] w-[230px] items-center justify-center">
-        <span className="absolute inset-0 rounded-full bg-white shadow-[0_30px_60px_-30px_rgba(76,29,149,0.45)] ring-1 ring-violet-100" />
+        <span className="absolute inset-0 rounded-full bg-white shadow-[0_30px_60px_-30px_rgba(41,16,80,0.45)] ring-1 ring-violet-100" />
         <span className="absolute inset-3 rounded-full ring-1 ring-violet-200/70" />
         <span className="absolute inset-9 rounded-full ring-1 ring-violet-300/70" />
         <span
@@ -446,7 +446,7 @@ function ListingVotePhase({
       </div>
 
       <div
-        className="mt-4 overflow-hidden rounded-[28px] bg-white shadow-[0_30px_60px_-30px_rgba(76,29,149,0.35)] ring-1 ring-zinc-200"
+        className="mt-4 overflow-hidden rounded-[28px] bg-white shadow-[0_30px_60px_-30px_rgba(41,16,80,0.35)] ring-1 ring-zinc-200"
         key={listing.id}
         style={{ animation: 'fetch-mm-cardin 0.45s ease-out both' }}
       >
@@ -570,7 +570,7 @@ function CountdownRing({ fraction, secondsLeft }: { fraction: number; secondsLef
   const dash = circ * Math.max(0, Math.min(1, fraction))
   const urgent = secondsLeft <= 3
   return (
-    <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-[0_10px_24px_-12px_rgba(76,29,149,0.25)] ring-1 ring-violet-100">
+    <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-[0_10px_24px_-12px_rgba(41,16,80,0.25)] ring-1 ring-violet-100">
       <svg width={size} height={size} className="absolute inset-0">
         <circle
           cx={size / 2}
@@ -670,7 +670,7 @@ function ListingDecisionPhase({
       </p>
 
       {!passed ? (
-        <div className="mt-2 flex w-full max-w-[20rem] items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-zinc-200 shadow-[0_18px_40px_-18px_rgba(76,29,149,0.25)]">
+        <div className="mt-2 flex w-full max-w-[20rem] items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-zinc-200 shadow-[0_18px_40px_-18px_rgba(41,16,80,0.25)]">
           <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-100">
             {photo ? (
               <img src={photo} alt="" className="h-full w-full object-cover" loading="lazy" />
@@ -737,7 +737,7 @@ function BidWarLiveStage({
         </span>
         <span
           className={[
-            'rounded-full px-3 py-1 text-[12px] font-black tabular-nums shadow-[0_6px_14px_-8px_rgba(76,29,149,0.3)]',
+            'rounded-full px-3 py-1 text-[12px] font-black tabular-nums shadow-[0_6px_14px_-8px_rgba(41,16,80,0.3)]',
             secondsLeft <= 5
               ? 'bg-rose-500 text-white'
               : 'bg-white text-violet-700 ring-1 ring-violet-200',
@@ -747,7 +747,7 @@ function BidWarLiveStage({
         </span>
       </div>
 
-      <div className="mt-3 overflow-hidden rounded-[28px] bg-white ring-1 ring-zinc-200 shadow-[0_30px_60px_-30px_rgba(76,29,149,0.35)]">
+      <div className="mt-3 overflow-hidden rounded-[28px] bg-white ring-1 ring-zinc-200 shadow-[0_30px_60px_-30px_rgba(41,16,80,0.35)]">
         <div className="relative h-[34vh] min-h-[200px] w-full overflow-hidden bg-zinc-100">
           {live.productImageUrl ? (
             <img
@@ -853,7 +853,7 @@ function ResultPhase({
         {won ? 'Bid War victory!' : 'Better luck next time'}
       </h2>
 
-      <div className="mt-5 w-full max-w-[20rem] overflow-hidden rounded-3xl bg-white ring-1 ring-zinc-200 shadow-[0_30px_60px_-30px_rgba(76,29,149,0.35)]">
+      <div className="mt-5 w-full max-w-[20rem] overflow-hidden rounded-3xl bg-white ring-1 ring-zinc-200 shadow-[0_30px_60px_-30px_rgba(41,16,80,0.35)]">
         <div className="aspect-[4/3] w-full overflow-hidden bg-zinc-100">
           {productImageUrl ? (
             <img
@@ -887,7 +887,7 @@ function ResultPhase({
             {saved.map((s) => (
               <div
                 key={s.id}
-                className="flex w-[8.5rem] shrink-0 flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-zinc-200 shadow-[0_12px_24px_-16px_rgba(76,29,149,0.3)]"
+                className="flex w-[8.5rem] shrink-0 flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-zinc-200 shadow-[0_12px_24px_-16px_rgba(41,16,80,0.3)]"
               >
                 <div className="aspect-square w-full overflow-hidden bg-zinc-100">
                   {s.imageUrl ? (

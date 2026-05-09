@@ -19,7 +19,7 @@ export function BidWarMeter({ leftCents, rightCents, leftLabel, rightLabel, clas
   return (
     <div className={['flex flex-col gap-1', className].join(' ')}>
       <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.12em]">
-        <span className={leftLeading ? 'text-[#4c1d95]' : 'text-zinc-400'}>
+        <span className={leftLeading ? 'text-[#291050]' : 'text-zinc-400'}>
           {leftLabel ?? 'You'} · {leftPct}%
         </span>
         <span className={!leftLeading ? 'text-rose-600' : 'text-zinc-400'}>
@@ -38,7 +38,7 @@ export function BidWarMeter({ leftCents, rightCents, leftLabel, rightLabel, clas
           className="absolute inset-y-0 left-0 transition-[width] duration-300 ease-out"
           style={{
             width: `${leftPct}%`,
-            background: 'linear-gradient(90deg,#7c3aed,#4c1d95)',
+            background: 'linear-gradient(90deg,#7c3aed,#291050)',
           }}
           aria-hidden
         />

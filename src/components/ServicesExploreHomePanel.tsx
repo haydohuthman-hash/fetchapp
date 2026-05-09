@@ -21,6 +21,10 @@ export type ServicesExploreHomePanelProps = {
   onOpenMarketplaceAuctions?: () => void
   onOpenMarketplaceShop?: () => void
   onOpenSearch?: () => void
+  /** Route to `/lives` Fetchit livecommerce hub. */
+  onBrowseLive?: () => void
+  /** Dedicated Go Live wizard (`/go-live`). Overrides quick-tile go-live when set. */
+  onSellerGoLive?: () => void
   onOpenMarketplaceBrowse?: (filter: MarketplacePeerBrowseFilter) => void
   onOpenPeerListing: (listingId: string) => void
   onQuickBuyPeerListing: (listingId: string) => void
@@ -29,6 +33,8 @@ export type ServicesExploreHomePanelProps = {
   /** Wallet card: full transaction history (bank-style account). */
   onViewTransactions?: () => void
   onOpenGifts?: () => void
+  /** Explore hero header — chat / messages. */
+  onOpenChat?: () => void
   onOpenNotifications?: () => void
   /** Opens the Bid Wars hub from the adventure promo. */
   onJoinBidWar?: () => void
@@ -72,12 +78,15 @@ export function ServicesExploreHomePanel({
   onOpenMarketplaceAuctions,
   onOpenMarketplaceShop,
   onOpenSearch,
+  onBrowseLive,
+  onSellerGoLive,
   onOpenMarketplaceBrowse,
   onOpenPeerListing,
   onQuickBuyPeerListing: _onQuickBuyPeerListing,
   onViewBackpack,
   onViewTransactions,
   onOpenGifts,
+  onOpenChat,
   onOpenNotifications,
   onJoinBidWar,
   intentOrbHintBubble: _intentOrbHintBubble,
@@ -122,9 +131,9 @@ export function ServicesExploreHomePanel({
   flushExploreScroll.current = onExploreFeedScrollTop
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden bg-[#f3f0fa]">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden bg-transparent">
       <div
-        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain bg-[#f3f0fa] pb-[calc(env(safe-area-inset-bottom,0px)+3.5rem)] [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain bg-transparent pb-[calc(env(safe-area-inset-bottom,0px)+3.5rem)] [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         onScroll={
           onExploreFeedScrollTop
             ? (e) => {
@@ -151,13 +160,16 @@ export function ServicesExploreHomePanel({
               onOpenMarketplaceBrowse ? () => onOpenMarketplaceBrowse({}) : undefined
             }
             onOpenSearch={onOpenSearch}
+            onWatchLive={onBrowseLive}
+            onSellerGoLive={onSellerGoLive}
             onOpenPeerListing={onOpenPeerListing}
             onJoinBidWar={onJoinBidWar}
-            onGoLive={onOpenMarketplaceAuctions ?? onOpenMarketplace}
+            onGoLive={onSellerGoLive ?? onOpenMarketplaceAuctions ?? onOpenMarketplace}
             onCreateListing={onOpenDrops}
             onAddHunt={onOpenDrops}
             onViewWallet={onViewTransactions ?? onViewBackpack}
             onOpenGifts={onOpenGifts}
+            onOpenChat={onOpenChat}
             onOpenNotifications={onOpenNotifications}
           />
         </div>

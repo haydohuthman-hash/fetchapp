@@ -1163,8 +1163,8 @@ function FieldShell({
   children: React.ReactNode
 }) {
   return (
-    <span className="fetch-auth-field-shell relative flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white pl-3.5 pr-2 shadow-[0_2px_8px_-4px_rgba(15,15,30,0.10)] focus-within:border-[#4c1d95] focus-within:ring-2 focus-within:ring-[#c4b5fd]">
-      {icon ? <span className="grid h-6 w-6 place-items-center text-[#4c1d95]">{icon}</span> : null}
+    <span className="fetch-auth-field-shell relative flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white pl-3.5 pr-2 shadow-[0_2px_8px_-4px_rgba(15,15,30,0.10)] focus-within:border-[#291050] focus-within:ring-2 focus-within:ring-[#c4b5fd]">
+      {icon ? <span className="grid h-6 w-6 place-items-center text-[#291050]">{icon}</span> : null}
       <span className="flex-1">{children}</span>
       {valid ? (
         <span aria-hidden className="grid h-6 w-6 place-items-center text-emerald-500">

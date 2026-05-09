@@ -24,7 +24,7 @@ export function EmptyState({ icon = '✨', title, body, ctaLabel, onPress, class
         <button
           type="button"
           onClick={onPress}
-          className="mt-1 rounded-full bg-gradient-to-b from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] px-4 py-2 text-[13px] font-black uppercase tracking-[0.06em] text-white shadow-[0_10px_22px_-12px_rgba(76,29,149,0.7)]"
+          className="mt-1 rounded-full bg-gradient-to-b from-[#7c3aed] via-[#4f1d93] to-[#291050] px-4 py-2 text-[13px] font-black uppercase tracking-[0.06em] text-white shadow-[0_10px_22px_-12px_rgba(41,16,80,0.7)]"
         >
           {ctaLabel}
         </button>

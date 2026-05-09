@@ -60,7 +60,7 @@ export default function CategoryDetailView({ category, onBack, onOpenAuction }: 
               className={[
                 'shrink-0 rounded-full px-3 py-1.5 text-[12px] font-black uppercase tracking-[0.06em] ring-1 transition-colors',
                 active
-                  ? 'bg-[#4c1d95] text-white ring-[#4c1d95]'
+                  ? 'bg-[#291050] text-white ring-[#291050]'
                   : 'bg-white text-zinc-600 ring-zinc-200',
               ].join(' ')}
             >

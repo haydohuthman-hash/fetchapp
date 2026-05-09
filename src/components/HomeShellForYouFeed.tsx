@@ -92,7 +92,7 @@ const PET_HUNT_CATEGORY_CAROUSEL_ITEMS: ReadonlyArray<{ label: string; image: st
 const PH_SHEET =
   'relative z-[1] max-h-[min(44rem,calc(100dvh-1.5rem))] w-full max-w-[400px] overflow-y-auto rounded-t-[1.85rem] bg-gradient-to-b from-[#faf8ff] via-white to-[#f7f5ff] px-5 pb-6 pt-3 text-[#1c1340] shadow-[0_-24px_56px_-20px_rgba(49,16,95,0.42)] ring-1 ring-violet-200/45 [-webkit-overflow-scrolling:touch] sm:rounded-[1.85rem]'
 const PH_CARD =
-  'rounded-2xl border border-violet-100/85 bg-white/95 p-4 shadow-[0_14px_36px_-24px_rgba(76,29,149,0.28)]'
+  'rounded-2xl border border-violet-100/85 bg-white/95 p-4 shadow-[0_14px_36px_-24px_rgba(41,16,80,0.28)]'
 const PH_FIELD =
   'mt-1.5 w-full rounded-2xl border border-violet-100 bg-white px-3.5 py-3 text-[15px] font-black tracking-[-0.02em] text-[#1c1340] shadow-[inset_0_1px_3px_rgba(124,58,237,0.07)] outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-[#7c3aed]/12'
 const PH_FIELD_SM =
@@ -932,7 +932,7 @@ function heroXpBarNumbers(level: number, xpIntoLevel: number) {
 }
 
 const feed3dPurpleCta =
-  'border-b-[4px] border-[#4c1d95] bg-gradient-to-b from-[#9f67ff] to-[#7c3aed] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2'
+  'border-b-[4px] border-[#291050] bg-gradient-to-b from-[#9f67ff] to-[#7c3aed] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2'
 
 const feed3dDarkCta =
   'border-b-[4px] border-[#090514] bg-gradient-to-b from-[#33225f] to-[#1c1340] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2'
@@ -942,7 +942,7 @@ function HeaderSquarePlusIcon({ className = '' }: { className?: string }) {
   return (
     <span
       className={[
-        'flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#7c3aed] text-white shadow-[0_4px_12px_-6px_rgba(76,29,149,0.65)]',
+        'flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#7c3aed] text-white shadow-[0_4px_12px_-6px_rgba(41,16,80,0.65)]',
         className,
       ].join(' ')}
       aria-hidden
@@ -1396,7 +1396,7 @@ function HomeBannerPetDock({
                   type="button"
                   onClick={onStarterUnlockClick}
                   data-fetch-starter-unlock
-                  className="pointer-events-auto relative z-[12] mb-[-2px] mt-1 w-[min(92%,11rem)] rounded-xl border-b-[4px] border-[#4c1d95] bg-gradient-to-b from-[#c4b5fd] to-[#7c3aed] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2 sm:text-[11px] sm:tracking-[0.16em]"
+                  className="pointer-events-auto relative z-[12] mb-[-2px] mt-1 w-[min(92%,11rem)] rounded-xl border-b-[4px] border-[#291050] bg-gradient-to-b from-[#c4b5fd] to-[#7c3aed] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2 sm:text-[11px] sm:tracking-[0.16em]"
                 >
                   Unlock
                 </button>
@@ -1501,7 +1501,7 @@ function FetchitWelcomeHero({
       <div className="flex items-stretch gap-1.5 bg-white px-2 py-1.5 text-[#1c1340]">
         <div className="flex min-h-[2.5rem] min-w-0 flex-[1.2] items-start gap-1.5 rounded-lg bg-white px-1.5 py-1 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-zinc-200/95">
           <span
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#7c3aed] text-[12px] font-black tabular-nums text-white shadow-[0_4px_12px_-4px_rgba(76,29,149,0.55)]"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#7c3aed] text-[12px] font-black tabular-nums text-white shadow-[0_4px_12px_-4px_rgba(41,16,80,0.55)]"
             aria-hidden
           >
             {adventureLevel}
@@ -1516,7 +1516,7 @@ function FetchitWelcomeHero({
             >
               {levelCardName} · {petName}
             </p>
-            <p className="text-[9px] font-black uppercase leading-none tracking-[0.14em] text-[#4c1d95]">
+            <p className="text-[9px] font-black uppercase leading-none tracking-[0.14em] text-[#291050]">
               Level {adventureLevel}
             </p>
             <div className="h-[4px] overflow-hidden rounded-full bg-violet-100">
@@ -1586,7 +1586,7 @@ function FetchitWelcomeHero({
           ) : null}
         </button>
       </div>
-      <div className="relative mt-2 aspect-square w-full overflow-hidden rounded-t-xl bg-gradient-to-b from-[#cdb7ff] via-[#a78bfa] to-[#7c3aed] shadow-[0_22px_48px_-22px_rgba(76,29,149,0.6)] sm:mt-2.5">
+      <div className="relative mt-2 aspect-square w-full overflow-hidden rounded-t-xl bg-gradient-to-b from-[#cdb7ff] via-[#a78bfa] to-[#7c3aed] shadow-[0_22px_48px_-22px_rgba(41,16,80,0.6)] sm:mt-2.5">
         <img
           src={fetchitHomePodRoomBgUrl}
           alt=""
@@ -1639,7 +1639,7 @@ function FetchitWelcomeHero({
             🔥
           </span>
           <div className="min-w-0 flex-1 leading-none">
-            <p className="text-[7.5px] font-semibold uppercase tracking-[0.08em] text-[#4c1d95]/88">Daily streak</p>
+            <p className="text-[7.5px] font-semibold uppercase tracking-[0.08em] text-[#291050]/88">Daily streak</p>
             <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1 gap-y-0 tabular-nums">
               <span
                 className={
@@ -1854,7 +1854,7 @@ function StarterPetSkillsSheet({
         aria-modal="true"
         aria-labelledby="fetch-starter-skills-title"
       >
-        <div className="relative overflow-hidden bg-gradient-to-b from-[#ddd6fe] via-[#a78bfa] to-[#6d28d9] px-5 pb-8 pt-6 text-center text-white">
+        <div className="relative overflow-hidden bg-gradient-to-b from-[#ddd6fe] via-[#a78bfa] to-[#4f1d93] px-5 pb-8 pt-6 text-center text-white">
           <div
             className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/20 blur-2xl"
             aria-hidden
@@ -1888,7 +1888,7 @@ function StarterPetSkillsSheet({
           <button
             type="button"
             onClick={onClose}
-            className="mt-4 flex w-full items-center justify-center rounded-2xl border-b-[4px] border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] px-4 py-3.5 text-[12px] font-black uppercase tracking-[0.08em] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
+            className="mt-4 flex w-full items-center justify-center rounded-2xl border-b-[4px] border-[#291050] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] px-4 py-3.5 text-[12px] font-black uppercase tracking-[0.08em] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
           >
             Let&apos;s go
           </button>
@@ -2185,7 +2185,7 @@ function PetEditSheet({
               const swapButtonClass = isBanner
                 ? 'cursor-default border-b-[2px] border-emerald-300 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100'
                 : [
-                    'border-b-[2px] border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white shadow-none ring-1 ring-violet-400/40',
+                    'border-b-[2px] border-[#291050] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white shadow-none ring-1 ring-violet-400/40',
                     'active:border-b-[1px]',
                   ].join(' ')
               return (
@@ -2264,7 +2264,7 @@ function PetEditSheet({
                       type="button"
                       aria-label={`Swap banner pet to ${name}`}
                       className={[
-                        'mt-1 w-full rounded-lg border-b-[2px] border-[#4c1d95] bg-gradient-to-b from-[#c4b5fd] to-[#7c3aed] px-1 py-1.5 text-[8px] font-black uppercase leading-none tracking-[0.06em] text-white ring-1 ring-violet-400/35 transition-[transform] active:scale-[0.98] active:border-b-[1px] sm:text-[8.5px]',
+                        'mt-1 w-full rounded-lg border-b-[2px] border-[#291050] bg-gradient-to-b from-[#c4b5fd] to-[#7c3aed] px-1 py-1.5 text-[8px] font-black uppercase leading-none tracking-[0.06em] text-white ring-1 ring-violet-400/35 transition-[transform] active:scale-[0.98] active:border-b-[1px] sm:text-[8.5px]',
                         onBlocked ? 'ring-amber-200' : '',
                       ].join(' ')}
                       onClick={() => swapBannerPet(pet.id)}
@@ -2282,7 +2282,7 @@ function PetEditSheet({
               onClick={() => {
                 swapBannerPet(focusedPetId)
               }}
-              className="mt-2 w-full rounded-xl bg-violet-50 py-2 text-center text-[10px] font-black uppercase tracking-[0.06em] text-[#4c1d95] ring-1 ring-violet-100 transition-colors active:bg-violet-100"
+              className="mt-2 w-full rounded-xl bg-violet-50 py-2 text-center text-[10px] font-black uppercase tracking-[0.06em] text-[#291050] ring-1 ring-violet-100 transition-colors active:bg-violet-100"
             >
               Make {focusedLabel} banner pet
             </button>
@@ -2305,7 +2305,7 @@ function PetEditSheet({
                 className={[
                   'mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border-b-[3px] px-3 py-2 text-[10px] font-black uppercase tracking-[0.06em] shadow-none transition-[transform,border-bottom-width] duration-150 sm:text-[11px]',
                   canUnlockBannerSlot
-                    ? 'border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white active:translate-y-0.5 active:border-b-[1.5px]'
+                    ? 'border-[#291050] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white active:translate-y-0.5 active:border-b-[1.5px]'
                     : 'cursor-not-allowed border-zinc-300 border-b-zinc-400 bg-zinc-100 text-zinc-400',
                 ].join(' ')}
               >
@@ -2361,7 +2361,7 @@ function PetEditSheet({
             className={[
               'mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border-b-[3px] px-3 py-2 text-[10px] font-black uppercase tracking-[0.06em] shadow-none transition-[transform,border-bottom-width] duration-150 sm:text-[11px]',
               includedIds.has(focusedPet.id) && canAffordRankUp
-                ? 'border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white active:translate-y-0.5 active:border-b-[1.5px]'
+                ? 'border-[#291050] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] text-white active:translate-y-0.5 active:border-b-[1.5px]'
                 : 'cursor-not-allowed border-zinc-300 border-b-zinc-400 bg-zinc-100 text-zinc-400',
             ].join(' ')}
             aria-label={atMaxRank ? `${focusedLabel} is at max rank` : `Spend ${rankCost} gems to rank up ${focusedLabel}`}
@@ -2380,17 +2380,17 @@ function PetEditSheet({
           ) : null}
         </div>
 
-        <div className="my-3 flex items-center justify-between rounded-xl bg-violet-50 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-[#4c1d95]">
+        <div className="my-3 flex items-center justify-between rounded-xl bg-violet-50 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-[#291050]">
           <span>{isPetFed ? 'Fed' : 'Hungry'}</span>
           <span className="tabular-nums">{petFeedTimerLabel}</span>
         </div>
 
-        <div className="sticky bottom-0 z-[4] mt-4 border-t border-violet-100 bg-gradient-to-b from-white via-white to-violet-50/40 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-4 shadow-[0_-8px_24px_-18px_rgba(76,29,149,0.18)] backdrop-blur-sm">
+        <div className="sticky bottom-0 z-[4] mt-4 border-t border-violet-100 bg-gradient-to-b from-white via-white to-violet-50/40 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-4 shadow-[0_-8px_24px_-18px_rgba(41,16,80,0.18)] backdrop-blur-sm">
           <button
             type="button"
             onClick={onSave}
             aria-label="Save and close home and pet editor"
-            className="flex w-full items-center justify-center rounded-2xl border-b-[4px] border-[#4c1d95] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] px-4 py-3 text-[12px] font-black uppercase tracking-[0.09em] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
+            className="flex w-full items-center justify-center rounded-2xl border-b-[4px] border-[#291050] bg-gradient-to-b from-[#a78bfa] to-[#7c3aed] px-4 py-3 text-[12px] font-black uppercase tracking-[0.09em] text-white shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
           >
             Save
           </button>
@@ -2439,7 +2439,7 @@ function PetHuntMissionCard({
   if (liveHuntCount > 0) {
     return (
       <section className="-mx-0.5 px-0.5" aria-label="Active Pet Hunts" data-fetch-tour-target="adventure">
-        <div className="overflow-hidden rounded-2xl border border-violet-100/80 bg-gradient-to-b from-white to-violet-50/20 p-4 shadow-[0_16px_40px_-26px_rgba(76,29,149,0.45)] ring-1 ring-violet-100/60">
+        <div className="overflow-hidden rounded-2xl border border-violet-100/80 bg-gradient-to-b from-white to-violet-50/20 p-4 shadow-[0_16px_40px_-26px_rgba(41,16,80,0.45)] ring-1 ring-violet-100/60">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#7c3aed]">Pet Hunt</p>
@@ -2518,7 +2518,7 @@ function PetHuntMissionCard({
                           ? `${matchedListing.title} · ${formatAudFromCents(matchedListing.priceCents)}`
                           : petHuntDetailLabel(hunt)}
                       </p>
-                      <p className="mt-1 truncate text-[10px] font-black text-[#4c1d95]">
+                      <p className="mt-1 truncate text-[10px] font-black text-[#291050]">
                         {petHuntAutopilotLabel(hunt)}
                         {hunt.autopilot_enabled && hunt.autopilot_max_bid != null ? ` · Bid cap ${formatAudFromCents(hunt.autopilot_max_bid)}` : ''}
                       </p>
@@ -2541,14 +2541,14 @@ function PetHuntMissionCard({
                         <button
                           type="button"
                           onClick={() => onMessage(hunt.id)}
-                          className="rounded-xl bg-white px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em] text-[#4c1d95] shadow-sm ring-1 ring-violet-100"
+                          className="rounded-xl bg-white px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em] text-[#291050] shadow-sm ring-1 ring-violet-100"
                         >
                           Message
                         </button>
                         <button
                           type="button"
                           onClick={() => onBid(hunt.id)}
-                          className="rounded-xl bg-white px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em] text-[#4c1d95] shadow-sm ring-1 ring-violet-100"
+                          className="rounded-xl bg-white px-1.5 py-2 text-[8px] font-black uppercase tracking-[0.04em] text-[#291050] shadow-sm ring-1 ring-violet-100"
                         >
                           Bid
                         </button>
@@ -2582,7 +2582,7 @@ function PetHuntMissionCard({
                           />
                         </div>
                       </div>
-                      <button type="button" onClick={() => onViewHunt(hunt.id)} className="shrink-0 rounded-xl bg-white px-3 py-2 text-[8px] font-black uppercase tracking-[0.05em] text-[#4c1d95] shadow-sm ring-1 ring-violet-100">
+                      <button type="button" onClick={() => onViewHunt(hunt.id)} className="shrink-0 rounded-xl bg-white px-3 py-2 text-[8px] font-black uppercase tracking-[0.05em] text-[#291050] shadow-sm ring-1 ring-violet-100">
                         View hunt
                       </button>
                     </div>
@@ -2599,7 +2599,7 @@ function PetHuntMissionCard({
                   key={preset}
                   type="button"
                   onClick={() => onStartHunt(preset)}
-                  className="shrink-0 rounded-full bg-violet-50/90 px-3 py-2 text-[9px] font-black text-[#4c1d95] shadow-sm ring-1 ring-violet-100"
+                  className="shrink-0 rounded-full bg-violet-50/90 px-3 py-2 text-[9px] font-black text-[#291050] shadow-sm ring-1 ring-violet-100"
                 >
                   {preset}
                 </button>
@@ -2617,7 +2617,7 @@ function PetHuntMissionCard({
       aria-label={canStartHunt ? 'Start Pet Hunt' : 'Pet Hunt locked until pet is fed'}
       data-fetch-tour-target="adventure"
     >
-      <div className="overflow-visible rounded-2xl border border-violet-100/70 bg-gradient-to-b from-white to-violet-50/30 p-4 shadow-[0_16px_40px_-26px_rgba(76,29,149,0.4)] ring-1 ring-violet-100/60">
+      <div className="overflow-visible rounded-2xl border border-violet-100/70 bg-gradient-to-b from-white to-violet-50/30 p-4 shadow-[0_16px_40px_-26px_rgba(41,16,80,0.4)] ring-1 ring-violet-100/60">
         <div className="min-w-0">
           <p className="truncate text-[15px] font-black leading-none tracking-[-0.02em] text-[#1c1340]">
             Send your pets on a hunt
@@ -2628,7 +2628,7 @@ function PetHuntMissionCard({
           onClick={() => canStartHunt && onStartHunt()}
           disabled={!canStartHunt}
           className={[
-            'mt-4 flex w-full items-center justify-center rounded-2xl px-5 py-3.5 text-[11px] font-black uppercase tracking-[0.08em] shadow-[0_8px_22px_-12px_rgba(76,29,149,0.35)]',
+            'mt-4 flex w-full items-center justify-center rounded-2xl px-5 py-3.5 text-[11px] font-black uppercase tracking-[0.08em] shadow-[0_8px_22px_-12px_rgba(41,16,80,0.35)]',
             canStartHunt
               ? feed3dPurpleCta
               : 'cursor-not-allowed border-b-[4px] border-b-zinc-300/80 bg-zinc-100 text-zinc-500 shadow-none',
@@ -2643,7 +2643,7 @@ function PetHuntMissionCard({
               type="button"
               onClick={() => canStartHunt && onStartHunt(preset)}
               disabled={!canStartHunt}
-              className="shrink-0 rounded-full bg-violet-50/90 px-3 py-2 text-[9px] font-black text-[#4c1d95] shadow-sm ring-1 ring-violet-100 disabled:opacity-45"
+              className="shrink-0 rounded-full bg-violet-50/90 px-3 py-2 text-[9px] font-black text-[#291050] shadow-sm ring-1 ring-violet-100 disabled:opacity-45"
             >
               {preset}
             </button>
@@ -2802,7 +2802,7 @@ function PetHuntSetupSheet({
         <h2 id="fetch-pet-hunt-title" className="mt-1 text-center text-[22px] font-black leading-tight tracking-[-0.05em] text-[#1c1340]">
           Choose your hunter
         </h2>
-        <div className="mt-4 rounded-2xl bg-gradient-to-r from-violet-100/90 via-violet-50 to-fuchsia-50/80 px-3.5 py-2.5 text-center text-[11px] font-black text-[#4c1d95] shadow-inner shadow-violet-200/50 ring-1 ring-violet-200/60">
+        <div className="mt-4 rounded-2xl bg-gradient-to-r from-violet-100/90 via-violet-50 to-fuchsia-50/80 px-3.5 py-2.5 text-center text-[11px] font-black text-[#291050] shadow-inner shadow-violet-200/50 ring-1 ring-violet-200/60">
           {liveHuntCount}/{PET_HUNT_MAX_LIVE} slots in use
         </div>
 
@@ -2920,7 +2920,7 @@ function PetHuntSetupSheet({
                         'rounded-full px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.06em] shadow-sm transition-transform active:scale-[0.97]',
                         active
                           ? 'bg-[#7c3aed] text-white shadow-[0_4px_14px_-6px_rgba(124,58,237,0.55)]'
-                          : 'bg-violet-50/90 text-[#4c1d95] ring-1 ring-violet-100',
+                          : 'bg-violet-50/90 text-[#291050] ring-1 ring-violet-100',
                       ].join(' ')}
                       aria-pressed={active}
                     >
@@ -2981,7 +2981,7 @@ function PetHuntSetupSheet({
                           onClick={() => toggleAutopilotAction(action)}
                           className={[
                             'rounded-full px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.05em]',
-                            active ? 'bg-[#7c3aed] text-white shadow-sm' : 'bg-white text-[#4c1d95] ring-1 ring-violet-100',
+                            active ? 'bg-[#7c3aed] text-white shadow-sm' : 'bg-white text-[#291050] ring-1 ring-violet-100',
                           ].join(' ')}
                           aria-pressed={active}
                         >
@@ -3061,7 +3061,7 @@ function PetHuntSetupSheet({
               })
             }}
             className={[
-              'rounded-2xl px-4 py-3.5 text-[12px] font-black uppercase tracking-[0.06em] shadow-[0_8px_24px_-12px_rgba(76,29,149,0.45)] transition-transform active:scale-[0.98]',
+              'rounded-2xl px-4 py-3.5 text-[12px] font-black uppercase tracking-[0.06em] shadow-[0_8px_24px_-12px_rgba(41,16,80,0.45)] transition-transform active:scale-[0.98]',
               canCreate
                 ? feed3dPurpleCta
                 : 'cursor-not-allowed border-b-[4px] border-b-zinc-300/80 bg-zinc-100 text-zinc-400 shadow-none',
@@ -3142,7 +3142,7 @@ function PetHuntFoundModal({
           </div>
           <div className="min-w-0 flex-1">
             <p className="line-clamp-3 text-[13px] font-black leading-snug text-[#1c1340]">{listing.title}</p>
-            <p className="mt-1 text-[14px] font-black tabular-nums text-[#4c1d95]">{priceLabel}</p>
+            <p className="mt-1 text-[14px] font-black tabular-nums text-[#291050]">{priceLabel}</p>
           </div>
         </div>
         <div className="mt-5 flex flex-col gap-2">
@@ -3150,7 +3150,7 @@ function PetHuntFoundModal({
             type="button"
             onClick={onViewFinding}
             className={[
-              'flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-[11px] font-black uppercase tracking-[0.08em] shadow-[0_10px_28px_-14px_rgba(76,29,149,0.55)] transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2',
+              'flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-[11px] font-black uppercase tracking-[0.08em] shadow-[0_10px_28px_-14px_rgba(41,16,80,0.55)] transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2',
               feed3dPurpleCta,
             ].join(' ')}
           >
@@ -3251,7 +3251,7 @@ function PetHuntFindingsSheet({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="line-clamp-2 text-[13px] font-black leading-snug text-[#1c1340]">{matchedListing.title}</p>
-                <p className="mt-1 text-[15px] font-black tabular-nums text-[#4c1d95]">
+                <p className="mt-1 text-[15px] font-black tabular-nums text-[#291050]">
                   {formatAudFromCents(matchedListing.priceCents ?? 0)}
                 </p>
               </div>
@@ -3260,7 +3260,7 @@ function PetHuntFindingsSheet({
               type="button"
               onClick={onViewFinding}
               className={[
-                'mt-4 flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-[11px] font-black uppercase tracking-[0.08em] shadow-[0_10px_28px_-14px_rgba(76,29,149,0.55)] transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2',
+                'mt-4 flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-[11px] font-black uppercase tracking-[0.08em] shadow-[0_10px_28px_-14px_rgba(41,16,80,0.55)] transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2',
                 feed3dPurpleCta,
               ].join(' ')}
             >
@@ -3280,7 +3280,7 @@ function PetHuntFindingsSheet({
             {hunt.status === 'active' || foundPending ? (
               <p className="mt-2 text-[12px] font-semibold text-zinc-500">Watching · {elapsedLabel}</p>
             ) : null}
-            <p className="mt-2 text-[11px] font-semibold text-[#4c1d95]">
+            <p className="mt-2 text-[11px] font-semibold text-[#291050]">
               {petHuntAutopilotLabel(hunt)}
               {hunt.autopilot_enabled && hunt.autopilot_max_bid != null
                 ? ` · Bid cap ${formatAudFromCents(hunt.autopilot_max_bid)}`
@@ -3461,7 +3461,7 @@ function PetHuntOptionGroup({
                 'rounded-full px-3.5 py-2 text-[10px] font-black transition-[transform,box-shadow] active:scale-[0.97]',
                 active
                   ? 'bg-[#7c3aed] text-white shadow-[0_4px_14px_-6px_rgba(124,58,237,0.55)]'
-                  : 'bg-violet-50/90 text-[#4c1d95] ring-1 ring-violet-100 shadow-sm',
+                  : 'bg-violet-50/90 text-[#291050] ring-1 ring-violet-100 shadow-sm',
               ].join(' ')}
               aria-pressed={active}
             >
@@ -3570,7 +3570,7 @@ function HomeAdventureQuickActions({
         <button
           type="button"
           onClick={onOpenLiveAuctions}
-          className="relative flex min-h-[8.35rem] flex-col overflow-hidden rounded-[1.1rem] border border-violet-200/70 bg-white px-2 py-2 text-left text-[#1c1340] shadow-[0_14px_26px_-20px_rgba(76,29,149,0.55)] transition-colors active:bg-violet-50"
+          className="relative flex min-h-[8.35rem] flex-col overflow-hidden rounded-[1.1rem] border border-violet-200/70 bg-white px-2 py-2 text-left text-[#1c1340] shadow-[0_14px_26px_-20px_rgba(41,16,80,0.55)] transition-colors active:bg-violet-50"
           aria-label="Open lives"
         >
           <p className="relative z-[1] truncate text-[11px] font-black uppercase leading-none tracking-[0.04em]">Live</p>
@@ -3603,7 +3603,7 @@ function HomeAdventureQuickActions({
             onOpenBidWars()
           }}
           className={[
-            'relative flex min-h-[8.35rem] flex-col overflow-hidden rounded-[1.1rem] border px-2 py-2 text-left text-[#1c1340] shadow-[0_14px_26px_-20px_rgba(76,29,149,0.55)] transition-colors',
+            'relative flex min-h-[8.35rem] flex-col overflow-hidden rounded-[1.1rem] border px-2 py-2 text-left text-[#1c1340] shadow-[0_14px_26px_-20px_rgba(41,16,80,0.55)] transition-colors',
             bidWarsUnlocked ? 'border-violet-200/70 bg-white active:bg-violet-50' : 'cursor-not-allowed border-zinc-200/90 bg-zinc-50/90',
           ].join(' ')}
           aria-label={
@@ -3649,7 +3649,7 @@ function HomeAdventureQuickActions({
         <button
           type="button"
           onClick={onOpenShop}
-          className="relative flex min-h-[8.35rem] flex-col overflow-hidden rounded-[1.1rem] border border-violet-200/70 bg-white px-2 py-2 text-left text-[#1c1340] shadow-[0_14px_26px_-20px_rgba(76,29,149,0.55)] transition-colors active:bg-violet-50"
+          className="relative flex min-h-[8.35rem] flex-col overflow-hidden rounded-[1.1rem] border border-violet-200/70 bg-white px-2 py-2 text-left text-[#1c1340] shadow-[0_14px_26px_-20px_rgba(41,16,80,0.55)] transition-colors active:bg-violet-50"
           aria-label="Open shop"
         >
           <p className="relative z-[1] truncate text-[11px] font-black uppercase leading-none tracking-[0.04em]">Shop</p>
@@ -3809,7 +3809,7 @@ function DailyRewardTaskCards({
             >
               <span
                 className={[
-                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#4c1d95] ring-1',
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#291050] ring-1',
                   done ? 'bg-emerald-100 ring-emerald-200' : 'bg-violet-100 ring-violet-200',
                 ].join(' ')}
                 aria-hidden
@@ -3828,7 +3828,7 @@ function DailyRewardTaskCards({
               <span className="min-w-0 flex-1 truncate text-[11px] font-black leading-none tracking-[-0.02em] text-[#1c1340]">
                   {task.title}
               </span>
-              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-black text-[#4c1d95]">
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-black text-[#291050]">
                 <img
                   src={purpleGemIconUrl}
                   alt=""
@@ -3866,7 +3866,7 @@ function DailyRewardTaskCards({
           >
             <span
               className={[
-                'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#4c1d95] ring-1',
+                'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#291050] ring-1',
                 mysteryDone ? 'bg-emerald-100 ring-emerald-200' : 'bg-amber-100 ring-amber-200',
               ].join(' ')}
               aria-hidden
@@ -3889,7 +3889,7 @@ function DailyRewardTaskCards({
                 </div>
               ) : null}
             </div>
-            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-black text-[#4c1d95]">
+            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-black text-[#291050]">
               <img
                 src={purpleGemIconUrl}
                 alt=""
@@ -4130,7 +4130,7 @@ function BackpackStoragePage({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-b-[3px] border-violet-400/80 bg-gradient-to-b from-violet-50 to-violet-100/95 text-[#4c1d95] shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-b-[3px] border-violet-400/80 bg-gradient-to-b from-violet-50 to-violet-100/95 text-[#291050] shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
               aria-label="Close backpack storage"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -4174,7 +4174,7 @@ function BackpackStoragePage({
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+1rem)] pt-4">
           {mapItem ? (
             <section
-              className="mb-3 flex items-center gap-3 rounded-3xl bg-white p-3 shadow-[0_14px_30px_-24px_rgba(76,29,149,0.45)] ring-1 ring-violet-100"
+              className="mb-3 flex items-center gap-3 rounded-3xl bg-white p-3 shadow-[0_14px_30px_-24px_rgba(41,16,80,0.45)] ring-1 ring-violet-100"
               aria-label="Explorer map"
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 ring-1 ring-amber-200">
@@ -4201,7 +4201,7 @@ function BackpackStoragePage({
 
           <div className="grid grid-cols-2 gap-3">
             {storedItems.map((item) => (
-              <div key={item.label} className="rounded-3xl bg-white p-3 shadow-[0_14px_30px_-24px_rgba(76,29,149,0.45)] ring-1 ring-violet-100">
+              <div key={item.label} className="rounded-3xl bg-white p-3 shadow-[0_14px_30px_-24px_rgba(41,16,80,0.45)] ring-1 ring-violet-100">
                 <div className={['inline-flex rounded-xl px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] ring-1', item.tone].join(' ')}>
                   Stored
                 </div>
@@ -4213,7 +4213,7 @@ function BackpackStoragePage({
             ))}
           </div>
 
-          <section className="mt-4 rounded-[2rem] bg-white p-4 shadow-[0_18px_38px_-28px_rgba(76,29,149,0.55)] ring-1 ring-violet-100" aria-label="Backpack vault">
+          <section className="mt-4 rounded-[2rem] bg-white p-4 shadow-[0_18px_38px_-28px_rgba(41,16,80,0.55)] ring-1 ring-violet-100" aria-label="Backpack vault">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-black uppercase tracking-[0.16em] text-violet-500">Vault pocket</p>
@@ -4232,7 +4232,7 @@ function BackpackStoragePage({
                 <button
                   key={slot}
                   type="button"
-                  className="rounded-2xl border-b-[3px] border-violet-400/85 bg-gradient-to-b from-violet-50 to-violet-100/95 px-2 py-3 text-center text-[11px] font-black text-[#4c1d95] shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
+                  className="rounded-2xl border-b-[3px] border-violet-400/85 bg-gradient-to-b from-violet-50 to-violet-100/95 px-2 py-3 text-center text-[11px] font-black text-[#291050] shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2"
                 >
                   {slot}
                 </button>
@@ -4392,7 +4392,7 @@ function ExplorePeerListingCard({
         <button
           type="button"
           aria-label={label}
-          className="absolute inset-0 z-[2] m-0 cursor-pointer border-0 bg-transparent p-0 outline-none active:opacity-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4c1d95]"
+          className="absolute inset-0 z-[2] m-0 cursor-pointer border-0 bg-transparent p-0 outline-none active:opacity-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#291050]"
           onClick={() => onOpenPeerListing(l.id)}
         />
         {showQuickAdd ? (
@@ -4402,7 +4402,7 @@ function ExplorePeerListingCard({
             title={quickTitle}
             aria-disabled={!canQuickAdd}
             className={[
-              'absolute right-1.5 top-1.5 z-[3] flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-b-[3px] border-zinc-200/95 border-b-zinc-400/90 bg-gradient-to-b from-white to-zinc-100 text-[#4c1d95] shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2',
+              'absolute right-1.5 top-1.5 z-[3] flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-b-[3px] border-zinc-200/95 border-b-zinc-400/90 bg-gradient-to-b from-white to-zinc-100 text-[#291050] shadow-none transition-[transform,border-bottom-width] duration-150 active:translate-y-0.5 active:border-b-2',
               canQuickAdd ? '' : 'cursor-default opacity-45',
             ].join(' ')}
             onPointerDown={(e) => e.stopPropagation()}
@@ -4422,7 +4422,7 @@ function ExplorePeerListingCard({
       <button
         type="button"
         aria-label={label}
-        className="flex min-w-0 flex-col gap-0.5 px-2.5 py-2 text-left outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4c1d95]"
+        className="flex min-w-0 flex-col gap-0.5 px-2.5 py-2 text-left outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#291050]"
         onClick={() => onOpenPeerListing(l.id)}
       >
         <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-[#1c1528]">{l.title}</p>
