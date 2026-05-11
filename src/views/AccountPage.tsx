@@ -36,8 +36,6 @@ import {
   FETCH_PROFILE_PREFERENCES_PATH,
   FETCH_PROFILE_TAX_EXEMPT_PATH,
   FETCH_PROFILE_USER_REPORTS_PATH,
-  FETCH_WALLET_ADD_CREDITS_PATH,
-  FETCH_WALLET_TRANSACTIONS_PATH,
 } from '../lib/fetchRoutes'
 import { navigateToHomeMarketplace, useMarketplaceCartItemCount } from '../lib/marketplaceCartSnapshot'
 import { loadSession, signOutUser } from '../lib/fetchUserSession'
@@ -111,15 +109,14 @@ export default function AccountPage() {
         <section>
           <h2 className="mb-3 text-[15px] font-black text-[#111111]">Account</h2>
           <AccountQuickCards
-            balanceLabel="$0.00"
             locked={!isLoggedIn}
-            onReferralsClick={() => gated(FETCH_WALLET_ADD_CREDITS_PATH)}
+            onReferralsClick={() => gated(FETCH_GEMS_PATH)}
             onRewardsClick={() => gated(FETCH_GEMS_PATH)}
           />
         </section>
 
         <section className="space-y-0">
-          <SettingsRow icon={Shield} title="Account Health" onClick={() => gated(FETCH_WALLET_TRANSACTIONS_PATH)} />
+          <SettingsRow icon={Shield} title="Account Health" onClick={() => gated(FETCH_PROFILE_ACCOUNT_CONTROLS_PATH)} />
           <SettingsRow icon={Users} title="Affiliate Program: Earn Cash" onClick={() => gated(FETCH_GEMS_PATH)} />
           <SettingsRow icon={CreditCard} title="Payments & Shipping" onClick={() => gated(FETCH_PROFILE_PAYMENTS_SHIPPING_PATH)} />
           <SettingsRow icon={MapPin} title="Addresses" onClick={() => gated(FETCH_PROFILE_ADDRESSES_PATH)} />

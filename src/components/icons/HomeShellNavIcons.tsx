@@ -1,8 +1,9 @@
 /**
  * Icons for home shell nav (bottom bar + peek chrome) and sheet menus.
  *
- * Bottom-bar nav uses outline-first icons for inactive state, and fills only
- * when active. All icons inherit `currentColor` from the dock.
+ * Bottom nav uses filled glyphs everywhere; muted vs active emphasis comes from dock
+ * `color` (`#a3a3a3` inactive, `#0a0a0a` when `.fetch-home-intent-bottom-nav__icon--active`).
+ * The first bottom-nav slot uses {@link FetchLivesNavIcon} (Explore / live TV). The marketplace **bottom-nav** tab uses {@link CartNavIcon} (same market-shop glyph as {@link FetchShopNavIcon}). Some headers (e.g. inbox) use {@link ShoppingCartHeaderIcon} (outline cart).
  */
 
 type IconProps = {
@@ -87,7 +88,7 @@ export function FetchSearchNavIcon({ className, active = true }: IconProps) {
 }
 
 /**
- * Live TV — outline when inactive, solid screen when active (Lives tab).
+ * Live TV — outline when inactive, solid screen when active. Used for the home shell’s first dock slot (Explore / live entry).
  */
 export function FetchLivesNavIcon({ className, active = true }: IconProps) {
   const stroke = active ? NAV_OUTLINE_STROKE_ACTIVE : NAV_OUTLINE_STROKE
@@ -207,6 +208,55 @@ export function FetchShopNavIcon({ className, active = true }: IconProps) {
         fill="none"
         stroke="currentColor"
         strokeWidth={stroke}
+      />
+    </svg>
+  )
+}
+
+/**
+ * Inbox — rounded chat bubble; outline when inactive, solid fill when active.
+ */
+export function FetchInboxNavIcon({ className, active = true }: IconProps) {
+  const stroke = active ? NAV_OUTLINE_STROKE_ACTIVE : NAV_OUTLINE_STROKE
+  /** Larger artwork to match neighbouring nav glyphs (home, cart, shop). */
+  const bubble = { x: 3.72, y: 3.78, w: 16.56, h: 12.42, rx: 5.45 }
+
+  if (active) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+        <rect
+          x={bubble.x}
+          y={bubble.y}
+          width={bubble.w}
+          height={bubble.h}
+          rx={bubble.rx}
+          ry={bubble.rx}
+          fill="currentColor"
+        />
+        <path fill="currentColor" d="M6.55 16.2L3.92 21L13.42 16.2z" />
+      </svg>
+    )
+  }
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect
+        x={bubble.x}
+        y={bubble.y}
+        width={bubble.w}
+        height={bubble.h}
+        rx={bubble.rx}
+        ry={bubble.rx}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={stroke}
+      />
+      <path
+        d="M6.55 16.2 L3.92 21 L13.42 16.2 Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={stroke}
+        strokeLinejoin="round"
+        strokeLinecap="round"
       />
     </svg>
   )
@@ -333,6 +383,52 @@ export function PlusCircleNavIcon({ className, active = true }: IconProps) {
       />
     </svg>
   )
+}
+
+/**
+ * Shopping cart — **outline only** (basket + arch handle + struts + twin wheels). Tuned for ~32px headers.
+ * Bottom-nav marketplace slot uses {@link CartNavIcon} (market shop storefront).
+ */
+export function ShoppingCartHeaderIcon({ className, active = true }: IconProps) {
+  const w = active ? NAV_OUTLINE_STROKE_ACTIVE : NAV_OUTLINE_STROKE
+  const wheelR = 1.42
+  const wheelY = 21.55
+  const wheelLX = 10.2
+  const wheelRX = 15.8
+
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      {/* Wire basket (open reads from handle + interior negative space) */}
+      <path
+        d="M6.9 14h11.55v6.2H6.9V14z"
+        stroke="currentColor"
+        strokeWidth={w}
+        strokeLinejoin="round"
+      />
+      {/* Cart brace / handle */}
+      <path
+        d="M8.75 14Q12 10.15 15.25 14"
+        stroke="currentColor"
+        strokeWidth={w + 0.48}
+        strokeLinecap="round"
+      />
+      <path
+        d={`M${wheelLX} 20.2v1.25M${wheelRX} 20.2v1.25`}
+        stroke="currentColor"
+        strokeWidth={w + 0.35}
+        strokeLinecap="round"
+      />
+      <circle cx={wheelLX} cy={wheelY} r={wheelR} stroke="currentColor" strokeWidth={w} fill="none" />
+      <circle cx={wheelRX} cy={wheelY} r={wheelR} stroke="currentColor" strokeWidth={w} fill="none" />
+    </svg>
+  )
+}
+
+/**
+ * Marketplace / browse (bottom nav) — **market shop** storefront: awning + single door; identical to {@link FetchShopNavIcon}.
+ */
+export function CartNavIcon(props: IconProps) {
+  return <FetchShopNavIcon {...props} />
 }
 
 /** Peer buy ↔ sell — horizontal swap arrows (reads clearly at small sizes). */

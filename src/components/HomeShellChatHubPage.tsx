@@ -9,14 +9,21 @@ import {
 } from '../lib/messagesApi'
 import { MARKETPLACE_MOCK_PEER_LISTINGS } from '../lib/marketplaceMockPeerListings'
 import { listingImageAbsoluteUrl, type PeerListing } from '../lib/listingsApi'
-import { AccountNavIconFilled } from './icons/HomeShellNavIcons'
+import {
+  HOME_SHELL_UNIFIED_TOP_HEADER_CLASS,
+  HomeShellHeaderHeartGlyph,
+  HomeShellHeaderSearchRingIcon,
+} from './HomeShellUnifiedTopHeader'
+import { ShoppingCartHeaderIcon } from './icons/HomeShellNavIcons'
 import { ChatThreadView } from './ChatThreadView'
 
 type HubScreen = 'hub' | 'thread'
 type ActivityTab = 'messages' | 'notifications' | 'purchases'
 
 export type HomeShellChatHubPageProps = {
-  bottomNav: ReactNode
+  bottomNav?: ReactNode
+  /** When true, omit the in-page dock (HomeView pins it outside the sliding layer) and pad scroll areas to clear it. */
+  renderShellDockOutsideRoute?: boolean
   onMenuAccount?: () => void
   onChatWithField: () => void
   initialThreadId?: string | null
@@ -24,6 +31,10 @@ export type HomeShellChatHubPageProps = {
   listingUnread?: number
   supportUnread?: number
   onFetchIt?: (listing: PeerListing) => void
+  /** Search tab — same chrome as other home-shell pages. */
+  onOpenSearch?: () => void
+  onOpenCart?: () => void
+  onOpenNotifications?: () => void
 }
 
 const ACTIVITY_TABS: { id: ActivityTab; label: string }[] = [
@@ -31,6 +42,10 @@ const ACTIVITY_TABS: { id: ActivityTab; label: string }[] = [
   { id: 'notifications', label: 'Notifications' },
   { id: 'purchases', label: 'Purchases' },
 ]
+
+/** Same bottom clearance as `HomeShellMarketplacePage` dock when the nav is rendered outside the route. */
+const HOME_SHELL_ROUTE_DOCK_SCROLL_PAD =
+  'pb-[calc(2.95rem+env(safe-area-inset-bottom,0px)+0.5rem)]'
 
 function ActivityTabBar({
   value,
@@ -45,7 +60,7 @@ function ActivityTabBar({
 }) {
   return (
     <nav
-      className="flex w-full items-stretch border-b border-violet-100 bg-white px-0"
+      className="flex w-full items-stretch bg-white px-0"
       role="tablist"
       aria-label="Activity"
     >
@@ -321,13 +336,17 @@ function statusChipFor(status: PurchaseStatus): { label: string; bg: string; fg:
 
 function HomeShellChatHubPageInner({
   bottomNav,
-  onMenuAccount,
+  renderShellDockOutsideRoute = false,
+  onMenuAccount: _onMenuAccount,
   onChatWithField,
   initialThreadId,
   onConsumedInitialThread,
   listingUnread = 0,
   supportUnread = 0,
   onFetchIt,
+  onOpenSearch,
+  onOpenCart,
+  onOpenNotifications,
 }: HomeShellChatHubPageProps) {
   const [screen, setScreen] = useState<HubScreen>('hub')
   const [tab, setTab] = useState<ActivityTab>('messages')
@@ -343,6 +362,9 @@ function HomeShellChatHubPageInner({
   const notifications = useActivityNotifications()
   const purchases = useRecentPurchases()
   const unreadNotifications = notifications.filter((n) => n.unread).length
+
+  const hubScrollBottomPad = renderShellDockOutsideRoute ? HOME_SHELL_ROUTE_DOCK_SCROLL_PAD : 'pb-6'
+  const threadRouteDockPad = renderShellDockOutsideRoute ? HOME_SHELL_ROUTE_DOCK_SCROLL_PAD : ''
 
   const loadThreads = useCallback(async () => {
     setErr(null)
@@ -418,20 +440,24 @@ function HomeShellChatHubPageInner({
         className="fetch-home-buysell-page absolute inset-0 z-[60] flex min-h-0 flex-col bg-[#f8f6fd]"
         role="main"
       >
-        <ChatThreadView
-          thread={activeThread}
-          onBack={() => {
-            setActiveThread(null)
-            if (openedViaHandoffRef.current) {
-              openedViaHandoffRef.current = false
-              setScreen('hub')
-            } else {
-              setScreen('hub')
-              if (threadKind === 'listing') void loadThreads()
-            }
-          }}
-          onFetchIt={onFetchIt}
-        />
+        <div
+          className={['flex min-h-0 min-w-0 flex-1 flex-col', threadRouteDockPad].filter(Boolean).join(' ')}
+        >
+          <ChatThreadView
+            thread={activeThread}
+            onBack={() => {
+              setActiveThread(null)
+              if (openedViaHandoffRef.current) {
+                openedViaHandoffRef.current = false
+                setScreen('hub')
+              } else {
+                setScreen('hub')
+                if (threadKind === 'listing') void loadThreads()
+              }
+            }}
+            onFetchIt={onFetchIt}
+          />
+        </div>
         {bottomNav ? (
           <div className="fetch-home-marketplace-shell-footer shrink-0 pb-[env(safe-area-inset-bottom,0px)]">
             {bottomNav}
@@ -447,29 +473,40 @@ function HomeShellChatHubPageInner({
       role="main"
       aria-label="Activity"
     >
-      <header className="shrink-0 border-b border-violet-100 bg-white px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top,0px))] shadow-[0_6px_18px_-18px_rgba(41,16,80,0.45)] sm:px-4">
-        <div className="mx-auto grid w-full min-w-0 max-w-lg grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-2">
-          <div className="h-10 w-10 shrink-0" aria-hidden />
-          <div className="flex min-w-0 flex-col items-center justify-center text-center">
-            <span className="text-[17px] font-bold tracking-[-0.02em] text-[#1c1528] sm:text-[18px]">
-              Activity
-            </span>
-            <span className="mt-0.5 text-[11px] font-medium leading-none text-zinc-500">
-              Chats · notifications · purchases
-            </span>
-          </div>
-          {onMenuAccount ? (
+      <header className={HOME_SHELL_UNIFIED_TOP_HEADER_CLASS}>
+        <h1 className="shrink-0 text-[clamp(1.25rem,5vw,1.65rem)] font-black leading-none tracking-tight text-zinc-900 sm:text-[1.75rem]">
+          Inbox
+        </h1>
+        <div className="min-w-0 flex-1" aria-hidden />
+        <button
+          type="button"
+          onClick={() => onOpenSearch?.()}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-0 bg-transparent text-zinc-900 outline-none transition-[opacity,filter] active:opacity-70 focus-visible:ring-2 focus-visible:ring-violet-400/55 focus-visible:ring-offset-2"
+          aria-label="Search"
+        >
+          <HomeShellHeaderSearchRingIcon className="h-7 w-7 shrink-0 text-zinc-900" />
+        </button>
+        <div className="flex shrink-0 items-center gap-0.5">
+          {onOpenCart ? (
             <button
               type="button"
-              onClick={onMenuAccount}
-              className="flex h-10 w-10 shrink-0 items-center justify-center justify-self-end rounded-full bg-violet-50 text-[#291050] ring-1 ring-violet-200/70 transition-colors active:bg-violet-100"
-              aria-label="Profile"
+              onClick={() => onOpenCart()}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-0 bg-transparent text-zinc-900 outline-none transition-[opacity,filter] active:opacity-70 focus-visible:ring-2 focus-visible:ring-violet-400/55 focus-visible:ring-offset-2"
+              aria-label="Shopping cart"
             >
-              <AccountNavIconFilled className="h-5 w-5" />
+              <ShoppingCartHeaderIcon className="block h-8 w-8 text-zinc-900" active={false} />
             </button>
-          ) : (
-            <div className="h-10 w-10 shrink-0" aria-hidden />
-          )}
+          ) : null}
+          {onOpenNotifications ? (
+            <button
+              type="button"
+              onClick={onOpenNotifications}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-0 bg-transparent text-zinc-900 outline-none transition-[opacity,filter] active:opacity-70 focus-visible:ring-2 focus-visible:ring-violet-400/55 focus-visible:ring-offset-2"
+              aria-label="Notifications"
+            >
+              <HomeShellHeaderHeartGlyph className="block h-7 w-7 text-zinc-900" />
+            </button>
+          ) : null}
         </div>
       </header>
 
@@ -483,7 +520,9 @@ function HomeShellChatHubPageInner({
           />
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-6 pt-3 sm:px-4">
+        <div
+          className={['min-h-0 flex-1 overflow-y-auto px-3 pt-3 sm:px-4', hubScrollBottomPad].join(' ')}
+        >
           {err ? (
             <p className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">
               {err}

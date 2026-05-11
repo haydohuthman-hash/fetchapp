@@ -16,12 +16,14 @@ export type ServicesExploreHomePanelProps = {
   onOpenDrops: () => void
   /** User tapped a “live now” tile — open the Live floor + player for that stream. */
   onOpenLiveStream?: (reel: DropReel) => void
+  /** Seller display name row — resolved from {@link DropReel.authorId}. */
+  onOpenSellerProfile?: (reel: DropReel) => void
   onOpenMarketplace: () => void
   /** Match For You quick tiles: Live vs Shop entry points. */
   onOpenMarketplaceAuctions?: () => void
   onOpenMarketplaceShop?: () => void
   onOpenSearch?: () => void
-  /** Route to `/lives` Fetchit livecommerce hub. */
+  /** In-shell marketplace live / Discover (no separate route). */
   onBrowseLive?: () => void
   /** Dedicated Go Live wizard (`/go-live`). Overrides quick-tile go-live when set. */
   onSellerGoLive?: () => void
@@ -32,9 +34,9 @@ export type ServicesExploreHomePanelProps = {
   onViewBackpack?: () => void
   /** Wallet card: full transaction history (bank-style account). */
   onViewTransactions?: () => void
-  onOpenGifts?: () => void
-  /** Explore hero header — chat / messages. */
-  onOpenChat?: () => void
+  /** Explore hero header — open account / profile hub. */
+  onOpenProfile?: () => void
+  /** Explore hero — filled heart in header taps this (combined former chat/bell shortcuts). */
   onOpenNotifications?: () => void
   /** Opens the Bid Wars hub from the adventure promo. */
   onJoinBidWar?: () => void
@@ -68,12 +70,15 @@ export type ServicesExploreHomePanelProps = {
   furniturePromoBleed?: 'page' | 'tight'
   /** Full-page Explore: report vertical scroll for collapsing the app header. */
   onExploreFeedScrollTop?: (scrollTop: number) => void
+  /** Playable live reels resolved from the Drops feed (+ mocks) — for random-live join UX. */
+  onExploreLiveAuctionReelsResolved?: (reels: DropReel[]) => void
 }
 
 export function ServicesExploreHomePanel({
   scanning: _scanning,
   onOpenDrops,
   onOpenLiveStream,
+  onOpenSellerProfile,
   onOpenMarketplace,
   onOpenMarketplaceAuctions,
   onOpenMarketplaceShop,
@@ -83,10 +88,9 @@ export function ServicesExploreHomePanel({
   onOpenMarketplaceBrowse,
   onOpenPeerListing,
   onQuickBuyPeerListing: _onQuickBuyPeerListing,
-  onViewBackpack,
-  onViewTransactions,
-  onOpenGifts,
-  onOpenChat,
+  onViewBackpack: _onViewBackpack,
+  onViewTransactions: _onViewTransactions,
+  onOpenProfile,
   onOpenNotifications,
   onJoinBidWar,
   intentOrbHintBubble: _intentOrbHintBubble,
@@ -113,6 +117,7 @@ export function ServicesExploreHomePanel({
   cardVisible: _cardVisible,
   furniturePromoBleed: _furniturePromoBleed = 'page',
   onExploreFeedScrollTop,
+  onExploreLiveAuctionReelsResolved,
 }: ServicesExploreHomePanelProps) {
   const [askFetchOpen, setAskFetchOpen] = useState(false)
   const scrollTopPendingRef = useRef<number | null>(null)
@@ -133,7 +138,7 @@ export function ServicesExploreHomePanel({
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden bg-transparent">
       <div
-        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain bg-transparent pb-[calc(env(safe-area-inset-bottom,0px)+3.5rem)] [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain bg-transparent pb-[calc(env(safe-area-inset-bottom,0px)+7.75rem)] [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         onScroll={
           onExploreFeedScrollTop
             ? (e) => {
@@ -154,6 +159,7 @@ export function ServicesExploreHomePanel({
         <div className="flex w-full min-w-0 flex-col">
           <HomeFeedV2
             onOpenLiveStream={onOpenLiveStream}
+            onOpenSellerProfile={onOpenSellerProfile}
             onOpenMarketplaceAuctions={onOpenMarketplaceAuctions ?? onOpenMarketplace}
             onOpenMarketplaceShop={onOpenMarketplaceShop ?? onOpenMarketplace}
             onViewAllForYou={
@@ -167,10 +173,9 @@ export function ServicesExploreHomePanel({
             onGoLive={onSellerGoLive ?? onOpenMarketplaceAuctions ?? onOpenMarketplace}
             onCreateListing={onOpenDrops}
             onAddHunt={onOpenDrops}
-            onViewWallet={onViewTransactions ?? onViewBackpack}
-            onOpenGifts={onOpenGifts}
-            onOpenChat={onOpenChat}
+            onOpenProfile={onOpenProfile}
             onOpenNotifications={onOpenNotifications}
+            onExploreLiveAuctionReelsResolved={onExploreLiveAuctionReelsResolved}
           />
         </div>
       </div>

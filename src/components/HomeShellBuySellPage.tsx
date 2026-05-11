@@ -319,7 +319,6 @@ function HomeShellBuySellPageInner({
   const [marketScope, setMarketScope] = useState<MarketScope>(loadStoredScope)
   const [searchOverlayOpen, setSearchOverlayOpen] = useState(false)
   const [categoriesOverlayOpen, setCategoriesOverlayOpen] = useState(false)
-  const shopSearchInputRef = useRef<HTMLInputElement>(null)
 
   const [listings, setListings] = useState<PeerListing[]>([])
   const [listErr, setListErr] = useState<string | null>(null)
@@ -1069,12 +1068,9 @@ function HomeShellBuySellPageInner({
           <div className="flex shrink-0 items-center justify-end gap-0.5 justify-self-end">
             <button
               type="button"
-              onClick={() => {
-                shopSearchInputRef.current?.focus()
-                shopSearchInputRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-              }}
+              onClick={() => setSearchOverlayOpen(true)}
               className="flex h-10 w-10 items-center justify-center rounded-full text-zinc-800 transition-colors active:bg-zinc-100"
-              aria-label="Focus search"
+              aria-label="Search listings"
             >
               <SearchIcon className="text-zinc-600" />
             </button>
@@ -1140,26 +1136,6 @@ function HomeShellBuySellPageInner({
           >
             For you
           </button>
-        </div>
-
-        <div className="mx-auto mt-2 w-full min-w-0 max-w-lg px-1">
-          <label className="sr-only" htmlFor="fetch-shop-search">
-            Search listings
-          </label>
-          <div className="flex w-full items-center gap-2 rounded-xl border border-zinc-200/90 bg-white px-3 py-2.5 shadow-sm">
-            <SearchIcon className="shrink-0 text-zinc-400" />
-            <input
-              id="fetch-shop-search"
-              ref={shopSearchInputRef}
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search listings"
-              className="min-w-0 flex-1 bg-transparent text-[15px] text-zinc-900 outline-none placeholder:text-zinc-400"
-              autoComplete="off"
-              enterKeyHint="search"
-            />
-          </div>
         </div>
 
         <div

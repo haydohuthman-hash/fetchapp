@@ -234,14 +234,12 @@ export function FetchHomeAppAddressHeader({
             <button
               type="button"
               onClick={onOpenSearch}
-              className="fetch-apple-warp-btn fetch-home-search-chip-bar flex min-w-0 flex-1 items-center gap-2 rounded-full border border-violet-200/80 bg-white/60 px-3 py-2 text-left shadow-[0_1px_0_rgba(41,16,80,0.06)] backdrop-blur-[2px] transition-[color,transform,border-color,background-color] hover:border-violet-300/90 hover:text-[#291050] active:scale-[0.99]"
+              className={`${brandMinimalIconBtn} shrink-0`}
               aria-label="Search Fetchit"
             >
               <SearchNavGlyph className="block h-[24px] w-[24px] shrink-0 text-[#1c1528]" />
-              <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold leading-none text-[#1c1528]">
-                Search categories, sellers, drops…
-              </span>
             </button>
+            <div className="min-w-0 flex-1" aria-hidden />
             <div className="flex shrink-0 items-center gap-0.5 self-center">
               {onOpenPokies ? (
                 <button

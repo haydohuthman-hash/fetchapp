@@ -1,7 +1,6 @@
 import { Crown, Lock, Users } from 'lucide-react'
 
 export type AccountQuickCardsProps = {
-  balanceLabel: string
   /** When true, cards are gated (tap opens sign-in). */
   locked?: boolean
   onReferralsClick?: () => void
@@ -12,7 +11,6 @@ export type AccountQuickCardsProps = {
  * Two-column quick cards: Referrals & Credits / My Rewards.
  */
 export function AccountQuickCards({
-  balanceLabel,
   locked = false,
   onReferralsClick,
   onRewardsClick,
@@ -31,7 +29,7 @@ export function AccountQuickCards({
         <Users className="h-5 w-5 text-[#111111]" strokeWidth={2} aria-hidden />
         <span className="mt-3 text-[14px] font-black leading-tight text-[#111111]">Referrals &amp; Credits</span>
         <span className="mt-1 text-[12px] font-semibold text-[#777777]">
-          Balance: <span style={{ color: '#25B46B' }}>{balanceLabel}</span>
+          Earn rewards when friends join Fetch.
         </span>
       </button>
       <button

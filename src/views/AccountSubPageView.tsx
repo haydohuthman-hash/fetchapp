@@ -6,8 +6,7 @@ import {
   FETCH_AUTH_PATH,
   FETCH_PROFILE_ADDRESSES_PATH,
   FETCH_PROFILE_EDIT_PATH,
-  FETCH_WALLET_ADD_CREDITS_PATH,
-  FETCH_WALLET_TRANSACTIONS_PATH,
+  FETCH_PROFILE_PAYMENTS_SHIPPING_PATH,
 } from '../lib/fetchRoutes'
 import { loadSession } from '../lib/fetchUserSession'
 
@@ -119,11 +118,6 @@ export default function AccountSubPageView({ section, onBack }: AccountSubPageVi
     if (section === 'payments-shipping') {
       return [
         {
-          label: 'Wallet & top up',
-          hint: 'Add funds for checkout',
-          onClick: () => navigate(FETCH_WALLET_ADD_CREDITS_PATH),
-        },
-        {
           label: 'Saved addresses',
           hint: 'Shipping & billing defaults',
           onClick: () => navigate(FETCH_PROFILE_ADDRESSES_PATH),
@@ -137,9 +131,9 @@ export default function AccountSubPageView({ section, onBack }: AccountSubPageVi
     if (section === 'user-reports') {
       return [
         {
-          label: 'Wallet transactions',
-          hint: 'Review charges and credits',
-          onClick: () => navigate(FETCH_WALLET_TRANSACTIONS_PATH),
+          label: 'Payments & shipping',
+          hint: 'Cards, payouts, order history',
+          onClick: () => navigate(FETCH_PROFILE_PAYMENTS_SHIPPING_PATH),
         },
       ]
     }

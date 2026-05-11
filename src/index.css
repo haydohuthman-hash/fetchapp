@@ -1265,6 +1265,29 @@ html[data-fetch-theme='light'] .fetch-home-phone-stage {
   }
 }
 
+/* Home shell primary tab swaps — full-width page swipe (duration stays in sync with HomeView clear timeout). */
+@keyframes fetch-home-shell-page-in-from-right {
+  from {
+    opacity: 0.98;
+    transform: translate3d(100%, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fetch-home-shell-page-in-from-left {
+  from {
+    opacity: 0.98;
+    transform: translate3d(-100%, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 @keyframes fetch-reels-tab-splash-in-from-right {
   from {
     transform: translate3d(100%, 0, 0);
@@ -1338,13 +1361,12 @@ html[data-fetch-theme='light'] .fetch-home-phone-stage {
 
   /* Home shell page route transitions (forward/back from bottom nav tab clicks). */
   .fetch-home-shell-route-enter--from-right {
-    animation: fetch-nav-slide-in-from-right 400ms
-      cubic-bezier(0.2, 0.82, 0.16, 1) both;
+    animation: fetch-home-shell-page-in-from-right 820ms
+      cubic-bezier(0.25, 0.88, 0.22, 1) both;
   }
 
   .fetch-home-shell-route-enter--from-left {
-    animation: fetch-nav-slide-in-from-left 400ms
-      cubic-bezier(0.2, 0.82, 0.16, 1) both;
+    animation: fetch-home-shell-page-in-from-left 820ms cubic-bezier(0.25, 0.88, 0.22, 1) both;
   }
 }
 
@@ -4897,10 +4919,7 @@ html[data-fetch-theme='light'] .fetch-home-vision .fetch-fetch-speech-glow-wave-
   width: 100%;
   max-width: none;
   border-radius: 0;
-  background: #faf8ff;
-  box-shadow:
-    0 -1px 0 rgba(41, 16, 80, 0.06),
-    0 6px 14px -6px rgba(41, 16, 80, 0.08);
+  background: #ffffff;
   box-sizing: border-box;
 }
 
@@ -6952,19 +6971,12 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
   border-radius: 0;
-  border-top: 1px solid rgb(237 233 254);
-  background-color: rgb(255 255 255 / 0.95);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  border-top: 1px solid #e4e4e7;
+  background-color: #ffffff;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   box-shadow: none;
   box-sizing: border-box;
-}
-
-@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
-  .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
-  .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
-    background-color: rgb(255 255 255 / 0.85);
-  }
 }
 
 /* Auctions / marketplace: mask feed behind floating pill + stronger nav shadow */
@@ -7300,16 +7312,16 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   .fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav__icon--reels.fetch-home-intent-bottom-nav__icon--active
   svg {
-  width: 3.05rem;
-  height: 3.05rem;
+  width: 3.35rem;
+  height: 3.35rem;
 }
 
 .fetch-home-reels-shell-footer[data-fetch-drops-upload-flow='true']
   .fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav__icon--reels.fetch-home-intent-bottom-nav__icon--active
   .fetch-home-intent-bottom-nav__drops-emoji {
-  width: 3.05rem;
-  height: 3.05rem;
+  width: 3.35rem;
+  height: 3.35rem;
 }
 
 /* Allow sheet panels to stay white above global remaps. */
@@ -7489,6 +7501,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 
 .fetch-home-intent-bottom-nav__icon {
   display: flex;
+  position: relative;
+  overflow: visible;
   flex: 1 1 0;
   align-items: center;
   justify-content: center;
@@ -7498,8 +7512,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   border: none;
   border-radius: 0;
   background: transparent;
-  /* Inactive icons render at full strength (premium outline) — never faded. */
-  color: #1c1340;
+  /* Icon-only dock: muted grey inactive, black when `--active`. */
+  color: #a3a3a3;
   cursor: pointer;
   transition:
     color 0.18s ease,
@@ -7509,7 +7523,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 }
 
 .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
-  color: #1c1340;
+  color: #8f8f8f;
   background: transparent;
 }
 
@@ -7518,59 +7532,85 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 }
 
 .fetch-home-intent-bottom-nav__icon-inner {
+  position: relative;
+  z-index: 1;
   display: flex;
   min-width: 0;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
+  gap: 0;
 }
 
-/* Default: labels off (legacy docks). Phone compact bar shows captions — see rules below. */
+/* Tap feedback: overshoot bounce on the glyph + soft outward ripple (via `playHomeIntentNavTap`). */
+@keyframes fetch-home-intent-nav-bounce {
+  0% {
+    transform: scale(1);
+  }
+  32% {
+    transform: scale(1.13);
+  }
+  58% {
+    transform: scale(0.94);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes fetch-home-intent-nav-ripple {
+  0% {
+    transform: scale(0.42);
+    opacity: 0.42;
+  }
+  100% {
+    transform: scale(2.45);
+    opacity: 0;
+  }
+}
+
+.fetch-home-intent-bottom-nav__icon::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+  width: 2.6rem;
+  height: 2.6rem;
+  margin: -1.3rem 0 0 -1.3rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, currentColor 32%, transparent);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.35);
+}
+
+.fetch-home-intent-bottom-nav__icon.fetch-home-intent-nav-tap::after {
+  animation: fetch-home-intent-nav-ripple 0.62s cubic-bezier(0.22, 1, 0.32, 1) forwards;
+}
+
+.fetch-home-intent-bottom-nav__icon.fetch-home-intent-nav-tap .fetch-home-intent-bottom-nav__icon-inner {
+  animation: fetch-home-intent-nav-bounce 0.62s cubic-bezier(0.33, 1.5, 0.55, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fetch-home-intent-bottom-nav__icon.fetch-home-intent-nav-tap::after {
+    animation: none;
+  }
+
+  .fetch-home-intent-bottom-nav__icon.fetch-home-intent-nav-tap .fetch-home-intent-bottom-nav__icon-inner {
+    animation: none;
+  }
+}
+
+/* Captions removed — keep hook for legacy markup / FAB experiments. */
 .fetch-home-intent-bottom-nav__label {
-  display: none;
-}
-
-/* Caption row under each icon (+ Sell under center orb) */
-.fetch-home-phone-stage .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__label {
-  display: block;
-  max-width: 100%;
-  padding: 0 0.08rem;
-  font-size: 0.68rem;
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: 0.012em;
-  text-align: center;
-  text-wrap: balance;
-  /* Match icon weight — full strength so the dock never reads as "ghosted". */
-  color: #1c1340;
-}
-
-.fetch-home-phone-stage
-  .fetch-home-intent-bottom-nav--compact
-  .fetch-home-intent-bottom-nav__icon--active
-  .fetch-home-intent-bottom-nav__label {
-  color: #291050;
-}
-
-.fetch-home-phone-stage
-  .fetch-home-intent-bottom-nav--compact
-  .fetch-home-intent-bottom-nav__fab--active
-  .fetch-home-intent-bottom-nav__label {
-  color: #291050;
-  font-weight: 800;
-}
-
-.fetch-home-phone-stage
-  .fetch-home-intent-bottom-nav--compact
-  .fetch-home-intent-bottom-nav__icon--shop-locked
-  .fetch-home-intent-bottom-nav__label {
-  color: #a1a1aa;
+  display: none !important;
 }
 
 .fetch-home-intent-bottom-nav__icon svg {
-  width: 2.04rem;
-  height: 2.04rem;
+  width: 2.28rem;
+  height: 2.28rem;
   flex-shrink: 0;
   transition:
     width 0.2s ease,
@@ -7579,14 +7619,14 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 }
 
 .fetch-home-intent-bottom-nav__icon--active svg {
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 2.46rem;
+  height: 2.46rem;
 }
 
 /* Drops active: slightly larger flame */
 .fetch-home-intent-bottom-nav__icon--reels.fetch-home-intent-bottom-nav__icon--active svg {
-  width: 2.9rem;
-  height: 2.9rem;
+  width: 3.22rem;
+  height: 3.22rem;
 }
 
 /* Drops tab: flame icon slot */
@@ -7594,8 +7634,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.04rem;
-  height: 2.04rem;
+  width: 2.28rem;
+  height: 2.28rem;
   line-height: 0;
 }
 
@@ -7605,8 +7645,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 }
 
 .fetch-home-intent-bottom-nav__icon--reels.fetch-home-intent-bottom-nav__icon--active .fetch-home-intent-bottom-nav__drops-emoji {
-  width: 2.9rem;
-  height: 2.9rem;
+  width: 3.22rem;
+  height: 3.22rem;
 }
 
 .fetch-home-intent-bottom-nav:has(
@@ -7616,46 +7656,38 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 }
 
 .fetch-home-intent-bottom-nav__icon--active {
-  color: #291050;
+  color: #0a0a0a;
   background: transparent;
 }
 
 .fetch-home-intent-bottom-nav__icon--active:hover {
   background: transparent;
-  color: #291050;
+  color: #0a0a0a;
 }
 
 .fetch-home-intent-bottom-nav__icon:focus-visible {
-  outline: 2px solid rgba(41, 16, 80, 0.3);
+  outline: 2px solid rgba(10, 10, 10, 0.22);
   outline-offset: 2px;
 }
 
-/* Home / shop / chat / reels dock: frosted bar (matches Mystery Flip overlay nav). */
+/* Home / shop / chat / reels dock: solid white bar + neutral top edge. */
 .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
   border-radius: 0;
-  border-top: 1px solid rgb(237 233 254);
-  background-color: rgb(255 255 255 / 0.95);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  border-top: 1px solid #e4e4e7;
+  background-color: #ffffff;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   box-shadow: none;
   box-sizing: border-box;
 }
 
-@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
-  .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav,
-  .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
-  .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
-    background-color: rgb(255 255 255 / 0.85);
-  }
-}
-
-/* Docked shell: full-strength inactive icons (NOT faded), bright purple active. */
+/* Docked shell — same grey / black semantics as standalone dock. */
 .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
 .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active),
 .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
-  color: #1c1340 !important;
+  color: #a3a3a3 !important;
 }
 
 .fetch-home-booking-sheet__shell-footer
@@ -7664,7 +7696,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover,
 .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
-  color: #1c1340 !important;
+  color: #8f8f8f !important;
 }
 
 .fetch-home-booking-sheet__shell-footer
@@ -7673,22 +7705,22 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active,
 .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active {
-  color: #1c1340 !important;
+  color: #8f8f8f !important;
 }
 
 .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
 .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
 .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
-  color: #291050 !important;
+  color: #0a0a0a !important;
 }
 
 .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
 .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
 .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
-  color: #291050 !important;
+  color: #0a0a0a !important;
 }
 
-/* Phone home: docked bottom nav — frosted bar (matches Mystery Flip). */
+/* Phone home: docked bottom nav — solid white. */
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
 .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
@@ -7699,19 +7731,11 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   position: relative;
   overflow: visible !important;
   border: none !important;
-  border-top: 1px solid rgb(237 233 254) !important;
-  background-color: rgb(255 255 255 / 0.95) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  backdrop-filter: blur(12px) !important;
+  border-top: 1px solid #e4e4e7 !important;
+  background-color: #ffffff !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
   box-shadow: none !important;
-}
-
-@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
-  .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav,
-  .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav,
-  .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav {
-    background-color: rgb(255 255 255 / 0.85) !important;
-  }
 }
 
 /* Compact dock (4 tabs): shorter bar + slightly smaller icons. */
@@ -7734,11 +7758,11 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   .fetch-home-vision[data-home-shell-tab='search']
   .fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav__icon {
-  min-height: 2.75rem;
+  min-height: 2.92rem;
   padding-top: 0.14rem;
   padding-bottom: 0.14rem;
   flex: 0 0 auto;
-  min-width: 2.75rem;
+  min-width: 2.92rem;
 }
 
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon svg,
@@ -7749,8 +7773,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   .fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav__icon
   svg {
-  width: 1.56rem !important;
-  height: 1.56rem !important;
+  width: 1.92rem !important;
+  height: 1.92rem !important;
 }
 
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon--active svg,
@@ -7761,8 +7785,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   .fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav__icon--active
   svg {
-  width: 1.72rem !important;
-  height: 1.72rem !important;
+  width: 2.12rem !important;
+  height: 2.12rem !important;
 }
 
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer
@@ -7777,8 +7801,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   .fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav__icon--reels.fetch-home-intent-bottom-nav__icon--active
   svg {
-  width: 2.72rem !important;
-  height: 2.72rem !important;
+  width: 3.14rem !important;
+  height: 3.14rem !important;
 }
 
 .fetch-home-phone-stage
@@ -7796,8 +7820,8 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   .fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav__icon--reels.fetch-home-intent-bottom-nav__icon--active
   .fetch-home-intent-bottom-nav__drops-emoji {
-  width: 2.72rem !important;
-  height: 2.72rem !important;
+  width: 3.14rem !important;
+  height: 3.14rem !important;
 }
 
 /* Center create FAB: orb lifted so its center lands on the bar's top edge,
@@ -7971,13 +7995,6 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   }
 }
 
-/* Sell caption shares __label typography; tighten vertical offset vs side tabs — FAB orb is taller in flow but visually lifted. */
-.fetch-home-phone-stage .fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__fab .fetch-home-intent-bottom-nav__label {
-  display: block;
-  margin-top: -0.7rem;
-}
-
-/* Apple-like "warp" press behavior: elastic squish + recover. */
 .fetch-apple-warp-btn,
 .fetch-home-intent-bottom-nav__icon {
   transform-origin: center;
@@ -8032,7 +8049,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
-  color: #1c1340 !important;
+  color: #a3a3a3 !important;
 }
 
 .fetch-home-phone-stage
@@ -8044,7 +8061,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
-  color: #1c1340 !important;
+  color: #8f8f8f !important;
 }
 
 .fetch-home-phone-stage
@@ -8056,10 +8073,10 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active {
-  color: #1c1340 !important;
+  color: #8f8f8f !important;
 }
 
-/* --------- Shared fixed bottom nav on profile / wallet / gems / sell -------- */
+/* --------- Shared fixed bottom nav on profile / gems / sell -------- */
 
 /* Position the shared nav fixed within the app shell so it sits above the
    safe-area on every supported surface. Width matches the app shell (max
@@ -8074,10 +8091,10 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   z-index: 80;
   border-radius: 0;
   border: none;
-  border-top: 1px solid rgb(237 233 254);
-  background-color: rgb(255 255 255 / 0.95);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  border-top: 1px solid #e4e4e7;
+  background-color: #ffffff;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   box-shadow: none;
   min-height: calc(3.65rem + env(safe-area-inset-bottom, 0px)) !important;
   padding-top: 0.5rem !important;
@@ -8087,12 +8104,6 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   overflow: visible !important;
 }
 
-@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
-  .fetch-app-bottom-nav.fetch-home-intent-bottom-nav {
-    background-color: rgb(255 255 255 / 0.85);
-  }
-}
-
 .fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon {
   min-height: 2.75rem;
   padding-top: 0.14rem;
@@ -8100,52 +8111,18 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 }
 
 .fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__icon svg {
-  width: 1.56rem !important;
-  height: 1.56rem !important;
+  width: 1.92rem !important;
+  height: 1.92rem !important;
 }
 
 .fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav__icon--active
   svg {
-  width: 1.72rem !important;
-  height: 1.72rem !important;
+  width: 2.12rem !important;
+  height: 2.12rem !important;
 }
 
-.fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact .fetch-home-intent-bottom-nav__label {
-  display: block;
-  max-width: 100%;
-  padding: 0 0.08rem;
-  font-size: 0.68rem;
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: 0.012em;
-  text-align: center;
-  text-wrap: balance;
-  color: #1c1340;
-}
 
-.fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact
-  .fetch-home-intent-bottom-nav__icon--active
-  .fetch-home-intent-bottom-nav__label,
-.fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact
-  .fetch-home-intent-bottom-nav__fab--active
-  .fetch-home-intent-bottom-nav__label {
-  color: #291050;
-  font-weight: 800;
-}
-
-.fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact
-  .fetch-home-intent-bottom-nav__icon--shop-locked
-  .fetch-home-intent-bottom-nav__label {
-  color: #a1a1aa;
-}
-
-.fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact
-  .fetch-home-intent-bottom-nav__fab
-  .fetch-home-intent-bottom-nav__label {
-  display: block !important;
-  margin-top: -0.62rem;
-}
 
 /* Spacer hook — pages can add `pb-[5.5rem]` themselves, but we also expose this
    utility so consumers can render `<div class="fetch-app-bottom-nav-spacer" />`
@@ -8157,13 +8134,13 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active,
 .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active,
 .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active {
-  color: #291050 !important;
+  color: #0a0a0a !important;
 }
 
 .fetch-home-phone-stage .fetch-home-booking-sheet__shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
 .fetch-home-phone-stage .fetch-home-marketplace-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover,
 .fetch-home-phone-stage .fetch-home-reels-shell-footer .fetch-home-intent-bottom-nav__icon--active:hover {
-  color: #291050 !important;
+  color: #0a0a0a !important;
 }
 
 /* Active tab: intense white glow from bottom (tight spread; icon paints above). */
@@ -8195,7 +8172,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   left: 50%;
   bottom: 0.02rem;
   transform: translateX(-50%);
-  width: 1.72rem;
+  width: 2.12rem;
   max-width: 68%;
   height: 0.45rem;
   pointer-events: none;
@@ -8217,17 +8194,17 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   outline-offset: 2px;
 }
 
-/* Search → Categories: light violet canvas matching the rest of the app */
+/* Search → Categories: white canvas */
 .fetch-app-shell-inner .fetch-home-search-route {
-  background-color: #f8f6fd !important;
+  background-color: #ffffff !important;
 }
 .fetch-app-shell-inner .fetch-home-search-categories,
 .fetch-app-shell-inner .fetch-home-search-categories__scroll {
-  background-color: #f8f6fd !important;
+  background-color: #ffffff !important;
 }
 .fetch-app-shell-inner .fetch-home-search-categories__tile {
-  aspect-ratio: 4 / 5 !important;
-  min-height: clamp(8.75rem, 28vw, 10.5rem);
+  aspect-ratio: 1 / 1 !important;
+  min-height: clamp(5.25rem, 16vw, 6.25rem);
   background-color: #f4f4f5 !important;
   background-image: none !important;
   box-shadow: none;
@@ -8255,7 +8232,7 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 
 /* Search hero: sticky search bar + quick chip rail (light surface) */
 .fetch-app-shell-inner .fetch-home-search-hero {
-  background-color: rgba(248, 246, 253, 0.92) !important;
+  background-color: rgba(255, 255, 255, 0.92) !important;
   backdrop-filter: saturate(140%) blur(8px);
   -webkit-backdrop-filter: saturate(140%) blur(8px);
 }
@@ -8415,17 +8392,18 @@ html[data-fetch-theme='light'] .fetch-home-vision {
   }
 }
 
-/* Search tab: bottom nav light bar with purple active */
+/* Search tab bottom nav matches other shells — flat white strip, zinc edge, grey/black icons. */
 .fetch-home-phone-stage .fetch-home-vision[data-home-shell-tab='search'] .fetch-home-intent-bottom-nav {
   width: 100% !important;
   margin: 0 !important;
-  min-height: 3.2rem !important;
-  border-radius: 2rem 2rem 0 0 !important;
+  min-height: calc(3.65rem + env(safe-area-inset-bottom, 0px)) !important;
+  border-radius: 0 !important;
   position: relative;
   overflow: visible !important;
-  background: #faf8ff !important;
-  box-shadow: 0 -1px 0 rgba(41, 16, 80, 0.06) !important;
+  background: #ffffff !important;
   border: none !important;
+  border-top: 1px solid #e4e4e7 !important;
+  box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
@@ -8433,39 +8411,13 @@ html[data-fetch-theme='light'] .fetch-home-vision {
 .fetch-home-phone-stage
   .fetch-home-vision[data-home-shell-tab='search']
   .fetch-home-intent-bottom-nav.fetch-home-intent-bottom-nav--compact {
-  min-height: calc(3.95rem + env(safe-area-inset-bottom, 0px)) !important;
-  padding-top: 0.18rem !important;
-  padding-bottom: max(0.1rem, env(safe-area-inset-bottom, 0px)) !important;
+  min-height: calc(3.65rem + env(safe-area-inset-bottom, 0px)) !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px)) !important;
   justify-content: center;
   column-gap: 0.625rem;
-  padding-left: max(0.75rem, env(safe-area-inset-left, 0px)) !important;
-  padding-right: max(0.75rem, env(safe-area-inset-right, 0px)) !important;
-}
-
-.fetch-home-phone-stage
-  .fetch-home-vision[data-home-shell-tab='search']
-  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
-  color: #1c1340 !important;
-}
-.fetch-home-phone-stage
-  .fetch-home-vision[data-home-shell-tab='search']
-  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
-  color: #291050 !important;
-}
-.fetch-home-phone-stage
-  .fetch-home-vision[data-home-shell-tab='search']
-  .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):active {
-  color: #3b1670 !important;
-}
-.fetch-home-phone-stage
-  .fetch-home-vision[data-home-shell-tab='search']
-  .fetch-home-intent-bottom-nav__icon--active {
-  color: #291050 !important;
-}
-.fetch-home-phone-stage
-  .fetch-home-vision[data-home-shell-tab='search']
-  .fetch-home-intent-bottom-nav__icon--active:hover {
-  color: #291050 !important;
+  padding-left: max(0.5rem, env(safe-area-inset-left, 0px)) !important;
+  padding-right: max(0.5rem, env(safe-area-inset-right, 0px)) !important;
 }
 
 .fetch-home-orb-speech-bubble .fetch-sound-wave-bars__bar,
@@ -13533,17 +13485,6 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   background-color: #e5e0f2 !important;
 }
 
-/* Explore starfield top bar — glass controls; Explore `main` forces dark ink on children. */
-.fetch-home-phone-stage main[aria-label='Explore'] .fetch-explore-hero-chrome,
-.fetch-home-phone-stage main[aria-label='Explore'] .fetch-explore-hero-chrome button,
-.fetch-home-phone-stage main[aria-label='Explore'] .fetch-explore-hero-chrome span {
-  color: #ffffff !important;
-}
-
-.fetch-home-phone-stage main[aria-label='Explore'] .fetch-explore-hero-chrome svg {
-  color: #ffffff !important;
-}
-
 /* App header: light bar + boomerang reads as dark silhouette */
 .fetch-app-shell--home-light .fetch-home-phone-stage .fetch-app-address-header {
   background-color: transparent !important;
@@ -13580,9 +13521,10 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav {
-  background: #faf8ff !important;
-  background-color: #faf8ff !important;
-  box-shadow: 0 -1px 0 rgba(41, 16, 80, 0.08) !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-top: 1px solid #e4e4e7 !important;
+  box-shadow: none !important;
 }
 .fetch-app-shell--home-light
   .fetch-home-phone-stage
@@ -13596,7 +13538,7 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
-  color: #1c1340 !important;
+  color: #a3a3a3 !important;
 }
 .fetch-app-shell--home-light
   .fetch-home-phone-stage
@@ -13610,7 +13552,7 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
-  color: #291050 !important;
+  color: #8f8f8f !important;
 }
 .fetch-app-shell--home-light
   .fetch-home-phone-stage
@@ -13636,30 +13578,25 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav__icon--active:hover {
-  color: var(--fetch-home-primary) !important;
+  color: #0a0a0a !important;
 }
 .fetch-app-shell--home-light .fetch-home-intent-bottom-nav__icon--active {
-  color: var(--fetch-home-primary) !important;
+  color: #0a0a0a !important;
 }
 .fetch-app-shell--home-light .fetch-home-intent-bottom-nav__icon--active:hover {
-  color: var(--fetch-home-primary-mid) !important;
+  color: #0a0a0a !important;
 }
 
-/* Fixed bottom nav (profile / wallet / sell): same full-strength ink as shell dock */
+/* Fixed bottom nav (profile / gems / sell): match shell dock grey/black */
 .fetch-app-shell--home-light
   .fetch-app-bottom-nav.fetch-home-intent-bottom-nav
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active) {
-  color: #1c1340 !important;
+  color: #a3a3a3 !important;
 }
 .fetch-app-shell--home-light
   .fetch-app-bottom-nav.fetch-home-intent-bottom-nav
   .fetch-home-intent-bottom-nav__icon:not(.fetch-home-intent-bottom-nav__icon--active):hover {
-  color: #291050 !important;
-}
-.fetch-app-shell--home-light
-  .fetch-app-bottom-nav.fetch-home-intent-bottom-nav--compact
-  .fetch-home-intent-bottom-nav__label {
-  color: #1c1340 !important;
+  color: #8f8f8f !important;
 }
 
 .fetch-app-shell--home-light .fetch-home-phone-stage .fetch-home-intent-bottom-nav__fab-orb {
@@ -13678,25 +13615,8 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
     inset 0 -8px 11px rgba(45, 13, 102, 0.45) !important;
 }
 
-.fetch-app-shell--home-light
-  .fetch-home-phone-stage
-  .fetch-home-intent-bottom-nav--compact
-  .fetch-home-intent-bottom-nav__label {
-  color: #1c1340 !important;
-}
 
-.fetch-app-shell--home-light
-  .fetch-home-phone-stage
-  .fetch-home-intent-bottom-nav--compact
-  .fetch-home-intent-bottom-nav__icon--active
-  .fetch-home-intent-bottom-nav__label,
-.fetch-app-shell--home-light
-  .fetch-home-phone-stage
-  .fetch-home-intent-bottom-nav--compact
-  .fetch-home-intent-bottom-nav__fab--active
-  .fetch-home-intent-bottom-nav__label {
-  color: var(--fetch-home-primary) !important;
-}
+
 .fetch-app-shell--home-light
   .fetch-home-phone-stage
   .fetch-home-booking-sheet__shell-footer
@@ -13709,8 +13629,8 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   .fetch-home-phone-stage
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav--compact {
-  background: #faf8ff !important;
-  background-color: #faf8ff !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
 }
 .fetch-app-shell--home-light
   .fetch-home-phone-stage
@@ -13727,8 +13647,8 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   .fetch-home-reels-shell-footer
   .fetch-home-intent-bottom-nav--compact
   .fetch-home-intent-bottom-nav {
-  background: #faf8ff !important;
-  background-color: #faf8ff !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
 }
 
 /* Sheets / routes that still use #000 in class names */
@@ -15417,7 +15337,305 @@ html[data-fetch-theme='light'] .fetch-home-orb-tunnel-vignette {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+@keyframes fetch-mystery-hero-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.fetch-mystery-hero-scroll {
+  display: flex;
+  gap: 0.5rem;
+  width: max-content;
+  will-change: transform;
+  animation: fetch-mystery-hero-scroll 22s linear infinite;
+}
+
+.fetch-mystery-hero-scroll-premium {
+  display: flex;
+  gap: 0.75rem;
+  width: max-content;
+  will-change: transform;
+  animation: fetch-mystery-hero-scroll 30s linear infinite;
+}
+
+@keyframes fetch-mystery-reveal-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.fetch-mystery-reveal-scroll {
+  display: flex;
+  gap: 0.5rem;
+  width: max-content;
+  will-change: transform;
+  animation: fetch-mystery-reveal-scroll 1.05s linear infinite;
+}
+
+@keyframes fetch-mystery-confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--mf-dx, 12px), 130%, 0) rotate(640deg);
+  }
+}
+
+.fetch-mystery-confetti-piece {
+  top: -2%;
+  animation-name: fetch-mystery-confetti-fall;
+  animation-timing-function: cubic-bezier(0.22, 0.94, 0.36, 0.96);
+  animation-fill-mode: forwards;
+}
+
+.mf-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: linear-gradient(to bottom right, #7c3aed, #6d28d9);
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  margin-top: -0.4rem;
+  box-sizing: border-box;
+}
+
+.mf-range-slider--pack::-webkit-slider-thumb {
+  background: linear-gradient(to bottom right, #22d3ee, #c026d3);
+}
+
+.mf-range-slider--pack::-moz-range-thumb {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: linear-gradient(to bottom right, #22d3ee, #c026d3);
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-sizing: border-box;
+}
+
+/** Mystery Find max spend — fill shimmer (honors reduced motion below). */
+@keyframes fetch-mf-spend-fill-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.fetch-mf-spend-fill {
+  background: linear-gradient(
+    100deg,
+    #6d28d9 0%,
+    #8b5cf6 22%,
+    #c4b5fd 38%,
+    #7c3aed 55%,
+    #5b21b6 100%
+  );
+  background-size: 220% 100%;
+  animation: fetch-mf-spend-fill-shimmer 5.5s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .fetch-mf-spend-fill {
+    animation: none;
+    background: linear-gradient(90deg, #7c3aed 0%, #8b5cf6 50%, #6d28d9 100%);
+    background-size: 100% 100%;
+  }
+}
+
+@keyframes fetch-mf-spend-amount-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.fetch-mf-spend-amount--pop {
+  animation: fetch-mf-spend-amount-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fetch-mf-spend-amount--pop {
+    animation: none;
+  }
+}
+
+/** Larger thumb + drag bloom when parent marks active drag */
+[data-mf-dragging='true'] .mf-range-slider--overlay.mf-range-slider--mystery {
+  cursor: grabbing !important;
+}
+[data-mf-dragging='true'] .mf-range-slider--overlay.mf-range-slider--mystery::-webkit-slider-thumb {
+  transform: scale(1.12);
+  box-shadow:
+    0 0 0 4px rgba(167, 139, 250, 0.45),
+    0 16px 40px rgba(91, 33, 182, 0.55),
+    0 6px 16px rgba(28, 21, 40, 0.16),
+    inset 0 2px 6px rgba(255, 255, 255, 0.5);
+}
+[data-mf-dragging='true'] .mf-range-slider--overlay.mf-range-slider--mystery::-moz-range-thumb {
+  transform: scale(1.12);
+  box-shadow:
+    0 0 0 4px rgba(167, 139, 250, 0.45),
+    0 16px 40px rgba(91, 33, 182, 0.55),
+    0 6px 16px rgba(28, 21, 40, 0.16),
+    inset 0 2px 6px rgba(255, 255, 255, 0.5);
+}
+
+/** Overlay slider — mystery: big purple dot thumb, thin rail. */
+.mf-range-slider--overlay.mf-range-slider--mystery {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  touch-action: pan-x;
+  --mf-range-track: 0.5rem; /* 8px */
+  --mf-range-thumb: 2.75rem; /* 44px */
+  height: 4rem;
+  min-height: 4rem;
+  background: transparent !important;
+}
+.mf-range-slider--overlay.mf-range-slider--mystery::-webkit-slider-runnable-track {
+  height: var(--mf-range-track);
+  border-radius: 9999px;
+  background: transparent;
+}
+.mf-range-slider--overlay.mf-range-slider--mystery::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--mf-range-thumb);
+  height: var(--mf-range-thumb);
+  border-radius: 999px;
+  margin-top: calc((var(--mf-range-track) - var(--mf-range-thumb)) / 2);
+  background: radial-gradient(circle at 30% 22%, #ddd6fe 0%, #8b5cf6 42%, #6d28d9 72%, #5b21b6 100%);
+  border: 4px solid #ffffff;
+  box-sizing: border-box;
+  box-shadow:
+    0 0 0 3px rgba(124, 58, 237, 0.28),
+    0 10px 28px rgba(91, 33, 182, 0.45),
+    0 4px 10px rgba(28, 21, 40, 0.12),
+    inset 0 2px 4px rgba(255, 255, 255, 0.45);
+  cursor: grab;
+}
+.mf-range-slider--overlay.mf-range-slider--mystery:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  transform: scale(1.05);
+  box-shadow:
+    0 0 0 4px rgba(124, 58, 237, 0.35),
+    0 14px 36px rgba(91, 33, 182, 0.5),
+    0 4px 12px rgba(28, 21, 40, 0.14),
+    inset 0 2px 4px rgba(255, 255, 255, 0.4);
+}
+.mf-range-slider--overlay.mf-range-slider--mystery:focus {
+  outline: none;
+}
+.mf-range-slider--overlay.mf-range-slider--mystery:focus-visible::-webkit-slider-thumb {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(124, 58, 237, 0.35),
+    0 10px 28px rgba(91, 33, 182, 0.45),
+    inset 0 2px 4px rgba(255, 255, 255, 0.45),
+    0 0 0 5px rgba(167, 139, 250, 0.75);
+}
+
+.mf-range-slider--overlay.mf-range-slider--mystery::-moz-range-track {
+  height: var(--mf-range-track);
+  border-radius: 9999px;
+  background: transparent;
+}
+.mf-range-slider--overlay.mf-range-slider--mystery::-moz-range-thumb {
+  width: var(--mf-range-thumb);
+  height: var(--mf-range-thumb);
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 22%, #ddd6fe 0%, #8b5cf6 42%, #6d28d9 72%, #5b21b6 100%);
+  border: 4px solid #ffffff;
+  box-sizing: border-box;
+  box-shadow:
+    0 0 0 3px rgba(124, 58, 237, 0.28),
+    0 10px 28px rgba(91, 33, 182, 0.45),
+    0 4px 10px rgba(28, 21, 40, 0.12),
+    inset 0 2px 4px rgba(255, 255, 255, 0.45);
+  cursor: grab;
+}
+.mf-range-slider--overlay.mf-range-slider--mystery:active::-moz-range-thumb {
+  cursor: grabbing;
+  transform: scale(1.05);
+  box-shadow:
+    0 0 0 4px rgba(124, 58, 237, 0.35),
+    0 14px 36px rgba(91, 33, 182, 0.5),
+    0 4px 12px rgba(28, 21, 40, 0.14),
+    inset 0 2px 4px rgba(255, 255, 255, 0.4);
+}
+.mf-range-slider--overlay.mf-range-slider--mystery:focus-visible::-moz-range-thumb {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(124, 58, 237, 0.35),
+    0 10px 28px rgba(91, 33, 182, 0.45),
+    inset 0 2px 4px rgba(255, 255, 255, 0.45),
+    0 0 0 5px rgba(167, 139, 250, 0.75);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-range-slider--overlay.mf-range-slider--mystery:active::-webkit-slider-thumb,
+  .mf-range-slider--overlay.mf-range-slider--mystery:active::-moz-range-thumb {
+    transform: none;
+  }
+  [data-mf-dragging='true'] .mf-range-slider--overlay.mf-range-slider--mystery::-webkit-slider-thumb,
+  [data-mf-dragging='true'] .mf-range-slider--overlay.mf-range-slider--mystery::-moz-range-thumb {
+    transform: none;
+  }
+}
+
+/** Overlay slider: custom track drawn under input (Mystery Find max spend). */
+.mf-range-slider--overlay {
+  --mf-range-h: 0.875rem;
+  height: var(--mf-range-h);
+  background: transparent !important;
+}
+.mf-range-slider--overlay::-webkit-slider-runnable-track {
+  height: var(--mf-range-h);
+  border-radius: 9999px;
+  background: transparent;
+}
+.mf-range-slider--overlay::-moz-range-track {
+  height: var(--mf-range-h);
+  border-radius: 9999px;
+  background: transparent;
+}
+
+.mf-range-slider--overlay::-moz-range-thumb {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: linear-gradient(to bottom right, #7c3aed, #6d28d9);
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fetch-mystery-hero-scroll,
+  .fetch-mystery-hero-scroll-premium,
+  .fetch-mystery-reveal-scroll,
+  .fetch-mystery-confetti-piece {
+    animation: none !important;
+  }
+
   .fetch-mflip-overlay,
   .fetch-mflip-mascot,
   .fetch-mflip-card-inner,

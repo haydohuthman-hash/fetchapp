@@ -8,7 +8,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { computePostAuthAppPhase } from './lib/fetchPostAuthRouting'
 import { handlePostAuthUser } from './lib/fetchHandlePostAuth'
 import {
@@ -19,7 +19,9 @@ import {
   FETCH_LEGACY_APP_REDIRECT_PATH,
   FETCH_LIVES_FEED_PATH,
   FETCH_MARKETPLACE_LIST_PATH,
+  FETCH_MYSTERY_FIND_PATH,
   FETCH_PROFILE_EDIT_PATH,
+  FETCH_PROFILE_PAYMENTS_SHIPPING_PATH,
   FETCH_PROFILE_PATH,
   FETCH_SHOP_PATH,
   FETCH_SHOP_SETUP_PATH,
@@ -27,6 +29,7 @@ import {
   FETCH_WALLET_CASH_OUT_PATH,
   FETCH_WALLET_TRANSACTIONS_PATH,
   liveRoomSlugFromPathname,
+  sellerIdFromProfilePathname,
   accountSettingsSectionFromPath,
   isFetchProfileAccountSubPath,
 } from './lib/fetchRoutes'
@@ -62,21 +65,12 @@ const fetchProfileEditChunk = () => import('./views/FetchProfileEditView')
 const FetchProfileEditView = lazy(fetchProfileEditChunk)
 const fetchMarketplaceListingCreateChunk = () => import('./views/FetchMarketplaceListingCreateView')
 const FetchMarketplaceListingCreateView = lazy(fetchMarketplaceListingCreateChunk)
-const fetchWalletPlaceholderChunk = () => import('./views/FetchWalletPlaceholderView')
-const FetchWalletPlaceholderView = lazy(fetchWalletPlaceholderChunk)
 const fetchGemsChunk = () => import('./views/FetchGemsView')
 const FetchGemsView = lazy(fetchGemsChunk)
-const fetchWalletTransactionsChunk = () => import('./views/FetchWalletTransactionsView')
-const FetchWalletTransactionsView = lazy(fetchWalletTransactionsChunk)
-const fetchShopPageChunk = () => import('./views/FetchShopPageView')
-const FetchShopPageView = lazy(fetchShopPageChunk)
-const fetchShopSetupChunk = () => import('./views/FetchShopSetupView')
-const FetchShopSetupView = lazy(fetchShopSetupChunk)
-
 const fetchGoLiveChunk = () => import('./views/GoLiveView')
 const FetchGoLiveView = lazy(fetchGoLiveChunk)
-const fetchLivesFeedChunk = () => import('./views/LivesFeedView')
-const LivesFeedView = lazy(fetchLivesFeedChunk)
+const fetchMysteryFindChunk = () => import('./views/MysteryFindView')
+const MysteryFindView = lazy(fetchMysteryFindChunk)
 const fetchLiveRoomChunk = () => import('./views/LiveRoomView')
 const LiveRoomView = lazy(fetchLiveRoomChunk)
 
@@ -149,17 +143,11 @@ function App() {
   const [authSessionUserId, setAuthSessionUserId] = useState<string | null>(null)
 
   const isHomeProfileSurface =
-    pathname === FETCH_WALLET_TRANSACTIONS_PATH ||
-    pathname === FETCH_SHOP_PATH ||
-    pathname === FETCH_SHOP_SETUP_PATH ||
     pathname === FETCH_PROFILE_PATH ||
     pathname === FETCH_PROFILE_EDIT_PATH ||
     isFetchProfileAccountSubPath(pathname) ||
     (Boolean(authSessionUserId) &&
-      (pathname === FETCH_MARKETPLACE_LIST_PATH ||
-        pathname === FETCH_WALLET_CASH_OUT_PATH ||
-        pathname === FETCH_WALLET_ADD_CREDITS_PATH ||
-        pathname === FETCH_GEMS_PATH))
+      (pathname === FETCH_MARKETPLACE_LIST_PATH || pathname === FETCH_GEMS_PATH))
   /**
    * When false, ignore post-auth phase jumps from onAuthStateChange so splash can finish and session cache can hydrate.
    * Seed from module splash flag so React Strict Mode remounts after handoff don’t stay “locked” on home.
@@ -206,15 +194,12 @@ function App() {
     applyFetchDevDemoLocalBootstrap()
   }, [authSessionUserId])
 
-  /** Require auth for sell / wallet / gems (not profile — profile always loads). */
+  /** Require auth for sell / gems (not profile — profile always loads). */
   useEffect(() => {
     if (!shellHydrateDone) return
     const gated =
       pathname === FETCH_MARKETPLACE_LIST_PATH ||
-      pathname === FETCH_SHOP_SETUP_PATH ||
       pathname === FETCH_GO_LIVE_PATH ||
-      pathname === FETCH_WALLET_CASH_OUT_PATH ||
-      pathname === FETCH_WALLET_ADD_CREDITS_PATH ||
       pathname === FETCH_GEMS_PATH
     if (gated && !authSessionUserId) {
       navigate(FETCH_AUTH_PATH, { replace: true })
@@ -287,10 +272,7 @@ function App() {
     void homeChunk()
     void authChunk()
     void driverChunk()
-    void fetchShopPageChunk()
-    void fetchShopSetupChunk()
     void fetchGoLiveChunk()
-    void fetchLivesFeedChunk()
     void fetchLiveRoomChunk()
   }, [])
 
@@ -494,6 +476,14 @@ function App() {
         )
       }
 
+      if (pathname === FETCH_LIVES_FEED_PATH || sellerIdFromProfilePathname(pathname)) {
+        return <Navigate to={FETCH_APP_PATH} replace />
+      }
+
+      if (pathname === FETCH_SHOP_PATH || pathname === FETCH_SHOP_SETUP_PATH) {
+        return <Navigate to={FETCH_APP_PATH} replace />
+      }
+
       if (pathname === FETCH_GO_LIVE_PATH) {
         return (
           <>
@@ -507,33 +497,34 @@ function App() {
         )
       }
 
-      if (pathname === FETCH_LIVES_FEED_PATH) {
+      if (pathname === FETCH_MYSTERY_FIND_PATH) {
         return (
-          <>
-            <FetchNavRouteSlide pathname={pathname}>
-              <Suspense
-                fallback={<FetchAppShellSuspenseFallback title="Watch live" subtitle="Fetching live sellers." />}
-              >
-                <LivesFeedView />
-              </Suspense>
-            </FetchNavRouteSlide>
-            <FetchAppBottomNav />
-          </>
+          <FetchNavRouteSlide pathname={pathname}>
+            <Suspense
+              fallback={
+                <FetchAppShellSuspenseFallback title="Fetchit" subtitle="Loading discovery flow." />
+              }
+            >
+              <MysteryFindView />
+            </Suspense>
+          </FetchNavRouteSlide>
         )
       }
 
-      const isProfileSurface =
+      if (
         pathname === FETCH_WALLET_TRANSACTIONS_PATH ||
-        pathname === FETCH_SHOP_PATH ||
-        pathname === FETCH_SHOP_SETUP_PATH ||
+        pathname === FETCH_WALLET_CASH_OUT_PATH ||
+        pathname === FETCH_WALLET_ADD_CREDITS_PATH
+      ) {
+        return <Navigate to={FETCH_PROFILE_PAYMENTS_SHIPPING_PATH} replace />
+      }
+
+      const isProfileSurface =
         pathname === FETCH_PROFILE_PATH ||
         pathname === FETCH_PROFILE_EDIT_PATH ||
         isFetchProfileAccountSubPath(pathname) ||
         (Boolean(authSessionUserId) &&
-          (pathname === FETCH_MARKETPLACE_LIST_PATH ||
-            pathname === FETCH_WALLET_CASH_OUT_PATH ||
-            pathname === FETCH_WALLET_ADD_CREDITS_PATH ||
-            pathname === FETCH_GEMS_PATH))
+          (pathname === FETCH_MARKETPLACE_LIST_PATH || pathname === FETCH_GEMS_PATH))
 
       if (isProfileSurface) {
         return (
@@ -553,12 +544,6 @@ function App() {
                 >
                   {pathname === FETCH_GEMS_PATH ? (
                     <FetchGemsView onBack={() => navigate(FETCH_APP_PATH)} />
-                  ) : pathname === FETCH_WALLET_TRANSACTIONS_PATH ? (
-                    <FetchWalletTransactionsView onBack={() => navigate(FETCH_APP_PATH)} />
-                  ) : pathname === FETCH_SHOP_SETUP_PATH ? (
-                    <FetchShopSetupView />
-                  ) : pathname === FETCH_SHOP_PATH ? (
-                    <FetchShopPageView />
                   ) : pathname === FETCH_PROFILE_PATH ? (
                     <AccountPage />
                   ) : isFetchProfileAccountSubPath(pathname) ? (
@@ -571,10 +556,7 @@ function App() {
                   ) : pathname === FETCH_MARKETPLACE_LIST_PATH ? (
                     <FetchMarketplaceListingCreateView onDone={() => navigate(FETCH_PROFILE_PATH, { replace: true })} />
                   ) : (
-                    <FetchWalletPlaceholderView
-                      variant={pathname === FETCH_WALLET_CASH_OUT_PATH ? 'cashOut' : 'credits'}
-                      onBack={() => navigate(FETCH_PROFILE_PATH)}
-                    />
+                    <Navigate to={FETCH_PROFILE_PATH} replace />
                   )}
                 </div>
               </Suspense>
@@ -638,7 +620,7 @@ function App() {
     phase === 'home' &&
     !isHomeProfileSurface &&
     pathname !== FETCH_GO_LIVE_PATH &&
-    pathname !== FETCH_LIVES_FEED_PATH &&
+    pathname !== FETCH_MYSTERY_FIND_PATH &&
     immersiveLiveSlug == null
 
   return (

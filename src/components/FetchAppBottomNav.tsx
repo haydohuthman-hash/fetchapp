@@ -1,55 +1,40 @@
 /**
- * Shared fixed-bottom navigation used outside the home shell (profile, wallet,
- * gems, marketplace listing creation). Inside the home shell the nav is
- * rendered as part of the shell footer; here we re-use the same icon set + CSS
- * rules so the chrome reads identically across surfaces.
+ * Shared fixed-bottom navigation used outside the home shell (profile, gems,
+ * etc.). Inside the home shell the nav is rendered as
+ * part of the shell footer; here we reuse the same icon set + CSS so the chrome
+ * matches.
  *
- * Active state is derived from {@link useLocation} so the user always sees
- * which surface they are on. Inactive icons are full-strength outlines (never
- * faded) per the Fetch dock spec.
+ * Active tab is derived from {@link useLocation}. Icons stay filled; muted grey
+ * vs black ink is driven by `.fetch-home-intent-bottom-nav__icon--active`.
+ * The second tab opens the browse / lives feed and uses the search magnifier.
+ * The first tab selects home Explore (`services`) and shows {@link FetchLivesNavIcon}. The dock’s marketplace tab opens marketplace browse.
  */
 
 import { useCallback } from 'react'
-import { Lock } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useAuthState } from '../lib/authState'
 import {
-  FetchShopNavIcon,
-  FetchEyesHomeIcon,
-  FetchProfileNavIcon,
+  FetchActivityNavIcon,
   FetchLivesNavIcon,
-  PlusCircleNavIcon,
+  FetchProfileNavIcon,
+  FetchSearchNavIcon,
+  CartNavIcon,
 } from './icons/HomeShellNavIcons'
 import {
   FETCH_APP_PATH,
-  FETCH_AUTH_PATH,
   FETCH_GEMS_PATH,
-  FETCH_LIVES_FEED_PATH,
   FETCH_MARKETPLACE_LIST_PATH,
   FETCH_PROFILE_PATH,
-  FETCH_SHOP_PATH,
-  FETCH_SHOP_SETUP_PATH,
-  FETCH_WALLET_ADD_CREDITS_PATH,
-  FETCH_WALLET_CASH_OUT_PATH,
-  FETCH_WALLET_TRANSACTIONS_PATH,
 } from '../lib/fetchRoutes'
+import { playHomeIntentNavTap } from '../lib/playHomeIntentNavTap'
 
 type ActiveTab = 'forYou' | 'search' | 'sell' | 'activity' | 'profile' | null
 
 function activeTabFor(pathname: string): ActiveTab {
-  if (pathname === FETCH_LIVES_FEED_PATH || pathname.startsWith('/live/')) {
-    return 'search'
-  }
-  if (pathname === FETCH_SHOP_PATH || pathname === FETCH_SHOP_SETUP_PATH) {
-    return 'activity'
-  }
+  if (pathname.startsWith('/live/')) return null
   if (
     pathname === FETCH_PROFILE_PATH ||
     pathname.startsWith(`${FETCH_PROFILE_PATH}/`) ||
-    pathname === FETCH_GEMS_PATH ||
-    pathname === FETCH_WALLET_CASH_OUT_PATH ||
-    pathname === FETCH_WALLET_ADD_CREDITS_PATH ||
-    pathname === FETCH_WALLET_TRANSACTIONS_PATH
+    pathname === FETCH_GEMS_PATH
   ) {
     return 'profile'
   }
@@ -68,8 +53,6 @@ export function FetchAppBottomNav({ activeTab, hidden }: FetchAppBottomNavProps)
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const tab = activeTab ?? activeTabFor(pathname)
-  const { sessionUserId } = useAuthState()
-  const shopLocked = !sessionUserId
 
   const navigateToHomeShellTab = useCallback(
     (slot: 'services' | 'search' | 'chat') => {
@@ -84,15 +67,23 @@ export function FetchAppBottomNav({ activeTab, hidden }: FetchAppBottomNavProps)
   )
 
   const onForYou = useCallback(() => navigateToHomeShellTab('services'), [navigateToHomeShellTab])
-  const onSearch = useCallback(() => navigate(FETCH_LIVES_FEED_PATH), [navigate])
-  const onActivity = useCallback(() => {
-    if (shopLocked) {
-      navigate(FETCH_AUTH_PATH)
-      return
+  const onSearch = useCallback(() => {
+    try {
+      sessionStorage.setItem('fetch.pendingHomeShellTab', 'search')
+    } catch {
+      /* ignore */
     }
-    navigate({ pathname: FETCH_SHOP_PATH, search: '' })
-  }, [navigate, shopLocked])
-  const onSell = useCallback(() => navigate(FETCH_MARKETPLACE_LIST_PATH), [navigate])
+    navigate(FETCH_APP_PATH)
+  }, [navigate])
+  const onActivity = useCallback(() => navigateToHomeShellTab('chat'), [navigateToHomeShellTab])
+  const navigateToMarketplaceTab = useCallback(() => {
+    try {
+      sessionStorage.setItem('fetch.pendingHomeShellTab', 'marketplace')
+    } catch {
+      /* ignore */
+    }
+    navigate(FETCH_APP_PATH)
+  }, [navigate])
   const onProfile = useCallback(() => navigate(FETCH_PROFILE_PATH), [navigate])
 
   if (hidden) return null
@@ -100,7 +91,7 @@ export function FetchAppBottomNav({ activeTab, hidden }: FetchAppBottomNavProps)
   return (
     <nav
       className="fetch-app-bottom-nav fetch-home-intent-bottom-nav fetch-home-intent-bottom-nav--compact"
-      aria-label="For you, lives, sell, shop, and profile"
+        aria-label="Live, search, marketplace, messages, and profile"
     >
       <button
         type="button"
@@ -110,13 +101,15 @@ export function FetchAppBottomNav({ activeTab, hidden }: FetchAppBottomNavProps)
         ]
           .filter(Boolean)
           .join(' ')}
-        aria-label="For you"
+        aria-label="Live"
         aria-current={tab === 'forYou' ? 'page' : undefined}
-        onClick={onForYou}
+        onClick={(e) => {
+          playHomeIntentNavTap(e.currentTarget)
+          void onForYou()
+        }}
       >
         <span className="fetch-home-intent-bottom-nav__icon-inner">
-          <FetchEyesHomeIcon className="block" active={tab === 'forYou'} />
-          <span className="fetch-home-intent-bottom-nav__label">For you</span>
+          <FetchLivesNavIcon className="block" active />
         </span>
       </button>
       <button
@@ -127,13 +120,15 @@ export function FetchAppBottomNav({ activeTab, hidden }: FetchAppBottomNavProps)
         ]
           .filter(Boolean)
           .join(' ')}
-        aria-label="Lives"
+        aria-label="Search"
         aria-current={tab === 'search' ? 'page' : undefined}
-        onClick={onSearch}
+        onClick={(e) => {
+          playHomeIntentNavTap(e.currentTarget)
+          void onSearch()
+        }}
       >
         <span className="fetch-home-intent-bottom-nav__icon-inner">
-          <FetchLivesNavIcon className="block" active={tab === 'search'} />
-          <span className="fetch-home-intent-bottom-nav__label">Lives</span>
+          <FetchSearchNavIcon className="block" active />
         </span>
       </button>
       <button
@@ -144,47 +139,34 @@ export function FetchAppBottomNav({ activeTab, hidden }: FetchAppBottomNavProps)
         ]
           .filter(Boolean)
           .join(' ')}
-        aria-label="Sell — list an item"
+        aria-label="Marketplace — browse listings"
         aria-current={tab === 'sell' ? 'page' : undefined}
-        onClick={onSell}
+        onClick={(e) => {
+          playHomeIntentNavTap(e.currentTarget)
+          void navigateToMarketplaceTab()
+        }}
       >
         <span className="fetch-home-intent-bottom-nav__icon-inner">
-          <PlusCircleNavIcon className="block" active={tab === 'sell'} />
-          <span className="fetch-home-intent-bottom-nav__label">Sell</span>
+          <CartNavIcon className="block" active />
         </span>
       </button>
       <button
         type="button"
         className={[
           'fetch-home-intent-bottom-nav__icon',
-          tab === 'activity' && !shopLocked ? 'fetch-home-intent-bottom-nav__icon--active' : '',
-          shopLocked ? 'fetch-home-intent-bottom-nav__icon--shop-locked' : '',
+          tab === 'activity' ? 'fetch-home-intent-bottom-nav__icon--active' : '',
         ]
           .filter(Boolean)
           .join(' ')}
-        aria-label={shopLocked ? 'Shop — sign in required' : 'Shop'}
-        aria-current={tab === 'activity' && !shopLocked ? 'page' : undefined}
-        onClick={onActivity}
+        aria-label="Messages"
+        aria-current={tab === 'activity' ? 'page' : undefined}
+        onClick={(e) => {
+          playHomeIntentNavTap(e.currentTarget)
+          void onActivity()
+        }}
       >
-        <span className="relative inline-block">
-          <span
-            className={[
-              'fetch-home-intent-bottom-nav__icon-inner',
-              shopLocked ? 'opacity-40 grayscale' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-          >
-            <FetchShopNavIcon className="block" active={tab === 'activity' && !shopLocked} />
-            <span className="fetch-home-intent-bottom-nav__label">Shop</span>
-          </span>
-          {shopLocked ? (
-            <Lock
-              className="pointer-events-none absolute -bottom-0.5 -right-1 h-3.5 w-3.5 rounded-full bg-white text-zinc-500 ring-1 ring-zinc-200"
-              strokeWidth={2.5}
-              aria-hidden
-            />
-          ) : null}
+        <span className="fetch-home-intent-bottom-nav__icon-inner">
+          <FetchActivityNavIcon className="block" active />
         </span>
       </button>
       <button
@@ -197,11 +179,13 @@ export function FetchAppBottomNav({ activeTab, hidden }: FetchAppBottomNavProps)
           .join(' ')}
         aria-label="Profile"
         aria-current={tab === 'profile' ? 'page' : undefined}
-        onClick={onProfile}
+        onClick={(e) => {
+          playHomeIntentNavTap(e.currentTarget)
+          void onProfile()
+        }}
       >
         <span className="fetch-home-intent-bottom-nav__icon-inner">
-          <FetchProfileNavIcon className="block" active={tab === 'profile'} />
-          <span className="fetch-home-intent-bottom-nav__label">Profile</span>
+          <FetchProfileNavIcon className="block" active />
         </span>
       </button>
     </nav>

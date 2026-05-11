@@ -15,7 +15,8 @@ export type ExploreCategoryRowPromoDef = {
   id: string
   title: string
   subline: string
-  imageSrc: string
+  /** Optional when the tile uses a programmatic icon (Discover search categories). */
+  imageSrc?: string
   handoff: MarketplacePeerBrowseFilter
   ariaLabel: string
 }

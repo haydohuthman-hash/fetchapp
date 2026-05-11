@@ -72,12 +72,26 @@ export const FETCH_MARKETPLACE_LIST_PATH = '/marketplace/sell' as const
 
 /** Seller multi-step wizard — camera prep, lineup, LiveKit go-live */
 export const FETCH_GO_LIVE_PATH = '/go-live' as const
-/** Browse Fetchit realtime rooms (seller-commerce livestreams). */
+/** Browse Fetchit realtime rooms — deprecated; `/lives` redirects to {@link FETCH_APP_PATH} in {@link App}. */
 export const FETCH_LIVES_FEED_PATH = '/lives' as const
 /** Room player: `/live/:roomName` */
 export const FETCH_LIVE_ROOM_PREFIX = '/live/' as const
 
+/** Legacy public seller URL `/seller/:sellerId` — redirects to home in {@link App}. */
+export const FETCH_SELLER_PROFILE_PREFIX = '/seller/' as const
+
 const LIVE_ROOM_RE = /^\/live\/([^/]+)$/
+const SELLER_PROFILE_RE = /^\/seller\/([^/]+)$/
+
+/** @returns decoded seller id or null */
+export function sellerIdFromProfilePathname(pathname: string): string | null {
+  const m = pathname.trim().match(SELLER_PROFILE_RE)
+  return m?.[1] ? decodeURIComponent(m[1]) : null
+}
+
+export function sellerProfilePath(sellerId: string): string {
+  return `${FETCH_SELLER_PROFILE_PREFIX}${encodeURIComponent(sellerId)}`
+}
 
 /** @returns decoded room slug or null */
 export function liveRoomSlugFromPathname(pathname: string): string | null {
@@ -88,6 +102,9 @@ export const FETCH_WALLET_CASH_OUT_PATH = '/wallet/cash-out' as const
 export const FETCH_WALLET_ADD_CREDITS_PATH = '/wallet/add-credits' as const
 export const FETCH_WALLET_TRANSACTIONS_PATH = '/wallet/transactions' as const
 export const FETCH_GEMS_PATH = '/gems' as const
+/** @deprecated Removed — client redirects to {@link FETCH_APP_PATH}. */
 export const FETCH_SHOP_PATH = '/shop' as const
-/** First-time “create your shop” flow (like a Facebook page). */
+/** @deprecated Removed — client redirects to {@link FETCH_APP_PATH}. */
 export const FETCH_SHOP_SETUP_PATH = '/shop/setup' as const
+/** Fetchit (curated marketplace discovery flow). Route kept as /mystery-find internally. */
+export const FETCH_MYSTERY_FIND_PATH = '/mystery-find' as const

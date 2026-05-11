@@ -12,7 +12,7 @@ import {
   type HuntGateFailureKind,
 } from '../lib/huntStartGates'
 import type { PeerListing } from '../lib/listingsApi'
-import { FETCH_PROFILE_EDIT_PATH, FETCH_WALLET_ADD_CREDITS_PATH } from '../lib/fetchRoutes'
+import { FETCH_PROFILE_EDIT_PATH, FETCH_PROFILE_PAYMENTS_SHIPPING_PATH } from '../lib/fetchRoutes'
 import { ChromaKeyedMascot } from './ChromaKeyedMascot'
 import exploreHeroMascotUrl from '../assets/fetch-explore-mascot-waving-green.png'
 
@@ -643,7 +643,7 @@ export function AutoHuntOnboardingFlow({
                         <button
                           type="button"
                           onClick={() => {
-                            navigate(FETCH_WALLET_ADD_CREDITS_PATH)
+                            navigate(FETCH_PROFILE_PAYMENTS_SHIPPING_PATH)
                             onClose()
                           }}
                           className="rounded-lg bg-amber-600 px-3 py-1.5 text-[12px] font-semibold text-white active:bg-amber-700"

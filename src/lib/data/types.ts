@@ -94,6 +94,8 @@ export type WalletTxnKind =
   | 'reward'
   | 'gift-card'
   | 'instant-cash'
+  /** Marketplace credit from Instant Relist (Fetchit) */
+  | 'mystery-relist-credit'
 
 export type WalletTransaction = {
   id: string
@@ -103,6 +105,8 @@ export type WalletTransaction = {
   createdAt: number
   label: string
   auctionId?: string
+  mysteryFindSessionId?: string
+  listingId?: string
 }
 
 export type Reward = {

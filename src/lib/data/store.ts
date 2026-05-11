@@ -565,6 +565,29 @@ export function instantCash(amountCents: number): boolean {
   return true
 }
 
+/** Marketplace Credit from Fetchit Instant Relist (positive balance change). */
+export function creditWalletMysteryRelist(params: {
+  amountCents: number
+  mysteryFindSessionId: string
+  listingId: string
+  listingTitle: string
+}): void {
+  const { amountCents, mysteryFindSessionId, listingId, listingTitle } = params
+  if (amountCents <= 0) return
+  pushWalletTxn({
+    id: genId('wtx'),
+    kind: 'mystery-relist-credit',
+    amountCents,
+    balanceAfterCents: state.walletBalanceCents + amountCents,
+    createdAt: Date.now(),
+    label: `Instant Relist · ${listingTitle}`,
+    mysteryFindSessionId,
+    listingId,
+  })
+  emit()
+  persist(state)
+}
+
 export function markAllNotificationsRead(): void {
   state.notifications = state.notifications.map((n) => ({ ...n, read: true }))
   emit()

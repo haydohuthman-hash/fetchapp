@@ -22,7 +22,7 @@ import {
   type LiveShowListingLine,
 } from '../lib/live/liveSessionApi'
 import { useAuthState } from '../lib/authState'
-import { FETCH_APP_PATH, FETCH_AUTH_PATH, FETCH_LIVES_FEED_PATH } from '../lib/fetchRoutes'
+import { FETCH_APP_PATH, FETCH_AUTH_PATH } from '../lib/fetchRoutes'
 import { LiveStudio } from '../components/live/LiveStudio'
 import { PinnedLiveCommerceCard } from '../components/live/PinnedLiveCommerceCard'
 
@@ -391,7 +391,14 @@ export function LiveRoomView({ roomName }: { roomName: string }) {
         <button
           type="button"
           className="mt-6 rounded-2xl bg-violet-600 py-3.5 font-bold text-white"
-          onClick={() => navigate(FETCH_LIVES_FEED_PATH)}
+          onClick={() => {
+            try {
+              sessionStorage.setItem('fetch.pendingHomeShellTab', 'marketplace')
+            } catch {
+              /* ignore */
+            }
+            navigate(FETCH_APP_PATH)
+          }}
         >
           Browse more lives
         </button>

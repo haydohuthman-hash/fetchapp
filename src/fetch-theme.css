@@ -1688,11 +1688,11 @@ html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-black {
   background-color: #f8f6fd !important;
 }
 
-/* Search → Categories: light violet canvas */
+/* Search → Categories: white canvas */
 html[data-fetch-theme='light'] .fetch-app-shell-inner div.fetch-home-search-route,
 html[data-fetch-theme='light'] .fetch-app-shell-inner main.fetch-home-search-categories,
 html[data-fetch-theme='light'] .fetch-app-shell-inner div.fetch-home-search-categories__scroll {
-  background-color: #f8f6fd !important;
+  background-color: #ffffff !important;
 }
 
 html[data-fetch-theme='light'] .fetch-app-shell-inner .bg-white\/95,

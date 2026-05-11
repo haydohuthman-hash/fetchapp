@@ -73,6 +73,15 @@ export function consumePendingOpenMarketplaceCart(): boolean {
   return false
 }
 
+/** On Fetch home, next marketplace tab activation opens the cart sub-view once consumed. */
+export function stageMarketplaceCartOpenPending(): void {
+  try {
+    sessionStorage.setItem(PENDING_OPEN_CART_KEY, '1')
+  } catch {
+    /* ignore */
+  }
+}
+
 export function useMarketplaceCartQtyLive(): Record<string, number> {
   const [state, setState] = useState(() => readMarketplaceCartQty())
   const sync = useCallback(() => setState(readMarketplaceCartQty()), [])

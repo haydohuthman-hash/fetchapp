@@ -20,9 +20,9 @@ import CategoryDetailView from './CategoryDetailView'
 import OrderConfirmedView from './OrderConfirmedView'
 import RewardsView from './RewardsView'
 import UpcomingAuctionsView from './UpcomingAuctionsView'
-import WalletView from './WalletView'
 import {
   FETCH_GEMS_PATH,
+  FETCH_MYSTERY_FIND_PATH,
   FETCH_PROFILE_ADDRESSES_PATH,
   FETCH_PROFILE_EDIT_PATH,
   FETCH_PROFILE_NOTIFICATIONS_PATH,
@@ -31,7 +31,6 @@ import {
 
 export type BidwarsHubView =
   | { kind: 'activity' }
-  | { kind: 'wallet' }
   | { kind: 'rewards' }
   | { kind: 'profile' }
   | { kind: 'upcoming' }
@@ -118,7 +117,6 @@ export function BidwarsHub({ open, initial, onClose, onOpenChat, bottomNav }: Pr
           onOpenMessages={onOpenChat}
         />
       ) : null}
-      {top.kind === 'wallet' ? <WalletView onBack={goBack} /> : null}
       {top.kind === 'rewards' ? (
         <RewardsView onBack={goBack} onInvite={() => undefined} />
       ) : null}
@@ -128,7 +126,7 @@ export function BidwarsHub({ open, initial, onClose, onOpenChat, bottomNav }: Pr
           onWatchlistOpen={(id) => {
             void id
           }}
-          onOpenWallet={() => push({ kind: 'wallet' })}
+          onOpenWallet={() => openInMainApp(FETCH_GEMS_PATH)}
           onOpenRewards={() => push({ kind: 'rewards' })}
           onInvite={() => openInMainApp(FETCH_GEMS_PATH)}
           onEditProfile={() => openInMainApp(FETCH_PROFILE_EDIT_PATH)}
@@ -152,6 +150,7 @@ export function BidwarsHub({ open, initial, onClose, onOpenChat, bottomNav }: Pr
           category={top.category}
           onBack={goBack}
           onOpenAuction={onOpenAuction}
+          onMysteryFind={() => openInMainApp(FETCH_MYSTERY_FIND_PATH)}
         />
       ) : null}
       {top.kind === 'order' ? <OrderConfirmedView onBack={goBack} onContinue={onClose} /> : null}

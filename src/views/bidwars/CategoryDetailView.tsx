@@ -12,6 +12,7 @@ type Props = {
   category: Category
   onBack: () => void
   onOpenAuction: (auction: Auction) => void
+  onMysteryFind?: () => void
 }
 
 const FILTERS: Array<{ id: 'all' | 'live' | 'upcoming' | 'ending'; label: string }> = [
@@ -21,7 +22,7 @@ const FILTERS: Array<{ id: 'all' | 'live' | 'upcoming' | 'ending'; label: string
   { id: 'ending', label: 'Ending soon' },
 ]
 
-export default function CategoryDetailView({ category, onBack, onOpenAuction }: Props) {
+export default function CategoryDetailView({ category, onBack, onOpenAuction, onMysteryFind }: Props) {
   const [filter, setFilter] = useState<typeof FILTERS[number]['id']>('all')
   const [query, setQuery] = useState('')
   const auctions = useAuctionsByCategory(category.id)
@@ -83,6 +84,15 @@ export default function CategoryDetailView({ category, onBack, onOpenAuction }: 
             aria-label="Search"
           />
         </label>
+        {onMysteryFind ? (
+          <button
+            type="button"
+            onClick={onMysteryFind}
+            className="w-full rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 to-white px-4 py-3 text-left text-[13px] font-bold text-violet-950 shadow-sm shadow-violet-900/[0.04] active:brightness-95"
+          >
+            Try Fetchit in this lane
+          </button>
+        ) : null}
         {filtered.length === 0 ? (
           <EmptyState
             icon="🔍"

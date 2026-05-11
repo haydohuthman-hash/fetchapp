@@ -9,11 +9,6 @@ import {
   FETCH_MARKETPLACE_LIST_PATH,
   FETCH_PROFILE_EDIT_PATH,
   FETCH_PROFILE_PATH,
-  FETCH_SHOP_PATH,
-  FETCH_SHOP_SETUP_PATH,
-  FETCH_WALLET_ADD_CREDITS_PATH,
-  FETCH_WALLET_CASH_OUT_PATH,
-  FETCH_WALLET_TRANSACTIONS_PATH,
   isFetchProfileAccountSubPath,
 } from './fetchRoutes'
 
@@ -21,15 +16,10 @@ import {
 export function navSlideOrder(pathname: string): number {
   if (pathname === FETCH_APP_PATH) return 0
   if (pathname === FETCH_MARKETPLACE_LIST_PATH) return 200
-  if (pathname === FETCH_SHOP_PATH) return 300
-  if (pathname === FETCH_SHOP_SETUP_PATH) return 310
   if (pathname === FETCH_PROFILE_PATH) return 400
   if (isFetchProfileAccountSubPath(pathname)) return 405
   if (pathname === FETCH_PROFILE_EDIT_PATH) return 410
   if (pathname === FETCH_GEMS_PATH) return 420
-  if (pathname === FETCH_WALLET_TRANSACTIONS_PATH) return 430
-  if (pathname === FETCH_WALLET_CASH_OUT_PATH) return 440
-  if (pathname === FETCH_WALLET_ADD_CREDITS_PATH) return 450
   if (pathname === FETCH_AUTH_PATH) return 900
   return 600
 }

@@ -1,5 +1,24 @@
 import { CURATED_DROP_REELS } from './drops/constants'
-import type { DropReel } from './drops/types'
+import type { DropMediaKind, DropReel } from './drops/types'
+
+/** Progressive sample MP4 (Google host) — same sources as {@link ../drops/devDemoDropsFeed}. */
+const MOCK_LIVE_FEED_MP4_A =
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+const MOCK_LIVE_FEED_MP4_B =
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+
+/**
+ * Curated catalogue rows labelled for “live auction” demos, each given a playable `videoUrl`
+ * so {@link dropsReelsForLiveAuctionFloor} and explore tap-to-watch handoffs behave like real streams.
+ */
+export function getMockStreamCapableLiveReels(): DropReel[] {
+  const rows = CURATED_DROP_REELS.filter((r) => r.id.startsWith('curated_demo_live_'))
+  return rows.map((r, i) => ({
+    ...r,
+    videoUrl: i % 2 === 0 ? MOCK_LIVE_FEED_MP4_A : MOCK_LIVE_FEED_MP4_B,
+    mediaKind: 'video' as DropMediaKind,
+  }))
+}
 import { listingImageAbsoluteUrl } from './listingsApi'
 import { liveStreamViewerCountSeed, formatLiveViewerShort } from './marketplaceAuctionUi'
 

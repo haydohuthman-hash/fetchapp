@@ -9,6 +9,7 @@ import {
   type ImgHTMLAttributes,
   type SetStateAction,
 } from 'react'
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import type { HardwareProduct } from '../lib/hardwareCatalog'
 import { SUPPLY_PRODUCTS, type SupplyProduct } from '../lib/suppliesCatalog'
@@ -21,7 +22,6 @@ import { formatDropHandle } from '../lib/drops/profileStore'
 import { syncCustomerSessionCookie } from '../lib/fetchServerSession'
 import { loadSession } from '../lib/fetchUserSession'
 import { consumePendingOpenMarketplaceCart } from '../lib/marketplaceCartSnapshot'
-import { useWalletBalanceCents } from '../lib/data'
 import { MARKETPLACE_MOCK_PEER_LISTINGS } from '../lib/marketplaceMockPeerListings'
 import {
   checkoutListing,
@@ -34,6 +34,7 @@ import {
   type PeerListing,
 } from '../lib/listingsApi'
 import type { BuySellDropsListingHandoff } from './HomeShellBuySellPage'
+import { HOME_SHELL_UNIFIED_TOP_HEADER_CLASS } from './HomeShellUnifiedTopHeader'
 import { HomeShellBuySellPage } from './HomeShellBuySellPage'
 import type { HomeShellTab } from './FetchHomeBookingSheet'
 import { FetchStripePaymentElement } from './FetchStripePaymentElement'
@@ -47,7 +48,6 @@ import {
 } from '../lib/liveFeedDemo'
 import { useDropsApiFeed } from '../lib/drops/useDropsApiFeed'
 import { LiveFeedCard, LiveVideoAuction } from './LiveFeedPage'
-import fetchitQuickLiveTile from '../assets/fetchit-quick-live-auctions.png'
 import imgLiveCatHome from '../assets/fetchit-home-living-room-hero.png'
 import imgLiveCatElectronics from '../assets/search-categories-real/electronics.png'
 import imgLiveCatFashion from '../assets/search-categories-real/womens-fashion.png'
@@ -64,15 +64,20 @@ function peerListingCategoryChipToFilterCategory(
   return id
 }
 
-const BROWSE_SEGMENT_STORAGE_KEY = 'fetch-mp-browse-segment'
+const BROWSE_SEGMENT_STORAGE_KEY = 'fetch-mp-browse-segment-v2'
+
+/** Stacked marketplace shop header (glass shell only — inner rows set padding). */
+const MARKETPLACE_SHOP_HEADER_SHELL_CLASS =
+  'sticky top-0 z-[15] flex w-full min-w-0 shrink-0 flex-col border-0 bg-white/92 backdrop-blur-md backdrop-saturate-150 supports-[backdrop-filter]:bg-white/80'
 
 function loadStoredBrowseSegment(): 'auctions' | 'shop' {
-  if (typeof window === 'undefined') return 'auctions'
+  if (typeof window === 'undefined') return 'shop'
   try {
     const v = window.localStorage.getItem(BROWSE_SEGMENT_STORAGE_KEY)
-    return v === 'shop' ? 'shop' : 'auctions'
+    if (v === 'auctions') return 'auctions'
+    return 'shop'
   } catch {
-    return 'auctions'
+    return 'shop'
   }
 }
 
@@ -84,14 +89,6 @@ function storeBrowseSegment(segment: 'auctions' | 'shop'): void {
     /* storage may be disabled */
   }
 }
-
-const SHOP_PRICE_PRESETS: { id: string; label: string; cents: number | null }[] = [
-  { id: 'any', label: 'Any price', cents: null },
-  { id: 'p25', label: 'Under $25', cents: 2500 },
-  { id: 'p50', label: 'Under $50', cents: 5000 },
-  { id: 'p100', label: 'Under $100', cents: 10000 },
-  { id: 'p250', label: 'Under $250', cents: 25000 },
-]
 
 export type MarketplaceDropsProductHandoff = {
   productId: string
@@ -121,6 +118,9 @@ export type MarketplaceSegmentHandoff = {
 
 export type HomeShellMarketplacePageProps = {
   bottomNav: React.ReactNode
+  /** When true, the fixed dock is not rendered here (HomeView pins it outside the sliding route layer). Seller overlay still uses `bottomNav` inline. */
+  renderShellDockOutsideRoute?: boolean
+  onSellerToolsOverlayOpenChange?: (open: boolean) => void
   hardwareProducts: readonly HardwareProduct[]
   /** Marketplace store cart (owned by parent so tab chrome can react, e.g. cart FAB on For You). */
   cartQtyById: Record<string, number>
@@ -142,15 +142,41 @@ export type HomeShellMarketplacePageProps = {
   /** Explore / feed: jump into Live viewer for this stream. */
   liveJoinStreamHandoff?: LiveFeedStream | null
   onLiveJoinStreamHandoffConsumed?: () => void
-  /** Opens Fetch wallet (e.g. Bidwars hub wallet). */
-  onOpenWallet?: () => void
+  /** Opens profile notifications (same heart affordance as Search / Explore). */
+  onOpenNotifications?: () => void
   /** For You quick tiles: land on live grid vs static shop. */
   segmentHandoff?: MarketplaceSegmentHandoff | null
   onSegmentHandoffConsumed?: () => void
+  /** Opens home-shell Discover / Search tab — header search is icon-only. */
+  onOpenSearch?: () => void
+  /**
+   * When set, initial browse boot skeleton follows this flag instead of an internal timer
+   * (single gate with Explore in HomeView).
+   */
+  browseShellRevealReady?: boolean
 }
 
-const LIVE_CATEGORY_COVER: Record<LiveFeedCategory, string> = {
-  all: fetchitQuickLiveTile,
+/** Only used for the first “All” circle — others use category cover thumbnails. */
+function MarketplaceListingCategoryDotsIcon({ selected }: { selected: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={[
+        'h-[1.8rem] w-[1.8rem] shrink-0',
+        selected ? 'text-[#291050]' : 'text-zinc-600',
+      ].join(' ')}
+      aria-hidden
+    >
+      <circle cx="8" cy="8" r="3" fill="currentColor" />
+      <circle cx="16" cy="8" r="3" fill="currentColor" />
+      <circle cx="8" cy="16" r="3" fill="currentColor" />
+      <circle cx="16" cy="16" r="3" fill="currentColor" />
+    </svg>
+  )
+}
+
+const LIVE_CATEGORY_CHIP_COVER: Record<Exclude<LiveFeedCategory, 'all'>, string> = {
   furniture: imgLiveCatHome,
   electronics: imgLiveCatElectronics,
   fashion: imgLiveCatFashion,
@@ -266,11 +292,11 @@ function MarketplaceBrowseBootSkeleton() {
       className="fetch-home-marketplace-body pointer-events-none flex min-h-0 flex-1 flex-col bg-white select-none"
       aria-hidden
     >
-      <div className="flex shrink-0 flex-col border-b border-zinc-100">
+      <div className="flex shrink-0 flex-col">
         <div className="flex items-center gap-2 px-3 pb-3 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
           <div className="h-11 min-w-0 flex-1 rounded-xl bg-zinc-100 animate-pulse" />
-          <div className="h-11 w-[4.75rem] shrink-0 rounded-xl bg-zinc-100 animate-pulse" />
-          <div className="h-11 w-11 shrink-0 rounded-full bg-zinc-100 animate-pulse" />
+          <div className="h-11 w-11 shrink-0 rounded-xl bg-zinc-100 animate-pulse" aria-hidden />
+          <div className="h-11 w-11 shrink-0 rounded-xl bg-zinc-100 animate-pulse" aria-hidden />
         </div>
         <div className="flex gap-2 overflow-hidden px-3 pb-2">
           <div className="h-8 w-14 shrink-0 rounded-full bg-zinc-100 animate-pulse" />
@@ -294,39 +320,43 @@ function MarketplaceBrowseBootSkeleton() {
 
 function MarketplaceSearchIcon({ className = '' }: { className?: string }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={['inline-block shrink-0 text-current', className].filter(Boolean).join(' ') || undefined}
+      aria-hidden
+    >
       <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
       <path d="M20 20l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   )
 }
 
-function MarketplaceCartIcon({ className = '' }: { className?: string }) {
+function MarketplaceBrowseHeartIcon({ className = '' }: { className?: string }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
       <path
-        d="M9 8.5V6a3 3 0 013-3h0a3 3 0 013 3v2.5M5 8.5h14l-1.2 10.2a2 2 0 01-2 1.8H8.2a2 2 0 01-2-1.8L5 8.5z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        fill="currentColor"
+        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-8.74 1.06-1.06a5.5 5.5 0 1 0-7.78-7.78z"
       />
     </svg>
   )
 }
 
-function MarketplaceWalletIcon({ className = '' }: { className?: string }) {
+/** Wishlist toggle on peer grid — soft light outline when off, red fill when saved. */
+function PeerListingWishlistHeartGlyph({ filled, className }: { filled: boolean; className?: string }) {
+  if (filled) {
+    return <MarketplaceBrowseHeartIcon className={className} />
+  }
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M18 8.25V6a2 2 0 00-2-2H6.5A2.5 2.5 0 004 6.5v11A2.5 2.5 0 006.5 20H16a2 2 0 002-2v-2.25"
+        d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
         stroke="currentColor"
-        strokeWidth="1.9"
+        strokeWidth="1.28"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <rect x="14" y="8.25" width="6.5" height="7.5" rx="1.25" stroke="currentColor" strokeWidth="1.9" />
-      <circle cx="17.25" cy="12" r="0.85" fill="currentColor" />
     </svg>
   )
 }
@@ -363,32 +393,70 @@ const MarketplacePeerListingGridCard = memo(function MarketplacePeerListingGridC
   listing: PeerListing
   onOpen: () => void
 }) {
+  const [wishlisted, setWishlisted] = useState(false)
   const raw = listing.images?.[0]?.url?.trim()
   const src = raw ? listingImageAbsoluteUrl(raw) : ''
   const price = formatAudFromCents(listing.priceCents ?? 0)
+  const openLabel = `View listing ${listing.title}`
+  const onCardKeyDown = useCallback((e: ReactKeyboardEvent<HTMLElement>) => {
+    if (e.target !== e.currentTarget) return
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onOpen()
+    }
+  }, [onOpen])
   return (
-    <button
-      type="button"
+    <article
+      role="button"
+      tabIndex={0}
+      aria-label={openLabel}
       onClick={onOpen}
-      className="group flex min-w-0 flex-col gap-1.5 rounded-2xl border border-zinc-100 bg-white p-2 text-left shadow-[0_1px_3px_rgba(0,0,0,0.05)] ring-1 ring-zinc-100/80 transition-transform active:scale-[0.98]"
-      aria-label={`View listing ${listing.title}`}
+      onKeyDown={onCardKeyDown}
+      className="group/card flex min-w-0 cursor-pointer flex-col gap-1 rounded-xl bg-transparent p-1 text-left transition-transform [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/55 focus-visible:ring-offset-2 active:scale-[0.98]"
     >
-      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-zinc-100">
+      <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-zinc-100">
         {src ? (
           <SupplyProductThumb
             src={src}
             alt=""
-            className="h-full w-full object-cover transition-transform duration-300 group-active:scale-[1.02]"
+            className="pointer-events-none h-full w-full object-cover transition-transform duration-300 group-active/card:scale-[1.02]"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-[11px] text-zinc-400">No photo</div>
         )}
+        <button
+          type="button"
+          onClick={(ev) => {
+            ev.preventDefault()
+            ev.stopPropagation()
+            setWishlisted((w) => !w)
+          }}
+          aria-pressed={wishlisted}
+          aria-label={
+            wishlisted ? `Remove ${listing.title} from wishlist` : `Save ${listing.title} to wishlist`
+          }
+          className="absolute right-0.5 top-0.5 z-[2] flex h-12 w-12 shrink-0 items-center justify-center border-0 bg-transparent p-0 text-transparent shadow-none outline-none backdrop-blur-none transition-transform [-webkit-tap-highlight-color:transparent] active:scale-[0.92] focus-visible:ring-2 focus-visible:ring-violet-400/65 focus-visible:ring-offset-2"
+        >
+          <PeerListingWishlistHeartGlyph
+            filled={wishlisted}
+            className={[
+              wishlisted
+                ? 'h-9 w-9 text-red-500'
+                : 'h-8 w-8 text-white/55',
+              'drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]',
+            ].join(' ')}
+          />
+        </button>
       </div>
-      <p className="line-clamp-2 min-h-[2.5rem] pl-0.5 text-[12px] font-semibold leading-snug text-zinc-900">
-        {listing.title}
-      </p>
-      <p className="pl-0.5 text-[1.05rem] font-bold tabular-nums leading-none text-zinc-900">{price}</p>
-    </button>
+      <div className="flex min-w-0 items-baseline gap-1.5 px-0.5">
+        <span className="shrink-0 text-[13px] font-bold tabular-nums leading-snug tracking-tight text-zinc-950">
+          {price}
+        </span>
+        <p className="min-w-0 flex-1 truncate text-[14px] font-semibold leading-snug text-zinc-900">
+          {listing.title}
+        </p>
+      </div>
+    </article>
   )
 })
 
@@ -396,6 +464,8 @@ type MarketplaceSubView = 'browse' | 'cart' | 'checkout' | 'orderComplete'
 
 function HomeShellMarketplacePageInner({
   bottomNav,
+  renderShellDockOutsideRoute = false,
+  onSellerToolsOverlayOpenChange,
   cartQtyById,
   setCartQtyById,
   onMenuAccount,
@@ -412,9 +482,11 @@ function HomeShellMarketplacePageInner({
   onSellerHubHandoffConsumed,
   liveJoinStreamHandoff: _liveJoinStreamHandoff = null,
   onLiveJoinStreamHandoffConsumed: _onLiveJoinStreamHandoffConsumed,
-  onOpenWallet,
+  onOpenNotifications,
+  onOpenSearch,
   segmentHandoff = null,
   onSegmentHandoffConsumed,
+  browseShellRevealReady,
 }: HomeShellMarketplacePageProps) {
   const { loading: productsApiLoading, products: apiProductList } = useFetchProducts()
   const [subView, setSubView] = useState<MarketplaceSubView>('browse')
@@ -432,7 +504,10 @@ function HomeShellMarketplacePageInner({
   const [completedOrderId, setCompletedOrderId] = useState<string | null>(null)
   const [cartEnterLoading, setCartEnterLoading] = useState(false)
   const [cartOpenSeq, setCartOpenSeq] = useState(0)
-  const [marketplaceBootLoading, setMarketplaceBootLoading] = useState(true)
+  const parentGatesBrowseBoot = browseShellRevealReady !== undefined
+  const [marketplaceBootLoading, setMarketplaceBootLoading] = useState(
+    () => !browseShellRevealReady,
+  )
   const [catalogProducts, setCatalogProducts] = useState<SupplyProduct[] | null>(null)
   const [peerListings, setPeerListings] = useState<PeerListing[]>([])
   const [peerListingSheet, setPeerListingSheet] = useState<PeerListing | null>(null)
@@ -443,6 +518,9 @@ function HomeShellMarketplacePageInner({
   const [peerBuyErr, setPeerBuyErr] = useState<string | null>(null)
   const [peerCheckoutBusy, setPeerCheckoutBusy] = useState(false)
   const [sellerToolsOpen, setSellerToolsOpen] = useState(false)
+  useEffect(() => {
+    onSellerToolsOverlayOpenChange?.(sellerToolsOpen)
+  }, [sellerToolsOpen, onSellerToolsOverlayOpenChange])
   const [sellerOverlayMountKey, setSellerOverlayMountKey] = useState(0)
   const [sellerOverlayLanding, setSellerOverlayLanding] = useState<'feed' | 'create' | 'live' | 'liveStudio'>('feed')
   const lastSellerHubIdRef = useRef<number | null>(null)
@@ -455,9 +533,6 @@ function HomeShellMarketplacePageInner({
   const lastBrowseHandoffIdRef = useRef<number | null>(null)
   const dropsListingHandoffDoneRef = useRef<string | null>(null)
   const lastSegmentHandoffIdRef = useRef<number | null>(null)
-
-  const walletBalanceCents = useWalletBalanceCents()
-  const walletBalanceLabel = formatAudFromCents(walletBalanceCents)
 
   const [browseSegment, setBrowseSegment] = useState<'auctions' | 'shop'>(loadStoredBrowseSegment)
   useEffect(() => {
@@ -507,7 +582,7 @@ function HomeShellMarketplacePageInner({
       LIVE_FEED_FILTER_CHIPS.map(({ id, label }) => ({
         id,
         label,
-        imageSrc: LIVE_CATEGORY_COVER[id],
+        imageSrc: id === 'all' ? undefined : LIVE_CATEGORY_CHIP_COVER[id],
       })),
     [],
   )
@@ -930,9 +1005,15 @@ function HomeShellMarketplacePageInner({
   }, [subView, cartOpenSeq])
 
   useEffect(() => {
+    if (parentGatesBrowseBoot) return
     const tid = window.setTimeout(() => setMarketplaceBootLoading(false), MARKETPLACE_BOOT_SKELETON_MS)
     return () => window.clearTimeout(tid)
-  }, [])
+  }, [parentGatesBrowseBoot])
+
+  useEffect(() => {
+    if (!parentGatesBrowseBoot) return
+    setMarketplaceBootLoading(!browseShellRevealReady)
+  }, [browseShellRevealReady, parentGatesBrowseBoot])
 
   const checkoutValid =
     checkoutName.trim().length > 0 &&
@@ -941,10 +1022,13 @@ function HomeShellMarketplacePageInner({
 
   const browseShellClass = 'bg-white'
   /** Matches `.fetch-home-intent-bottom-nav` min-height + pad so content clears the docked bar. */
-  const shellDockActive = Boolean(bottomNav) && !sellerToolsOpen
-  const shellDockContentPad = shellDockActive
+  const shellDockInsetReserved =
+    (Boolean(bottomNav) || renderShellDockOutsideRoute) && !sellerToolsOpen
+  const shellDockContentPad = shellDockInsetReserved
     ? 'pb-[calc(2.95rem+env(safe-area-inset-bottom,0px)+0.5rem)]'
     : ''
+  const renderFixedShellDockSlot =
+    Boolean(bottomNav) && !sellerToolsOpen && !renderShellDockOutsideRoute
 
   return (
     <div
@@ -968,7 +1052,7 @@ function HomeShellMarketplacePageInner({
         >
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             {subView === 'browse' ? null : subView === 'cart' ? (
-              <header className="shrink-0 border-b border-zinc-100 bg-white px-3 py-2.5 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
+              <header className="shrink-0 bg-white px-3 py-2.5 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
@@ -989,7 +1073,7 @@ function HomeShellMarketplacePageInner({
                 </div>
               </header>
             ) : subView === 'checkout' ? (
-              <header className="shrink-0 border-b border-zinc-200/80 bg-white px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
+              <header className="shrink-0 bg-white px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -1011,7 +1095,7 @@ function HomeShellMarketplacePageInner({
                 </div>
               </header>
             ) : (
-              <header className="shrink-0 border-b border-zinc-200/80 bg-white px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
+              <header className="shrink-0 bg-white px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
                 <h1 className="text-center text-[1.2rem] font-bold tracking-[-0.03em] text-zinc-900">
                   Order confirmed
                 </h1>
@@ -1020,98 +1104,68 @@ function HomeShellMarketplacePageInner({
 
             {subView === 'browse' ? (
               <div className="flex min-h-0 flex-1 flex-col bg-white">
-                <header className="shrink-0 border-b border-zinc-100 bg-white px-3 pb-3 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
-                  <div className="mx-auto flex w-full max-w-[min(100%,430px)] items-center gap-2">
-                    <div
-                      role="search"
-                      aria-label="Search marketplace"
-                      className="min-w-0 flex-1"
-                    >
-                      <label className="flex min-h-[2.75rem] min-w-0 items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50/90 px-3">
-                        <MarketplaceSearchIcon className="shrink-0 text-zinc-400" />
-                        <input
-                          type="search"
-                          value={peerListFilter.q ?? ''}
-                          onChange={(e) =>
-                            setPeerListFilter((prev) => ({
-                              ...prev,
-                              q: e.target.value,
-                            }))
-                          }
-                          placeholder="Search"
-                          autoComplete="off"
-                          enterKeyHint="search"
-                          className="min-w-0 flex-1 bg-transparent text-[15px] text-zinc-900 outline-none placeholder:text-zinc-400"
-                        />
-                      </label>
+                {browseSegment === 'shop' ? (
+                  <header className={MARKETPLACE_SHOP_HEADER_SHELL_CLASS}>
+                    <div className="mx-auto flex w-full max-w-[min(100%,430px)] min-w-0 items-center justify-between gap-2 px-3 pt-[max(0.35rem,calc(env(safe-area-inset-top,0px)+0.15rem))] pb-2 sm:px-5">
+                      <h1 className="min-w-0 shrink truncate text-left text-[clamp(1.55rem,6vw,2.05rem)] font-black leading-none tracking-tight text-zinc-900 sm:text-[2.125rem]">
+                        Shop
+                      </h1>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => onOpenSearch?.()}
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-0 bg-transparent text-zinc-900 outline-none transition-[opacity,filter] active:opacity-70 focus-visible:ring-2 focus-visible:ring-violet-400/55 focus-visible:ring-offset-2"
+                          aria-label="Search"
+                        >
+                          <MarketplaceSearchIcon className="h-7 w-7 text-zinc-800" />
+                        </button>
+                        {onOpenNotifications ? (
+                          <button
+                            type="button"
+                            onClick={onOpenNotifications}
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-0 bg-transparent text-zinc-900 outline-none transition-[opacity,filter] active:opacity-70 focus-visible:ring-2 focus-visible:ring-violet-400/55 focus-visible:ring-offset-2"
+                            aria-label="Notifications"
+                          >
+                            <MarketplaceBrowseHeartIcon className="h-7 w-7 text-zinc-900" />
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
+                  </header>
+                ) : (
+                  <header className={HOME_SHELL_UNIFIED_TOP_HEADER_CLASS}>
+                    <h1 className="shrink-0 text-[clamp(1.25rem,5vw,1.65rem)] font-black leading-none tracking-tight text-zinc-900 sm:text-[1.75rem]">
+                      Live
+                    </h1>
+                    <div className="min-w-0 flex-1" aria-hidden />
                     <button
                       type="button"
-                      onClick={onOpenWallet}
-                      className="flex h-11 max-w-[38%] shrink-0 items-center gap-1.5 rounded-xl border border-zinc-200 bg-zinc-50/90 px-2.5 text-left transition-colors active:bg-zinc-100 min-[380px]:px-3"
-                      aria-label={`Wallet, balance ${walletBalanceLabel}`}
+                      onClick={() => onOpenSearch?.()}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-0 bg-transparent text-zinc-900 outline-none transition-[opacity,filter] active:opacity-70 focus-visible:ring-2 focus-visible:ring-violet-400/55 focus-visible:ring-offset-2"
+                      aria-label="Search"
                     >
-                      <MarketplaceWalletIcon className="shrink-0 text-emerald-700" />
-                      <span className="min-w-0 truncate text-[13px] font-semibold tabular-nums tracking-tight text-zinc-900">
-                        {walletBalanceLabel}
-                      </span>
+                      <MarketplaceSearchIcon className="h-7 w-7 text-zinc-800" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={goCart}
-                      className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-zinc-800 transition-colors active:bg-zinc-100"
-                      aria-label={cartItemCount > 0 ? `Open cart, ${cartItemCount} items` : 'Open cart'}
-                    >
-                      <MarketplaceCartIcon className="text-zinc-800" />
-                      {cartItemCount > 0 ? (
-                        <span className="absolute -right-0.5 -top-0.5 flex h-[1.1rem] min-w-[1.1rem] items-center justify-center rounded-full bg-zinc-900 px-1 text-[10px] font-bold tabular-nums text-white ring-2 ring-white">
-                          {cartItemCount > 99 ? '99+' : cartItemCount}
-                        </span>
-                      ) : null}
-                    </button>
-                  </div>
-                </header>
+                    {onOpenNotifications ? (
+                      <button
+                        type="button"
+                        onClick={onOpenNotifications}
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-0 bg-transparent text-zinc-900 outline-none transition-[opacity,filter] active:opacity-70 focus-visible:ring-2 focus-visible:ring-violet-400/55 focus-visible:ring-offset-2"
+                        aria-label="Notifications"
+                      >
+                        <MarketplaceBrowseHeartIcon className="h-7 w-7 text-zinc-900" />
+                      </button>
+                    ) : null}
+                  </header>
+                )}
                 <div
                   className="flex min-h-0 flex-1 flex-col bg-white"
                   role="region"
                   aria-label={browseSegment === 'auctions' ? 'Live auctions' : 'Local listings'}
                 >
-                  <div className="shrink-0 border-b border-zinc-50 bg-white">
-                    {browseSegment === 'shop' ? (
-                      <div
-                        className="mx-auto flex w-full max-w-[min(100%,430px)] gap-1.5 overflow-x-auto px-3 pt-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                        role="group"
-                        aria-label="Maximum price"
-                      >
-                        {SHOP_PRICE_PRESETS.map((p) => {
-                          const active =
-                            (peerListFilter.maxPriceCents ?? null) ===
-                            (p.cents == null ? null : p.cents)
-                          return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              onClick={() =>
-                                setPeerListFilter((prev) => ({
-                                  ...prev,
-                                  maxPriceCents: p.cents ?? undefined,
-                                }))
-                              }
-                              className={[
-                                'shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold transition-colors',
-                                active
-                                  ? 'bg-[#291050] text-white'
-                                  : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200',
-                              ].join(' ')}
-                            >
-                              {p.label}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    ) : null}
+                  <div className="shrink-0 bg-white">
                     <div
-                      className="mx-auto flex w-full max-w-[min(100%,430px)] gap-2.5 overflow-x-auto px-3 pb-3 pt-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      className="mx-auto flex w-full max-w-[min(100%,430px)] gap-1 overflow-x-auto px-2.5 pb-3 pt-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                       role="group"
                       aria-label={
                         browseSegment === 'auctions' ? 'Live categories' : 'Listing categories'
@@ -1122,6 +1176,7 @@ function HomeShellMarketplacePageInner({
                           browseSegment === 'auctions'
                             ? liveCategory === id
                             : listingCategory === id
+                        const isDotsChip = id === 'all'
                         return (
                           <button
                             key={id}
@@ -1131,22 +1186,28 @@ function HomeShellMarketplacePageInner({
                                 ? setLiveCategory(id)
                                 : onListingBrowseCategory(id)
                             }
-                            className="flex w-[4.65rem] shrink-0 flex-col items-center gap-1.5"
+                            className="flex w-[4rem] shrink-0 flex-col items-center gap-1"
                           >
                             <span
                               className={[
-                                'relative h-[3.6rem] w-[3.6rem] overflow-hidden rounded-2xl bg-zinc-100 transition-shadow',
+                                isDotsChip
+                                  ? 'relative flex h-[3.6rem] w-[3.6rem] shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-100 transition-shadow'
+                                  : 'relative h-[3.6rem] w-[3.6rem] shrink-0 overflow-hidden rounded-full bg-zinc-100 transition-shadow',
                                 selected
                                   ? 'ring-[3px] ring-[#291050] shadow-md'
                                   : 'ring-1 ring-zinc-200/90',
                               ].join(' ')}
                             >
-                              <img
-                                src={imageSrc}
-                                alt=""
-                                draggable={false}
-                                className="h-full w-full object-cover"
-                              />
+                              {isDotsChip ? (
+                                <MarketplaceListingCategoryDotsIcon selected={selected} />
+                              ) : (
+                                <img
+                                  src={imageSrc}
+                                  alt=""
+                                  draggable={false}
+                                  className="h-full w-full object-cover"
+                                />
+                              )}
                             </span>
                             <span
                               className={[
@@ -1190,7 +1251,7 @@ function HomeShellMarketplacePageInner({
                         </p>
                       </div>
                     ) : (
-                      <div className="mx-auto grid w-full max-w-[min(100%,430px)] grid-cols-2 gap-2.5 px-3 pb-[max(5rem,env(safe-area-inset-bottom,0px)+4rem)] pt-3">
+                      <div className="mx-auto grid w-full max-w-[min(100%,430px)] grid-cols-2 gap-1 px-3 pb-[max(5rem,env(safe-area-inset-bottom,0px)+4rem)] pt-3">
                         {filteredPeerListingsForGrid.map((listing) => (
                           <MarketplacePeerListingGridCard
                             key={listing.id}
@@ -1478,7 +1539,7 @@ function HomeShellMarketplacePageInner({
         </div>
         )}
 
-        {shellDockActive ? (
+        {renderFixedShellDockSlot ? (
           <div className="fetch-home-marketplace-shell-dock pointer-events-auto fixed inset-x-0 bottom-0 z-[55] mx-auto flex w-full max-w-[min(100%,430px)] flex-col items-stretch">
             <div className="fetch-home-marketplace-shell-footer w-full shrink-0">
               {bottomNav}

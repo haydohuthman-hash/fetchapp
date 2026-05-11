@@ -1,4 +1,5 @@
 import {
+  memo,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -9,7 +10,6 @@ import {
   type CSSProperties,
   type RefObject,
 } from 'react'
-import { Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import {
   FetchHomeBookingSheet,
@@ -54,24 +54,23 @@ import {
 } from '../lib/fetchEntryAddressOnboarding'
 import { isBidWarsAdventureUnlocked } from '../lib/fetchAdventureRewards'
 import {
-  FETCH_AUTH_PATH,
   FETCH_GEMS_PATH,
   FETCH_GO_LIVE_PATH,
-  FETCH_LIVES_FEED_PATH,
   FETCH_MARKETPLACE_LIST_PATH,
   FETCH_PROFILE_NOTIFICATIONS_PATH,
-  FETCH_SHOP_PATH,
-  FETCH_WALLET_TRANSACTIONS_PATH,
+  FETCH_PROFILE_PAYMENTS_SHIPPING_PATH,
 } from '../lib/fetchRoutes'
-import { useAuthState } from '../lib/authState'
-import { readMarketplaceCartQty, writeMarketplaceCartQty } from '../lib/marketplaceCartSnapshot'
+import {
+  readMarketplaceCartQty,
+  stageMarketplaceCartOpenPending,
+  writeMarketplaceCartQty,
+} from '../lib/marketplaceCartSnapshot'
+import { playHomeIntentNavTap } from '../lib/playHomeIntentNavTap'
 import { ambientRegisterHome, ambientSetPokiesDuck } from '../lib/audio/fetchAmbientMusic'
 import { PokiesGame } from '../components/bidwars/PokiesGame'
 import { MysteryFlipPage } from '../components/games/MysteryFlipPage'
-import { SellOptionsSheet } from '../components/bidwars/SellOptionsSheet'
 import { ServicesExploreHomePanel } from '../components/ServicesExploreHomePanel'
-import { ExploreEarthCurveDivider } from '../components/ExploreEarthCurveDivider'
-import searchHeroWallpaperUrl from '../assets/fetchit-search-hero-wallpaper.png'
+import { ExploreStickyIconDockHost } from '../components/ExploreStickyIconDockHost'
 import { HomeShellChatHubPage } from '../components/HomeShellChatHubPage'
 import { HomeShellMarketplacePage } from '../components/HomeShellMarketplacePage'
 import type { BuySellDropsListingHandoff } from '../components/HomeShellBuySellPage'
@@ -82,21 +81,19 @@ import type {
   MarketplaceSellerHubHandoff,
 } from '../components/HomeShellMarketplacePage'
 import type { DropReel } from '../lib/drops/types'
-import { dropReelToLiveFeedStream, type LiveFeedStream } from '../lib/liveFeedDemo'
+import {
+  dropReelToLiveFeedStream,
+  type LiveFeedStream,
+} from '../lib/liveFeedDemo'
 import type { MarketplacePeerBrowseFilter } from '../components/ExploreBrowseBanner'
+import {
+  DISCOVER_POPULAR_BRANDS,
+  discoverPopularBrandGoogleFavicon,
+  discoverPopularBrandLogoPrimary,
+  type DiscoverPopularBrandDef,
+} from '../lib/discoverPopularBrands'
 import type { ExploreCategoryRowPromoDef } from '../lib/exploreCategoryRowPromos'
-import searchRealBabyKidsUrl from '../assets/search-categories-real/baby-kids.png'
-import searchRealCoinsMoneyUrl from '../assets/search-categories-real/coins-money.png'
-import searchRealElectronicsUrl from '../assets/search-categories-real/electronics.png'
-import searchRealEventsUrl from '../assets/search-categories-real/events.png'
-import searchRealJewelleryWatchesUrl from '../assets/search-categories-real/jewellery-watches.png'
-import searchRealMensFashionUrl from '../assets/search-categories-real/mens-fashion.png'
-import searchRealRocksCrystalsUrl from '../assets/search-categories-real/rocks-crystals.png'
-import searchRealSneakersShoesUrl from '../assets/search-categories-real/sneakers-shoes.png'
-import searchRealSportsCardsUrl from '../assets/search-categories-real/sports-cards.png'
-import searchRealToysHobbiesUrl from '../assets/search-categories-real/toys-hobbies.png'
-import searchRealTradingCardGamesUrl from '../assets/search-categories-real/trading-card-games.png'
-import searchRealWomensFashionUrl from '../assets/search-categories-real/womens-fashion.png'
+import { DiscoverShopCategoryIcon } from '../components/DiscoverShopCategoryIcon'
 import { BidwarsHub, type BidwarsHubView } from './bidwars'
 import { FetchBidWarsMatchmakingOverlay } from '../components/FetchBidWarsMatchmakingOverlay'
 import { BookingCompletionSummary } from '../components/booking/BookingCompletionSummary'
@@ -104,11 +101,11 @@ import { TripSheetCard } from '../components/booking/TripSheetCard'
 import { TripDriverStatusStrip } from '../components/booking/TripDriverStatusStrip'
 import { TripPriceEstimateStrip } from '../components/booking/TripPriceEstimateStrip'
 import {
-  FetchShopNavIcon,
-  FetchEyesHomeIcon,
-  FetchProfileNavIcon,
+  FetchInboxNavIcon,
   FetchLivesNavIcon,
-  PlusCircleNavIcon,
+  FetchProfileNavIcon,
+  FetchSearchNavIcon,
+  CartNavIcon,
 } from '../components/icons/HomeShellNavIcons'
 import {
   postFetchAiChat,
@@ -579,7 +576,18 @@ function ForYouShimmerSkeleton() {
   )
 }
 
+/** One-shot browse-shell shimmer (Explore + Marketplace share this gate; persisted for the tab session). */
 const FOR_YOU_SKELETON_MS = 1200
+const HOME_SHELL_BROWSE_HYDRATED_KEY = 'fetch.homeShellBrowseHydratedOnce'
+
+function readBrowseShellHydratedOnce(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return sessionStorage.getItem(HOME_SHELL_BROWSE_HYDRATED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
 const CART_FAB_EXPAND_DELAY_MS = 2400
 const CART_FAB_TEXT_DELAY_MS = 3200
 
@@ -650,7 +658,6 @@ const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
     id: 'events',
     title: 'Events',
     subline: 'Shows, drops & local live events',
-    imageSrc: searchRealEventsUrl,
     handoff: { q: 'events' },
     ariaLabel: 'Browse events',
   },
@@ -658,7 +665,6 @@ const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
     id: 'mens-fashion',
     title: "Men's Fashion",
     subline: 'Jackets, streetwear & fits',
-    imageSrc: searchRealMensFashionUrl,
     handoff: { category: 'fashion', q: "men's fashion" },
     ariaLabel: "Browse men's fashion",
   },
@@ -666,7 +672,6 @@ const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
     id: 'trading-card-games',
     title: 'Trading Card Games',
     subline: 'Packs, slabs & grails',
-    imageSrc: searchRealTradingCardGamesUrl,
     handoff: { q: 'trading card games' },
     ariaLabel: 'Browse trading card games',
   },
@@ -674,7 +679,6 @@ const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
     id: 'jewellery-watches',
     title: 'Jewellery & Watches',
     subline: 'Rings, watches & gems',
-    imageSrc: searchRealJewelleryWatchesUrl,
     handoff: { category: 'fashion', q: 'jewellery watches' },
     ariaLabel: 'Browse jewellery and watches',
   },
@@ -682,7 +686,6 @@ const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
     id: 'sneakers-shoes',
     title: 'Sneakers & Shoes',
     subline: 'Drops, retros & daily pairs',
-    imageSrc: searchRealSneakersShoesUrl,
     handoff: { category: 'fashion', q: 'sneakers shoes' },
     ariaLabel: 'Browse sneakers and shoes',
   },
@@ -690,7 +693,6 @@ const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
     id: 'electronics',
     title: 'Electronics',
     subline: 'Audio, tech & gear',
-    imageSrc: searchRealElectronicsUrl,
     handoff: { category: 'electronics' },
     ariaLabel: 'Browse electronics',
   },
@@ -698,7 +700,6 @@ const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
     id: 'womens-fashion',
     title: "Women's Fashion",
     subline: 'Bags, clothes & vintage',
-    imageSrc: searchRealWomensFashionUrl,
     handoff: { category: 'fashion', q: "women's fashion" },
     ariaLabel: "Browse women's fashion",
   },
@@ -706,7 +707,6 @@ const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
     id: 'baby-kids',
     title: 'Baby & Kids',
     subline: 'Kidswear, toys & essentials',
-    imageSrc: searchRealBabyKidsUrl,
     handoff: { q: 'baby kids' },
     ariaLabel: 'Browse baby and kids',
   },
@@ -714,7 +714,6 @@ const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
     id: 'rocks-crystals',
     title: 'Rocks & Crystals',
     subline: 'Specimens, gems & minerals',
-    imageSrc: searchRealRocksCrystalsUrl,
     handoff: { q: 'crystals rocks' },
     ariaLabel: 'Browse rocks and crystals',
   },
@@ -722,7 +721,6 @@ const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
     id: 'toys-hobbies',
     title: 'Toys & Hobbies',
     subline: 'Figures, collectibles & fun',
-    imageSrc: searchRealToysHobbiesUrl,
     handoff: { q: 'toys hobbies' },
     ariaLabel: 'Browse toys and hobbies',
   },
@@ -730,7 +728,6 @@ const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
     id: 'coins-money',
     title: 'Coins & Money',
     subline: 'Bullion, notes & rare finds',
-    imageSrc: searchRealCoinsMoneyUrl,
     handoff: { q: 'coins money' },
     ariaLabel: 'Browse coins and money',
   },
@@ -738,11 +735,35 @@ const WHATNOT_SEARCH_CATEGORIES: ExploreCategoryRowPromoDef[] = [
     id: 'sports-cards',
     title: 'Sports Cards',
     subline: 'Breaks, slabs & singles',
-    imageSrc: searchRealSportsCardsUrl,
     handoff: { category: 'sports', q: 'sports cards' },
     ariaLabel: 'Browse sports cards',
   },
 ]
+
+/** Reliable logo thumb: SI SVG when slug set, otherwise Google favicon; on SI error swap to favicon. */
+const DiscoverPopularBrandMark = memo(function DiscoverPopularBrandMark({ brand }: { brand: DiscoverPopularBrandDef }) {
+  const primary = useMemo(() => discoverPopularBrandLogoPrimary(brand), [brand])
+  const favIcon = useMemo(() => discoverPopularBrandGoogleFavicon(brand.fallbackDomain), [brand])
+
+  const [src, setSrc] = useState(primary)
+
+  useEffect(() => {
+    setSrc(primary)
+  }, [primary])
+
+  return (
+    <img
+      src={src}
+      alt=""
+      draggable={false}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      className="max-h-[78%] max-w-[78%] object-contain"
+      onError={() => setSrc((cur) => (cur === favIcon ? cur : favIcon))}
+    />
+  )
+})
 
 const HOME_SHELL_TAB_TRANSITION_ORDER: Record<HomeShellTab, number> = {
   services: 0,
@@ -751,10 +772,19 @@ const HOME_SHELL_TAB_TRANSITION_ORDER: Record<HomeShellTab, number> = {
   chat: 3,
 }
 
-/** Search category tiles — deterministic counts until wired to analytics. */
-function searchCategoryTileViewerCount(tileIndex: number): number {
-  const base = 16 + ((tileIndex * 47 + 11) % 156)
-  return base + ((tileIndex * 7) % 8)
+/** Must match home-shell `.fetch-home-shell-route-enter` animation duration in `index.css`. */
+const HOME_SHELL_ROUTE_ENTER_ANIM_MS = 820
+
+/** Filled heart — matches Explore feed header heart. */
+function SearchTabHeartIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-8.74 1.06-1.06a5.5 5.5 0 1 0-7.78-7.78z"
+      />
+    </svg>
+  )
 }
 
 export type HomeViewProps = {
@@ -769,8 +799,6 @@ export default function HomeView({
   onMapsBootReady,
 }: HomeViewProps = {}) {
   const navigate = useNavigate()
-  const { sessionUserId } = useAuthState()
-  const shopLocked = !sessionUserId
   const {
     speakLine,
     isSpeechPlaying,
@@ -843,18 +871,22 @@ export default function HomeView({
   const [homeMapExploreMode, setHomeMapExploreMode] = useState(false)
   const [homeShellTab, setHomeShellTab] = useState<HomeShellTab>('services')
   const [homeShellTabEnterClass, setHomeShellTabEnterClass] = useState('')
+  const [marketplaceSellerOverlayOpen, setMarketplaceSellerOverlayOpen] = useState(false)
   const prevHomeShellTabTransitionRef = useRef<HomeShellTab>('services')
   const [entryAddressSheetOpen, setEntryAddressSheetOpen] = useState(false)
   const [headerCoinBalance, setHeaderCoinBalance] = useState(0)
   const [bidwarsHubView, setBidwarsHubView] = useState<BidwarsHubView | null>(null)
   const [bidwarsMatchmakingOpen, setBidwarsMatchmakingOpen] = useState(false)
-  const [sellSheetOpen, setSellSheetOpen] = useState(false)
   const [pokiesOpen, setPokiesOpen] = useState(false)
   const [mysteryFlipOpen, setMysteryFlipOpen] = useState(false)
   useEffect(() => {
     ambientRegisterHome(1)
     return () => ambientRegisterHome(-1)
   }, [])
+
+  useEffect(() => {
+    if (homeShellTab !== 'marketplace') setMarketplaceSellerOverlayOpen(false)
+  }, [homeShellTab])
 
   useEffect(() => {
     const prev = prevHomeShellTabTransitionRef.current
@@ -867,7 +899,7 @@ export default function HomeView({
         ? 'fetch-home-shell-route-enter--from-right'
         : 'fetch-home-shell-route-enter--from-left',
     )
-    const t = window.setTimeout(() => setHomeShellTabEnterClass(''), 400)
+    const t = window.setTimeout(() => setHomeShellTabEnterClass(''), HOME_SHELL_ROUTE_ENTER_ANIM_MS + 48)
     return () => window.clearTimeout(t)
   }, [homeShellTab])
 
@@ -933,6 +965,8 @@ export default function HomeView({
   const [pendingSearchCategoryChoice, setPendingSearchCategoryChoice] =
     useState<ExploreCategoryRowPromoDef | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [discoverSearchFieldVisible, setDiscoverSearchFieldVisible] = useState(false)
+  const discoverSearchInputRef = useRef<HTMLInputElement>(null)
   const [pendingChatThreadId, setPendingChatThreadId] = useState<string | null>(null)
   const [chatBrainHandoff, setChatBrainHandoff] = useState<{ listingId: string; title: string } | null>(
     null,
@@ -1437,6 +1471,16 @@ export default function HomeView({
     setReminderLineEarsArmed(false)
     reminderLineSpeechHeardRef.current = false
   }, [])
+
+  useEffect(() => {
+    if (!discoverSearchFieldVisible) return
+    const tid = window.setTimeout(() => discoverSearchInputRef.current?.focus(), 0)
+    return () => window.clearTimeout(tid)
+  }, [discoverSearchFieldVisible])
+
+  useEffect(() => {
+    if (homeShellTab !== 'search') setDiscoverSearchFieldVisible(false)
+  }, [homeShellTab])
 
   useEffect(() => {
     return () => {
@@ -3377,6 +3421,15 @@ export default function HomeView({
     [bumpInteraction, onHomeShellTabChange],
   )
 
+  const openExploreSellerProfile = useCallback(
+    (_reel: DropReel) => {
+      bumpInteraction()
+      setMarketplaceSegmentHandoff({ id: Date.now(), segment: 'auctions' })
+      onHomeShellTabChange('marketplace')
+    },
+    [bumpInteraction, onHomeShellTabChange],
+  )
+
   const clearMarketplaceBrowseHandoff = useCallback(() => {
     setMarketplaceBrowseHandoff(null)
   }, [])
@@ -3429,6 +3482,12 @@ export default function HomeView({
 
   const onAppTopOpenCart = useCallback(() => {
     bumpInteraction()
+    onHomeShellTabChange('marketplace')
+  }, [bumpInteraction, onHomeShellTabChange])
+
+  const onExploreHeaderOpenCart = useCallback(() => {
+    bumpInteraction()
+    stageMarketplaceCartOpenPending()
     onHomeShellTabChange('marketplace')
   }, [bumpInteraction, onHomeShellTabChange])
 
@@ -4280,15 +4339,19 @@ export default function HomeView({
     ],
   )
 
-  const [forYouLoaded, setForYouLoaded] = useState(false)
+  const [browseShellHydrated, setBrowseShellHydrated] = useState(readBrowseShellHydratedOnce)
   useEffect(() => {
-    if (!servicesExploreFullPage) {
-      setForYouLoaded(false)
-      return
-    }
-    const t = window.setTimeout(() => setForYouLoaded(true), FOR_YOU_SKELETON_MS)
+    if (readBrowseShellHydratedOnce()) return
+    const t = window.setTimeout(() => {
+      try {
+        sessionStorage.setItem(HOME_SHELL_BROWSE_HYDRATED_KEY, '1')
+      } catch {
+        /* storage may be disabled */
+      }
+      setBrowseShellHydrated(true)
+    }, FOR_YOU_SKELETON_MS)
     return () => window.clearTimeout(t)
-  }, [servicesExploreFullPage])
+  }, [])
 
   const [, setExploreFullPageChromeHidden] = useState(false)
   const exploreFullPageChromeHiddenRef = useRef(false)
@@ -4297,7 +4360,7 @@ export default function HomeView({
   const exploreScrollLastYRef = useRef(0)
   const exploreScrollChromeDirReadyRef = useRef(false)
   const exploreScrollLastChromeToggleYRef = useRef(0)
-  const forYouLoadedPrevRef = useRef(false)
+  const browseShellHydratedPrevRef = useRef(false)
 
   useEffect(() => {
     if (!servicesExploreFullPage) {
@@ -4316,18 +4379,18 @@ export default function HomeView({
 
   useEffect(() => {
     if (!servicesExploreFullPage) {
-      forYouLoadedPrevRef.current = false
+      browseShellHydratedPrevRef.current = false
       return
     }
-    if (forYouLoaded && !forYouLoadedPrevRef.current) {
+    if (browseShellHydrated && !browseShellHydratedPrevRef.current) {
       exploreFullPageChromeHiddenRef.current = false
       setExploreFullPageChromeHidden(false)
       exploreScrollLastYRef.current = 0
       exploreScrollChromeDirReadyRef.current = false
       exploreScrollLastChromeToggleYRef.current = 0
     }
-    forYouLoadedPrevRef.current = forYouLoaded
-  }, [servicesExploreFullPage, forYouLoaded])
+    browseShellHydratedPrevRef.current = browseShellHydrated
+  }, [servicesExploreFullPage, browseShellHydrated])
 
   const onExploreFullPageFeedScroll = useCallback((scrollTop: number) => {
     exploreScrollPendingYRef.current = scrollTop
@@ -5144,7 +5207,7 @@ export default function HomeView({
     () => (
       <nav
         className="fetch-home-intent-bottom-nav fetch-home-intent-bottom-nav--compact"
-        aria-label="For you, lives, sell, shop, and profile"
+        aria-label="Live, search, marketplace, inbox, and profile"
       >
         <button
           type="button"
@@ -5154,16 +5217,16 @@ export default function HomeView({
           ]
             .filter(Boolean)
             .join(' ')}
-          aria-label="For you"
+          aria-label="Live"
           aria-current={homeShellTab === 'services' ? 'page' : undefined}
-          onClick={() => {
+          onClick={(e) => {
+            playHomeIntentNavTap(e.currentTarget)
             bumpInteraction()
             onPeekHomeClick()
           }}
         >
           <span className="fetch-home-intent-bottom-nav__icon-inner">
-            <FetchEyesHomeIcon className="block" active={homeShellTab === 'services'} />
-            <span className="fetch-home-intent-bottom-nav__label">For you</span>
+            <FetchLivesNavIcon className="block" active />
           </span>
         </button>
         <button
@@ -5174,16 +5237,16 @@ export default function HomeView({
           ]
             .filter(Boolean)
             .join(' ')}
-          aria-label="Lives"
+          aria-label="Search"
           aria-current={homeShellTab === 'search' ? 'page' : undefined}
-          onClick={() => {
+          onClick={(e) => {
+            playHomeIntentNavTap(e.currentTarget)
             bumpInteraction()
             onHomeShellTabChange('search')
           }}
         >
           <span className="fetch-home-intent-bottom-nav__icon-inner">
-            <FetchLivesNavIcon className="block" active={homeShellTab === 'search'} />
-            <span className="fetch-home-intent-bottom-nav__label">Lives</span>
+            <FetchSearchNavIcon className="block" active />
           </span>
         </button>
         <button
@@ -5194,73 +5257,50 @@ export default function HomeView({
           ]
             .filter(Boolean)
             .join(' ')}
-          aria-label="Sell — list an item or go live"
+          aria-label="Marketplace — browse listings"
           aria-current={homeShellTab === 'marketplace' ? 'page' : undefined}
-          onClick={() => {
+          onClick={(e) => {
+            playHomeIntentNavTap(e.currentTarget)
             bumpInteraction()
-            setSellSheetOpen(true)
+            onHomeShellTabChange('marketplace')
           }}
         >
           <span className="fetch-home-intent-bottom-nav__icon-inner">
-            <PlusCircleNavIcon className="block" active={homeShellTab === 'marketplace'} />
-            <span className="fetch-home-intent-bottom-nav__label">Sell</span>
+            <CartNavIcon className="block" active />
           </span>
         </button>
         <button
           type="button"
           className={[
             'fetch-home-intent-bottom-nav__icon',
-            homeShellTab === 'chat' && !shopLocked
-              ? 'fetch-home-intent-bottom-nav__icon--active'
-              : '',
-            shopLocked ? 'fetch-home-intent-bottom-nav__icon--shop-locked' : '',
+            homeShellTab === 'chat' ? 'fetch-home-intent-bottom-nav__icon--active' : '',
           ]
             .filter(Boolean)
             .join(' ')}
-          aria-label={shopLocked ? 'Shop — sign in required' : 'Shop'}
-          aria-current={homeShellTab === 'chat' && !shopLocked ? 'page' : undefined}
-          onClick={() => {
+          aria-label="Inbox"
+          aria-current={homeShellTab === 'chat' ? 'page' : undefined}
+          onClick={(e) => {
+            playHomeIntentNavTap(e.currentTarget)
             bumpInteraction()
-            if (shopLocked) {
-              navigate(FETCH_AUTH_PATH)
-              return
-            }
-            navigate({ pathname: FETCH_SHOP_PATH, search: '' })
+            onHomeShellTabChange('chat')
           }}
         >
-          <span className="relative inline-block">
-            <span
-              className={[
-                'fetch-home-intent-bottom-nav__icon-inner',
-                shopLocked ? 'opacity-40 grayscale' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            >
-              <FetchShopNavIcon className="block" active={homeShellTab === 'chat' && !shopLocked} />
-              <span className="fetch-home-intent-bottom-nav__label">Shop</span>
-            </span>
-            {shopLocked ? (
-              <Lock
-                className="pointer-events-none absolute -bottom-0.5 -right-1 h-3.5 w-3.5 rounded-full bg-white text-zinc-500 ring-1 ring-zinc-200"
-                strokeWidth={2.5}
-                aria-hidden
-              />
-            ) : null}
+          <span className="fetch-home-intent-bottom-nav__icon-inner">
+            <FetchInboxNavIcon className="block" active />
           </span>
         </button>
         <button
           type="button"
           className="fetch-home-intent-bottom-nav__icon"
           aria-label="Profile"
-          onClick={() => {
+          onClick={(e) => {
+            playHomeIntentNavTap(e.currentTarget)
             bumpInteraction()
             onAccountNavigate?.()
           }}
         >
           <span className="fetch-home-intent-bottom-nav__icon-inner">
-            <FetchProfileNavIcon className="block" active={false} />
-            <span className="fetch-home-intent-bottom-nav__label">Profile</span>
+            <FetchProfileNavIcon className="block" active />
           </span>
         </button>
       </nav>
@@ -5268,11 +5308,9 @@ export default function HomeView({
     [
       bumpInteraction,
       homeShellTab,
-      navigate,
       onHomeShellTabChange,
       onPeekHomeClick,
       onAccountNavigate,
-      shopLocked,
     ],
   )
 
@@ -5724,6 +5762,31 @@ export default function HomeView({
   const homeShellDockBehindHub = showHomeShellBottomDock && bidwarsHubView == null ? homeShellFooterNav : null
   const homeShellDockInsideHub = showHomeShellBottomDock ? homeShellFooterNav : undefined
 
+  const showHomeShellFloatingDock = Boolean(
+    !brainImmersive &&
+      shellShopOrChat &&
+      homeShellDockBehindHub &&
+      cardVisible &&
+      homeBrainFlow == null &&
+      !(homeShellTab === 'marketplace' && marketplaceSellerOverlayOpen),
+  )
+
+  const showExploreStickyDock = Boolean(
+    !brainImmersive &&
+      cardVisible &&
+      homeBrainFlow == null &&
+      bidwarsHubView == null &&
+      !(homeShellTab === 'marketplace' && marketplaceSellerOverlayOpen) &&
+      (homeShellTab === 'search' ||
+        homeShellTab === 'marketplace' ||
+        homeShellTab === 'chat' ||
+        (homeShellTab === 'services' && servicesExploreFullPage && browseShellHydrated)),
+  )
+
+  const mountExploreStickyDockHost = Boolean(
+    !brainImmersive && cardVisible && homeBrainFlow == null && bidwarsHubView == null,
+  )
+
   useEffect(() => {
     if (sheetGestureActive) return
     if (showPickup || showDropoff || showDualAddresses) {
@@ -5817,15 +5880,6 @@ export default function HomeView({
       <FetchBidWarsMatchmakingOverlay
         open={bidwarsMatchmakingOpen}
         onClose={() => setBidwarsMatchmakingOpen(false)}
-      />
-      <SellOptionsSheet
-        open={sellSheetOpen}
-        onClose={() => setSellSheetOpen(false)}
-        onSellItem={() => navigate(FETCH_MARKETPLACE_LIST_PATH)}
-        onGoLive={() => {
-          setSellSheetOpen(false)
-          navigate(FETCH_GO_LIVE_PATH)
-        }}
       />
 
       <PokiesGame
@@ -5921,7 +5975,7 @@ export default function HomeView({
             homeShellTab === 'services' ? homeShellTabEnterClass : '',
           ].join(' ')}
         >
-          {!forYouLoaded ? (
+          {!browseShellHydrated ? (
             <main
               className={[
                 'mx-auto flex min-h-0 min-w-0 w-full max-w-[min(100%,430px)] flex-1 flex-col overflow-x-hidden bg-transparent pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+1rem)]',
@@ -5956,12 +6010,13 @@ export default function HomeView({
                 }
                 onOpenDrops={() => onHomeShellTabChange('marketplace')}
                 onOpenLiveStream={openExploreLiveStream}
+                onOpenSellerProfile={openExploreSellerProfile}
                 onOpenMarketplace={() => onHomeShellTabChange('marketplace')}
                 onOpenMarketplaceAuctions={openMarketplaceAuctionsEntry}
                 onOpenMarketplaceShop={openMarketplaceShopEntry}
                 onOpenSearch={() => {
                   bumpInteraction()
-                  navigate(FETCH_LIVES_FEED_PATH)
+                  onHomeShellTabChange('search')
                 }}
                 onOpenMarketplaceBrowse={openExploreMarketplaceBrowse}
                 onOpenPeerListing={(listingId) => {
@@ -5974,12 +6029,11 @@ export default function HomeView({
                   onHomeShellTabChange('marketplace')
                 }}
                 onViewBackpack={onAppTopOpenCart}
-                onViewTransactions={() => navigate(FETCH_WALLET_TRANSACTIONS_PATH)}
-                onOpenGifts={onAppTopOpenGems}
-                onOpenChat={onAppTopChat}
+                onViewTransactions={() => navigate(FETCH_PROFILE_PAYMENTS_SHIPPING_PATH)}
+                onOpenProfile={onAppTopAccount}
                 onOpenNotifications={onAppTopNotifications}
                 onSellerGoLive={() => navigate(FETCH_GO_LIVE_PATH)}
-                onBrowseLive={() => navigate(FETCH_LIVES_FEED_PATH)}
+                onBrowseLive={openMarketplaceAuctionsEntry}
                 onJoinBidWar={() => {
                   bumpInteraction()
                   if (!isBidWarsAdventureUnlocked()) {
@@ -6018,7 +6072,7 @@ export default function HomeView({
           <HomeCartFab
             onOpen={() => onHomeShellTabChange('marketplace')}
             footerNav={homeShellFooterNav}
-            ready={forYouLoaded}
+            ready={browseShellHydrated}
             hasCartItems={marketplaceCartHasItems}
           />
         ) : null}
@@ -6407,12 +6461,13 @@ export default function HomeView({
                     scanning={scanning}
                     onOpenDrops={() => onHomeShellTabChange('marketplace')}
                     onOpenLiveStream={openExploreLiveStream}
+                    onOpenSellerProfile={openExploreSellerProfile}
                     onOpenMarketplace={() => onHomeShellTabChange('marketplace')}
                     onOpenMarketplaceAuctions={openMarketplaceAuctionsEntry}
                     onOpenMarketplaceShop={openMarketplaceShopEntry}
                     onOpenSearch={() => {
                       bumpInteraction()
-                      navigate(FETCH_LIVES_FEED_PATH)
+                      onHomeShellTabChange('search')
                     }}
                     onOpenMarketplaceBrowse={openExploreMarketplaceBrowse}
                     onOpenPeerListing={(listingId) => {
@@ -6425,11 +6480,11 @@ export default function HomeView({
                       onHomeShellTabChange('marketplace')
                     }}
                     onViewBackpack={onAppTopOpenCart}
-                    onViewTransactions={() => navigate(FETCH_WALLET_TRANSACTIONS_PATH)}
-                    onOpenGifts={onAppTopOpenGems}
+                    onViewTransactions={() => navigate(FETCH_PROFILE_PAYMENTS_SHIPPING_PATH)}
+                    onOpenProfile={onAppTopAccount}
                     onOpenNotifications={onAppTopNotifications}
                     onSellerGoLive={() => navigate(FETCH_GO_LIVE_PATH)}
-                    onBrowseLive={() => navigate(FETCH_LIVES_FEED_PATH)}
+                    onBrowseLive={openMarketplaceAuctionsEntry}
                     onJoinBidWar={() => {
                       bumpInteraction()
                       if (!isBidWarsAdventureUnlocked()) {
@@ -7956,9 +8011,17 @@ export default function HomeView({
       homeShellTab === 'marketplace' &&
       cardVisible &&
       homeBrainFlow == null ? (
-        <div className={homeShellTabEnterClass}>
+        <div
+          className={[
+            'absolute inset-0 z-[52] min-h-0 overflow-x-hidden',
+            homeShellTabEnterClass,
+          ].join(' ')}
+        >
           <HomeShellMarketplacePage
             bottomNav={homeShellDockBehindHub}
+            renderShellDockOutsideRoute={Boolean(homeShellDockBehindHub)}
+            browseShellRevealReady={browseShellHydrated}
+            onSellerToolsOverlayOpenChange={setMarketplaceSellerOverlayOpen}
             hardwareProducts={HARDWARE_PRODUCTS}
             cartQtyById={marketplaceCartQtyById}
             setCartQtyById={setMarketplaceCartQtyById}
@@ -7976,7 +8039,11 @@ export default function HomeView({
             liveJoinStreamHandoff={liveJoinStreamHandoff}
             onLiveJoinStreamHandoffConsumed={clearLiveJoinStreamHandoff}
             onRequestHomeShellTab={onHomeShellTabChange}
-            onOpenWallet={() => setBidwarsHubView({ kind: 'wallet' })}
+            onOpenNotifications={onAppTopNotifications}
+            onOpenSearch={() => {
+              bumpInteraction()
+              onHomeShellTabChange('search')
+            }}
             segmentHandoff={marketplaceSegmentHandoff}
             onSegmentHandoffConsumed={clearMarketplaceSegmentHandoff}
           />
@@ -7987,9 +8054,14 @@ export default function HomeView({
       homeShellTab === 'chat' &&
       cardVisible &&
       homeBrainFlow == null ? (
-        <div className={homeShellTabEnterClass}>
+        <div
+          className={[
+            'absolute inset-0 z-[52] min-h-0 overflow-x-hidden',
+            homeShellTabEnterClass,
+          ].join(' ')}
+        >
           <HomeShellChatHubPage
-            bottomNav={homeShellDockBehindHub}
+            renderShellDockOutsideRoute={Boolean(homeShellDockBehindHub)}
             onMenuAccount={onAccountNavigate}
             onChatWithField={onChatHubOpenField}
             initialThreadId={pendingChatThreadId}
@@ -7997,6 +8069,12 @@ export default function HomeView({
             listingUnread={messagesUnread.listing}
             supportUnread={messagesUnread.support}
             onFetchIt={onChatFetchItListing}
+            onOpenSearch={() => {
+              bumpInteraction()
+              onHomeShellTabChange('search')
+            }}
+            onOpenCart={onExploreHeaderOpenCart}
+            onOpenNotifications={onAppTopNotifications}
           />
         </div>
       ) : null}
@@ -8005,125 +8083,176 @@ export default function HomeView({
       homeShellTab === 'search' &&
       cardVisible &&
       homeBrainFlow == null ? (
-        <div
-          className={[
-            'fetch-home-search-route absolute inset-0 z-[52] flex min-h-dvh flex-col',
-            homeShellTabEnterClass,
-          ].join(' ')}
-        >
-          <div className="relative z-[13] w-full shrink-0 overflow-visible">
-            <div
-              className="relative z-0 min-h-[min(168px,44vw)] w-full overflow-visible bg-[#cab8ff] bg-cover bg-center bg-no-repeat px-3 pb-[min(40px,11vw)] pt-[max(0.35rem,calc(env(safe-area-inset-top,0px)+0.6rem))]"
-              style={{ backgroundImage: `url(${searchHeroWallpaperUrl})` }}
-            >
-              <form
-                role="search"
-                aria-label="Search fetchit"
-                className="fetch-home-search-hero fetch-home-search-hero--explore-wallpaper relative z-[10] mb-3"
-                onSubmit={(e) => {
-                  e.preventDefault()
+        <div className="fetch-home-search-route absolute inset-0 z-[52] flex min-h-dvh flex-col overflow-x-hidden">
+          <div
+            className={[
+              'flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden',
+              homeShellTabEnterClass,
+            ].join(' ')}
+          >
+          <header className="sticky top-0 z-[15] shrink-0 w-full border-0 bg-white/92 backdrop-blur-md backdrop-saturate-150 supports-[backdrop-filter]:bg-white/80">
+            <div className="mx-auto flex w-full max-w-[min(100%,430px)] min-w-0 items-center gap-2 px-3 pt-[max(0.35rem,calc(env(safe-area-inset-top,0px)+0.15rem))] pb-2 sm:px-5">
+              <h1 className="shrink-0 text-[clamp(1.55rem,7vw,2.25rem)] font-black leading-none tracking-tight text-zinc-900 sm:text-[2.35rem]">
+                Discover
+              </h1>
+              <div className="min-w-0 flex-1" aria-hidden />
+              <button
+                type="button"
+                onClick={() => {
                   bumpInteraction()
-                  onAppTopSearchSubmit(searchQuery.trim())
+                  setDiscoverSearchFieldVisible((open) => !open)
                 }}
+                aria-pressed={discoverSearchFieldVisible}
+                aria-expanded={discoverSearchFieldVisible}
+                aria-label="Search across fetchit"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-0 bg-transparent text-zinc-900 outline-none transition-[opacity,filter] active:opacity-70 focus-visible:ring-2 focus-visible:ring-violet-400/55 focus-visible:ring-offset-2"
               >
-                <label className="fetch-home-search-hero__field flex h-12 w-full items-center gap-2 rounded-full px-3 transition-[border-color,box-shadow] duration-200">
-                  <svg className="h-5 w-5 shrink-0 text-zinc-500" viewBox="0 0 24 24" fill="none" aria-hidden>
-                    <path
-                      d="M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15zM16.5 16.5L21 21"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <input
-                    type="search"
-                    inputMode="search"
-                    enterKeyHint="search"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => bumpInteraction()}
-                    placeholder="Search marketplace, drops & live"
-                    className="min-w-0 flex-1 bg-transparent text-[15px] font-medium leading-tight tracking-tight text-zinc-900 outline-none placeholder:font-normal placeholder:text-zinc-400"
-                    aria-label="Search across fetchit"
+                <svg className="h-7 w-7 shrink-0 text-zinc-700" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15zM16.5 16.5L21 21"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
-                  {searchQuery ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        bumpInteraction()
-                        setSearchQuery('')
-                      }}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-100/60 text-[#291050] transition-colors active:bg-violet-100"
-                      aria-label="Clear search"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-                        <path
-                          d="M6 6l12 12M18 6L6 18"
-                          stroke="currentColor"
-                          strokeWidth="2.2"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </button>
-                  ) : null}
-                </label>
-              </form>
-              <ExploreEarthCurveDivider curveFill="#f8f6fd" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={onAppTopNotifications}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-0 bg-transparent text-zinc-900 outline-none transition-[opacity,filter] active:opacity-70 focus-visible:ring-2 focus-visible:ring-violet-400/55 focus-visible:ring-offset-2"
+                aria-label="Notifications"
+              >
+                <SearchTabHeartIcon className="h-7 w-7" />
+              </button>
             </div>
-          </div>
+            {discoverSearchFieldVisible ? (
+              <div className="mx-auto w-full max-w-[min(100%,430px)] px-3 pb-2 pt-0 sm:px-5">
+                <form
+                  role="search"
+                  aria-label="Search fetchit query"
+                  className="fetch-home-search-hero w-full"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    bumpInteraction()
+                    onAppTopSearchSubmit(searchQuery.trim())
+                  }}
+                >
+                  <label className="fetch-home-search-hero__field flex h-12 w-full min-w-0 items-center gap-1.5 rounded-full py-1 pl-3 pr-1.5 transition-[border-color,box-shadow] duration-200">
+                    <svg className="h-5 w-5 shrink-0 text-zinc-500" viewBox="0 0 24 24" fill="none" aria-hidden>
+                      <path
+                        d="M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15zM16.5 16.5L21 21"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <input
+                      ref={discoverSearchInputRef}
+                      type="search"
+                      inputMode="search"
+                      enterKeyHint="search"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onFocus={() => bumpInteraction()}
+                      placeholder="Search marketplace, drops & live"
+                      className="min-w-0 flex-1 bg-transparent py-1 text-[15px] font-medium leading-tight tracking-tight text-zinc-900 outline-none placeholder:font-normal placeholder:text-zinc-400"
+                      aria-label="Search across fetchit"
+                    />
+                    {searchQuery ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          bumpInteraction()
+                          setSearchQuery('')
+                        }}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-100/60 text-[#291050] transition-colors active:bg-violet-100"
+                        aria-label="Clear search"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                          <path
+                            d="M6 6l12 12M18 6L6 18"
+                            stroke="currentColor"
+                            strokeWidth="2.2"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </button>
+                    ) : null}
+                  </label>
+                </form>
+              </div>
+            ) : null}
+          </header>
 
           <main
-            className="fetch-home-search-categories relative z-[1] -mt-[min(44px,11vw)] mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-[#f8f6fd] px-3 pb-2 pt-2"
+            className="fetch-home-search-categories relative z-[1] mx-auto flex min-h-0 w-full max-w-[min(100%,430px)] flex-1 flex-col bg-white px-3 pb-[calc(2.95rem+env(safe-area-inset-bottom,0px)+0.5rem)] pt-2"
             role="main"
             aria-label="Search"
           >
             <div className="fetch-home-search-categories__scroll min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pr-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <section className="mt-1 min-w-0 pb-2" aria-label="Search categories">
+              <section className="fetch-home-search-popular-brands mt-1 min-w-0 pb-5" aria-label="Popular brands">
+                <div className="mb-3 flex items-baseline justify-between px-0.5">
+                  <h2 className="text-[1.1875rem] font-extrabold tracking-tight text-zinc-900 sm:text-xl">
+                    Popular brands
+                  </h2>
+                </div>
+                <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-1 pb-0.5 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {DISCOVER_POPULAR_BRANDS.map((brand) => (
+                    <button
+                      key={brand.id}
+                      type="button"
+                      className="group flex shrink-0 snap-start flex-col items-center gap-2 rounded-xl bg-transparent p-1 text-center transition-transform active:scale-[0.97]"
+                      aria-label={`Shop ${brand.label}`}
+                      onClick={() => {
+                        bumpInteraction()
+                        openExploreMarketplaceBrowse(brand.handoff)
+                      }}
+                    >
+                      <span className="relative flex h-[4.125rem] w-[4.125rem] shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-50 shadow-md ring-[3px] ring-white">
+                        <DiscoverPopularBrandMark brand={brand} />
+                      </span>
+                      <span className="max-w-[4.125rem] truncate text-[11px] font-bold leading-none text-zinc-700 transition-colors group-active:text-[#291050]">
+                        {brand.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <section className="min-w-0 border-t border-violet-200/55 pt-5 pb-2" aria-label="Shop by category">
                 <div className="mb-2 flex items-baseline justify-between px-0.5">
-                  <h2 className="text-[15px] font-extrabold tracking-tight text-zinc-900">Categories</h2>
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
+                  <h2 className="text-[1.1875rem] font-extrabold tracking-tight text-zinc-900 sm:text-xl">
+                    Shop by category
+                  </h2>
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
                     {searchCategoryTiles.length} categories
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-x-3 gap-y-4">
-                  {searchCategoryTiles.map((item, tileIndex) => {
-                    const viewers = searchCategoryTileViewerCount(tileIndex)
-                    return (
+                <div className="grid grid-cols-4 gap-x-2 gap-y-3.5 sm:gap-x-2.5 sm:gap-y-4">
+                  {searchCategoryTiles.map((item) => (
                       <button
                         key={item._k}
                         type="button"
-                        className="group flex min-w-0 flex-col items-center rounded-2xl bg-transparent p-0 text-center transition-transform active:scale-[0.98]"
+                        className="group flex min-w-0 flex-col items-center gap-1.5 rounded-2xl bg-transparent p-0 text-center transition-transform active:scale-[0.98]"
                         onClick={() => {
                           bumpInteraction()
                           setPendingSearchCategoryChoice(item)
                         }}
-                        aria-label={`${item.ariaLabel} · ${viewers} people viewing now`}
+                        aria-label={item.ariaLabel}
                       >
-                        <span className="fetch-home-search-categories__tile relative flex w-full flex-col items-center justify-end overflow-hidden rounded-[1.35rem] px-1.5 pb-1.5 pt-2">
-                          <span className="line-clamp-2 min-h-[2.15em] w-full px-0.5 text-center text-[11px] font-black leading-tight tracking-tight text-zinc-900">
-                            {item.title}
-                          </span>
-                          <img
-                            src={item.imageSrc}
-                            alt=""
-                            loading="lazy"
-                            draggable={false}
-                            className="min-h-0 flex-1 w-[90%] object-contain transition-transform duration-200 group-active:scale-95"
+                        <span className="fetch-home-search-categories__tile relative flex w-full flex-col items-center justify-center overflow-hidden rounded-[1.35rem] p-2 pb-1.5">
+                          <DiscoverShopCategoryIcon
+                            id={item.id}
+                            className="aspect-square h-auto w-[88%] max-w-[5.75rem] flex-none transition-transform duration-200 group-active:scale-95 sm:max-w-[6.25rem]"
                           />
-                          <span className="pointer-events-none absolute bottom-1 left-1 flex items-center gap-1 rounded-full bg-black/65 px-1.5 py-0.5 shadow-sm backdrop-blur-[2px]">
-                            <span className="relative flex h-1.5 w-1.5 shrink-0" aria-hidden>
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-70" />
-                              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]" />
-                            </span>
-                            <span className="max-w-[3rem] truncate text-left text-[9px] font-black leading-none text-white/95">
-                              {viewers}
-                            </span>
-                          </span>
+                        </span>
+                        <span className="line-clamp-2 w-full px-0.5 text-center text-[11px] font-black leading-tight tracking-tight text-zinc-900">
+                          {item.title}
                         </span>
                       </button>
-                    )
-                  })}
+                    ))}
                 </div>
               </section>
             </div>
@@ -8186,7 +8315,7 @@ export default function HomeView({
               </div>
             </div>
           ) : null}
-          {homeShellDockBehindHub}
+          </div>
         </div>
       ) : null}
 
@@ -8424,6 +8553,25 @@ export default function HomeView({
           }
         }}
       />
+
+      {showHomeShellFloatingDock ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[56] mx-auto flex w-full max-w-[min(100%,430px)] flex-col items-stretch">
+          <div className="fetch-home-marketplace-shell-footer pointer-events-auto w-full shrink-0">
+            {homeShellDockBehindHub}
+          </div>
+        </div>
+      ) : null}
+
+      {mountExploreStickyDockHost ? (
+        <ExploreStickyIconDockHost
+          dockVisible={showExploreStickyDock}
+          onGoLive={() => navigate(FETCH_GO_LIVE_PATH)}
+          onOpenPeerListing={(listingId) => {
+            setDropsListingHandoff({ listingId, mode: 'sheet' })
+            onHomeShellTabChange('marketplace')
+          }}
+        />
+      ) : null}
 
       {streetViewPosition && mapsJsReady ? (
         <FetchStreetViewOverlay
